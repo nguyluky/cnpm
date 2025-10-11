@@ -9,6 +9,7 @@ import { errorHandler } from './middleware/error';
 import { requestLogger } from './middleware/requestLogger';
 import { apiRouter, swaggerRouter } from './module';
 import { Logger } from './utils/logger';
+import z from 'zod/v4';
 
 const logger = new Logger('MAIN');
 const app = express();
@@ -54,5 +55,3 @@ const port = env.PORT;
 httpServer.listen(port, () => {
     logger.info(`Server running at http://localhost:${port}`)
 });
-
-

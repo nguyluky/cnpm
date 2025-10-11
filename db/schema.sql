@@ -1,9 +1,9 @@
 -- =======================================================
 -- CẤU TRÚC CƠ BẢN
 -- =======================================================
-DROP DATABASE IF EXISTS software_engineering;
-CREATE DATABASE software_engineering;
-USE software_engineering;
+-- DROP DATABASE IF EXISTS software_engineering;
+-- CREATE DATABASE software_engineering;
+-- USE software_engineering;
 
 -- =======================================================
 -- AUTH CORE
@@ -84,7 +84,6 @@ CREATE TABLE `Bus` (
 CREATE TABLE `Route` (
   `id` VARCHAR(191) NOT NULL PRIMARY KEY,
   `name` VARCHAR(191) NOT NULL,
-  `direction` ENUM('MORNING', 'AFTERNOON') NOT NULL,
   `estimatedDuration` INT DEFAULT 0,
   `startLocation` JSON NOT NULL,
   `endLocation` JSON NOT NULL,
@@ -97,15 +96,24 @@ CREATE TABLE `Route` (
 -- 🚏 STOP POINT
 CREATE TABLE `StopPoint` (
   `id` VARCHAR(191) NOT NULL PRIMARY KEY,
-  `routeId` VARCHAR(191) NOT NULL,
-  `sequence` INT NOT NULL,
   `name` VARCHAR(191) NOT NULL,
   `location` JSON NOT NULL,
-  `estimatedArrival` TIME DEFAULT NULL,
   `meta` JSON DEFAULT NULL,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   CONSTRAINT `StopPoint_routeId_fkey` FOREIGN KEY (`routeId`) REFERENCES `Route` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+
+-- 🚍 ROUTE - STOP POINT (Mapping many-to-many with order)
+CREATE TABLE `RouteStopPoint` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `routeId` VARCHAR(191) NOT NULL,
+  `stopPointId` VARCHAR(191) NOT NULL,
+  `sequence` INT NOT NULL, -- Thứ tự điểm dừng trong tuyến
+  PRIMARY KEY (`id`),
+  CONSTRAINT `RouteStopPoint_routeId_fkey` FOREIGN KEY (`routeId`) REFERENCES `Route` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `RouteStopPoint_stopPointId_fkey` FOREIGN KEY (`stopPointId`) REFERENCES `StopPoint` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- 📅 SCHEDULE (template for repeated trips)
