@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  api:
+    image: nguyluky/api_tiktok_clone
+    ports:
+      - "3000:3000"
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=mysql://user:password@db:3306/tiktok_clone
+    restart: unless-stopped
+    depends_on:
+      - db
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: tiktok_clone
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    restart: unless-stopped
+
+volumes:
+  mysql_data:

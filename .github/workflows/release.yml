@@ -1,0 +1,89 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers when tag like v1.0.0 is pushed
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Package dist/ into release.zip
+        run: |
+          zip -r release.zip dist
+
+      - name: Create GitHub Release and Upload
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          files: release.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Download Latest Release
+        run: |
+          curl -L \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/${{ github.repository }}/releases/latest \
+            -o latest-release.json
+
+          DOWNLOAD_URL=$(jq -r '.assets[] | select(.name == "release.zip") | .browser_download_url' latest-release.json)
+
+          echo "Download URL: $DOWNLOAD_URL"
+
+          curl -L \
+            -H "Authorization: Bearer <YOUR_TOKEN>" \
+            -H "Accept: application/octet-stream" \
+            -o release.zip \
+            "$DOWNLOAD_URL"
+
+      - name: Unzip Release
+        run: |
+          unzip -o release.zip -d app
+
+      - name: EnvSetup
+        run: |
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> app/dist/.env
+          echo "PORT=${{ secrets.PORT }}" >> app/dist/.env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> app/dist/.env
+          echo "JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}" >> app/dist/.env
+          echo "TWO_FACTOR_SECRET=${{ secrets.TWO_FACTOR_SECRET }}" >> app/dist/.env
+          echo "TWO_FACTOR_EXPIRATION=${{ secrets.TWO_FACTOR_EXPIRATION }}" >> app/dist/.env
+          echo "EMAIL_SECRET=${{ secrets.EMAIL_SECRET }}" >> app/dist/.env
+          echo "REFRESH_TOKEN_EXPIRATION=${{ secrets.REFRESH_TOKEN_EXPIRATION }}" >> app/dist/.env
+          echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> app/dist/.env
+          echo "CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}" >> app/dist/.env
+          echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> app/dist/.env
+          echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> app/dist/.env
+          echo "ENVIRONMENT SETUP COMPLETE"
+
+      - name: Install & Restart with PM2
+        run: |
+          cd app/dist
+          pm2 stop tiktok-live || true
+          pm2 start index.js --name "tiktok-live"
