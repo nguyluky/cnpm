@@ -1,217 +1,257 @@
-# 📋 TikTok Clone API – TODO List
+# Bus Management System
 
-A checklist to track progress of API development for a TikTok-like app.
+A comprehensive bus management system built with Node.js, TypeScript, Express.js, and Socket.IO. This system provides real-time bus tracking, schedule management, and user authentication with role-based access control.
 
----
+## 🚌 Features
 
-## 🐳 Docker Usage
+- **User Authentication & Authorization**
+  - JWT-based authentication
+  - Role-based access control (Admin, Driver, Student)
+  - User registration and profile management
 
-### Build and Run with Docker
+- **Bus Management**
+  - Add, update, and delete buses
+  - Real-time bus tracking
+  - Driver assignment
+
+- **Route Management**
+  - Create and manage bus routes
+  - Stop point management
+  - Route optimization
+
+- **Schedule Management**
+  - Create and manage bus schedules
+  - Share schedules with users
+  - Real-time updates
+
+- **Real-time Features**
+  - Live bus location tracking
+  - Real-time notifications
+  - Socket.IO integration
+
+- **API Documentation**
+  - Swagger/OpenAPI documentation
+  - Interactive API explorer
+
+## 🛠️ Tech Stack
+
+- **Backend**: Node.js, Express.js, TypeScript
+- **Database**: MySQL with Prisma ORM
+- **Real-time**: Socket.IO
+- **Authentication**: JWT, bcryptjs
+- **File Upload**: Multer, Cloudinary
+- **API Documentation**: Swagger/OpenAPI
+- **Email**: Nodemailer
+- **Validation**: Zod
+- **Development**: Nodemon, Concurrently
+
+## 📋 Prerequisites
+
+- Node.js (v16 or higher)
+- MySQL (v8.0 or higher)
+- Docker (optional)
+
+## 🚀 Getting Started
+
+### Local Development
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd se
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   Create a `.env` file in the root directory:
+   ```env
+   DATABASE_URL="mysql://user:password@localhost:3306/software_engineering"
+   JWT_SECRET="your-jwt-secret"
+   NODE_ENV="development"
+   PORT=3000
+   
+   # Cloudinary (for file uploads)
+   CLOUDINARY_CLOUD_NAME="your-cloud-name"
+   CLOUDINARY_API_KEY="your-api-key"
+   CLOUDINARY_API_SECRET="your-api-secret"
+   
+   # Email configuration
+   EMAIL_HOST="smtp.gmail.com"
+   EMAIL_PORT=587
+   EMAIL_USER="your-email@gmail.com"
+   EMAIL_PASS="your-app-password"
+   ```
+
+4. **Set up the database**
+   ```bash
+   # Generate Prisma client
+   npx prisma generate
+   
+   # Run database migrations
+   npx prisma db push
+   
+   # Seed the database (optional)
+   npx prisma db seed
+   ```
+
+5. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+   The application will be available at `http://localhost:3000`
+
+### Docker Development
+
+1. **Using Docker Compose**
+   ```bash
+   docker-compose up -d
+   ```
+
+   This will start both the application and MySQL database in containers.
+
+## 📚 API Documentation
+
+Once the server is running, you can access the API documentation at:
+
+- **Swagger UI**: `http://localhost:3000/api-docs`
+- **ReDoc**: `http://localhost:3000/redoc`
+
+## 🏗️ Project Structure
+
+```
+src/
+├── config/          # Configuration files
+├── middleware/      # Express middleware
+├── module/          # Feature modules
+│   ├── auth/        # Authentication
+│   ├── buses/       # Bus management
+│   ├── drivers/     # Driver management
+│   ├── routes/      # Route management
+│   ├── schedules/   # Schedule management
+│   └── stoppoints/  # Stop point management
+├── socket/          # Socket.IO handlers
+├── types/           # TypeScript type definitions
+└── utils/           # Utility functions
+
+lib/                 # Custom libraries
+├── BaseAuth.ts      # Base authentication
+├── swagget.ts       # Swagger generation
+└── socket_*.ts      # Socket decorators
+
+prisma/              # Database schema and migrations
+scripts/             # Build and development scripts
+```
+
+## 🛡️ Authentication
+
+The system uses JWT-based authentication with role-based access control:
+
+- **Admin**: Full system access
+- **Driver**: Access to schedules and routes
+- **Student**: View schedules and track buses
+
+### API Endpoints
 
 ```bash
-# Build the image
-docker build -t tiktok-api .
+POST /api/auth/register    # User registration
+POST /api/auth/login       # User login
+POST /api/auth/refresh     # Refresh token
+GET  /api/auth/profile     # Get user profile
+```
 
-# Run with environment variables
-docker run -p 3000:3000 \
-  -e DATABASE_URL="mysql://user:password@host:3306/tiktok_clone" \
-  -e JWT_SECRET="your_jwt_secret_key_here" \
-  -e JWT_EXPIRATION="1d" \
-  -e REFRESH_TOKEN_EXPIRATION="1y" \
-  -e TWO_FACTOR_SECRET="your_2fa_secret_here" \
-  -e TWO_FACTOR_EXPIRATION="5m" \
-  -e EMAIL_SECRET="your_email_secret_here" \
-  -e CLOUDINARY_CLOUD_NAME="your_cloudinary_cloud_name" \
-  -e CLOUDINARY_API_KEY="your_cloudinary_api_key" \
-  -e CLOUDINARY_API_SECRET="your_cloudinary_api_secret" \
-  -e NODE_ENV="production" \
-  -e PORT="3000" \
-  tiktok-api
+## 🚌 Main Features
 
-# Or use environment file
-docker run -p 3000:3000 --env-file .env tiktok-api
+### Bus Management
+- Create, read, update, delete buses
+- Assign drivers to buses
+- Track bus locations in real-time
 
-# Using docker-compose (includes database)
+### Schedule Management
+- Create bus schedules
+- Share schedules with users
+- Real-time schedule updates
+
+### Route Management
+- Define bus routes with stop points
+- Optimize routes for efficiency
+- Manage stop point locations
+
+## 🔧 Development Scripts
+
+```bash
+npm run dev          # Start development server with hot reload
+npm run build        # Build for production
+npm run watch        # Watch for file changes
+npm add_endpoint     # Generate new API endpoint
+npm add_module       # Generate new module
+```
+
+## 🐳 Docker Support
+
+The project includes Docker support for easy deployment:
+
+```bash
+# Build and run with Docker Compose
 docker-compose up -d
+
+# Build Docker image
+docker build -t bus-management-system .
+
+# Run container
+docker run -p 3000:3000 bus-management-system
 ```
-
-### Environment Variables
-
-Copy `.env.example` to `.env` and update with your values:
-
-```bash
-cp .env.example .env
-```
-
-Required environment variables:
-- `DATABASE_URL` - MySQL database connection string
-- `JWT_SECRET` - Secret key for JWT tokens
-- `TWO_FACTOR_SECRET` - Secret key for 2FA
-- `EMAIL_SECRET` - Secret key for email operations
-- `CLOUDINARY_CLOUD_NAME` - Cloudinary cloud name
-- `CLOUDINARY_API_KEY` - Cloudinary API key
-- `CLOUDINARY_API_SECRET` - Cloudinary API secret
-
----
-
-## ✅ Project Setup
-- [x] Initialize project (`npm init`, `pip`, etc.)
-- [x] Set up server framework (e.g. Express, FastAPI, etc.)
-- [x] Configure environment (.env, dotenv)
-- [x] Set up database (PostgreSQL, MongoDB, etc.)
-- [x] Connect ORM/ODM (Prisma, Mongoose, Sequelize, etc.)
-
----
-
-## 🔐 Authentication
-- [x] `POST /auth/signup` – Register user
-- [x] `POST /auth/login` – Login user & return JWT
-- [x] Middleware to protect routes using JWT
-- [x] Password hashing with bcrypt or similar
-
----
-
-## 👤 User Management
-- [x] `GET /users/:id` – Get user profile (with `isFollowed`)
-- [x] `PUT /users/:id` – Update user profile
-- [x] `POST /users/:id/follow` – Follow a user
-- [x] `POST /users/:id/unfollow` – Unfollow a user
-- [x] `GET /users/:id/follow-status` – Check follow status
-- [x] `GET /me/following` – List of users current user follows
-- [x] `GET /users/search` – Search users by username
-- [x] `GET /users/:id/videos` – List videos by user
-- [x] `GET /users/me` – Get current user profile
----
-
-## 🎬 Video Handling
-- [x] `GET /videos/feed` – Personalized feed (followed users or algorithm)
-- [x] `POST /videos` – Upload a video
-- [x] `DELETE /videos/:id` – Delete video
-
----
-
-## ❤️ Like System
-- [x] `POST /videos/:id/like` – Like a video
-- [x] `POST /videos/:id/unlike` – Unlike a video
-- [x] `GET /videos/:id/likes` – List users who liked a video
-
----
-
-## 💬 Comments
-- [x] `POST /videos/:id/comments` – Add comment
-- [x] `GET /videos/:id/comments` – Get comments for video
-- [x] `DELETE /comments/:commentId` – Delete comment
-
----
-
-## 💬 Chat API
-
-### 🧵 Conversations
-- [x] `GET /chats` – Get list of user’s conversations
-- [x] `GET /chats/:userId` – Get messages in a conversation with a user
-- [x] `DELETE /chats/:userId` – Delete a conversation
-- [x] `POST /chats/:userId/send` – Send a message
-- [x] `DELETE /chats/message/:messageId` – Delete a message
-
-### 🔧 Extras
-- [ ] `POST /messages/:id/seen` – Mark message as read
-- [ ] Add `lastSeenId` to `/chats` response
-- [ ] `GET /chats/unread-count` – Get total unread messages
-
----
-
-### ⚡ Real-time Events (Socket)
-- [x] `socket.emit("message:send", data)` – Send a message
-- [ ] `socket.emit("message:seen", messageId)` – Mark as seen
-- [ ] `socket.emit("typing", { to })` – Emit typing status
-
-- [x] `socket.on("message:new")` – Receive new message
-- [ ] `socket.on("message:seen")` – Listen for seen event
-- [ ] `socket.on("typing", { from })` – Listen for typing
-
-- [ ] `socket.on("notification:new")` – Receive new notification
 
 ## 🧪 Testing
-- [ ] Add unit tests for each endpoint
-- [ ] Add integration tests
-- [ ] Test authentication flow
-- [ ] Test follow/unfollow logic
 
----
+```bash
+# Run tests
+npm test
 
-## 🧰 Extra Features (Optional)
-- [x] Video upload with cloud storage (e.g. Cloudinary, S3)
-- [x] Notifications (new follower, likes, comments)
-- [ ] Admin dashboard
-- [ ] Rate limiting
-- [ ] API versioning
-
-## Socket auto docs
-- [ ] Auto-generate API docs for WebSocket events  
-format: 
-```ts
-type SocketIOSchema = {
-  name: string;
-  description: string;
-  version: string;
-  servers: Array<{
-    url: string;
-    description: string;
-  }>;
-  name_spaces: Array<{
-    name: string;
-    description: string;
-    emits: Array<{
-      name: string;
-      description: string;
-      schema: "jsonSchema";
-    }>;
-    listens: Array<{
-      name: string;
-      description: string;
-      parameters: Array<{
-        name: string;
-        type: string;
-        schema: "jsonSchema";
-      }>;
-    }>;
-    // 👇 Thêm yêu cầu xác thực cho từng namespace nếu cần
-    security?: Array<{
-      scheme: string;
-      scopes?: string[];
-    }>;
-  }>;
-  components: {
-    schemas: Record<string, any>; // JSON Schema definitions
-    // 👇 Thêm phần securitySchemes như trong OpenAPI
-    securitySchemes?: Record<
-      string,
-      {
-        type: "apiKey" | "http" | "oauth2" | "openIdConnect";
-        name?: string; // For apiKey
-        in?: "query" | "header" | "cookie";
-        scheme?: string; // For http type
-        bearerFormat?: string; // For http bearer
-        description?: string;
-      }
-    >;
-  };
-  // 👇 Có thể định nghĩa security toàn cục tại đây
-  security?: Array<{
-    scheme: string;
-    scopes?: string[];
-  }>;
-};
-
+# Run tests with coverage
+npm run test:coverage
 ```
 
----
+## 📝 Environment Variables
 
-✅ **Tip**: Check each item as you go! You can use `[x]` to mark it done.
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `DATABASE_URL` | MySQL database connection string | Yes |
+| `JWT_SECRET` | Secret key for JWT tokens | Yes |
+| `NODE_ENV` | Environment (development/production) | Yes |
+| `PORT` | Server port (default: 3000) | No |
+| `CLOUDINARY_*` | Cloudinary configuration for file uploads | No |
+| `EMAIL_*` | Email service configuration | No |
 
+## 🤝 Contributing
 
-TODO: 
-- [ ] create a new socket event emit 
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
----
+## 📄 License
 
+This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
+
+## 👥 Authors
+
+- **Your Name** - *Initial work* - [Your GitHub](https://github.com/yourusername)
+
+## 🆘 Support
+
+If you have any questions or need help, please open an issue on GitHub or contact the development team.
+
+## 🔮 Future Enhancements
+
+- [ ] Mobile application
+- [ ] Advanced analytics dashboard
+- [ ] GPS integration for real-time tracking
+- [ ] Payment integration
+- [ ] Multi-language support
+- [ ] Progressive Web App (PWA) features
