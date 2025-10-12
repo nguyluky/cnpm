@@ -118,8 +118,7 @@ A comprehensive bus management system built with Node.js, TypeScript, Express.js
 
 Once the server is running, you can access the API documentation at:
 
-- **Swagger UI**: `http://localhost:3000/api-docs`
-- **ReDoc**: `http://localhost:3000/redoc`
+**StopLight API Docs**: `http://localhost:3000/docs`
 
 ## 🏗️ Project Structure
 
@@ -184,9 +183,8 @@ GET  /api/auth/profile     # Get user profile
 ## 🔧 Development Scripts
 
 ```bash
-npm run dev          # Start development server with hot reload
 npm run build        # Build for production
-npm run watch        # Watch for file changes
+npm run watch        # Watch for file changes and run
 npm add_endpoint     # Generate new API endpoint
 npm add_module       # Generate new module
 ```
