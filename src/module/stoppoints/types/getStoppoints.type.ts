@@ -19,9 +19,6 @@ export @ApiRequestStatus({
     @IsString()
     id: string
 
-    @IsNumber()
-    sequence: number
-
     @IsString()
     name: string
 

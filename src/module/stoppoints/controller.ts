@@ -21,7 +21,6 @@ export default class StoppointsController {
             id: stoppoint.id,
             name: stoppoint.name,
             location: GeoLocation.parse(stoppoint.location),
-            sequence: stoppoint.sequence,
             meta: stoppoint.meta as any
         }));
         
@@ -45,7 +44,6 @@ export default class StoppointsController {
 
         return getStoppointsType.getStoppointsRes.parse({
             id: stoppoint.id,
-            sequence: stoppoint.sequence,
             name: stoppoint.name,
             location: GeoLocation.parse(stoppoint.location),
             createdAt: stoppoint.createdAt.toISOString(),
@@ -60,20 +58,13 @@ export default class StoppointsController {
         const stoppoint = await prisma.stopPoint.create({
             data: {
                 id: uuidv4(),
-                sequence,
                 name,
                 location: location as any,
-                Route: {
-                    connect: {
-                        id: ""
-                    }
-                }
             }
         })
 
         return createStoppointsType.createStoppointsRes.parse({
             id: stoppoint.id,
-            sequence: stoppoint.sequence,
             name: stoppoint.name,
             location: GeoLocation.parse(stoppoint.location)
         })
@@ -99,7 +90,6 @@ export default class StoppointsController {
 
         return updateStoppointsType.updateStoppointsRes.parse({
             id: stoppoint.id,
-            sequence: stoppoint.sequence,
             name: stoppoint.name,
             location: GeoLocation.parse(stoppoint.location),
             meta: stoppoint.meta as any,

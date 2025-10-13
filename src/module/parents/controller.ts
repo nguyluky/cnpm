@@ -17,14 +17,14 @@ export default class ParentController {
         const userId = req.user.id;
         const students = await prisma.student.findMany({
             where: {
-                userId : userId
+                userId: userId
             },
             include: {
                 StudentAttendance: {
                     select: {
                         status: true
                     }
-                }, 
+                },
                 StudentAssignment: {
                     select: {
                         StopPoint: true
@@ -33,35 +33,26 @@ export default class ParentController {
             }
         })
 
-        const formattedStudents = students.map(student => getStudentsType.Students.parse({
-            id: student.id,
-            name: student.name,
-            stopPoint: StopPointsData.parse({
-                id: student.StudentAssignment.map(getStudentsType.studentAssignment => student),
-                name: stop.StopPoint.name,
-                location: GeoLocation.parse(stop.StopPoint.location),
-                sequence: stop.StopPoint.sequence,
-                meta: stop.StopPoint.meta as any
-            }),
-            status: student.StudentAttendance[0].status as any
-        }))
 
-        // throw new NotFoundError("")
-
-        // const formattedStudents = students.map(student => StudentData.parse({
-        //     id: student.id,
-        //     name: student.name,
-        //     stopPoint: student.StudentAttendance.
-        // }))
+        const formattedStudents = students.map(student => {
+            const stopPoint = student.StudentAssignment[0]?.StopPoint;
+            return getStudentsType.Students.parse({
+                id: student.id,
+                name: student.name,
+                stopPoint: stopPoint ? StopPointsData.parse({
+                    id: stopPoint.id,
+                    name: stopPoint.name,
+                    location: GeoLocation.parse(stopPoint.location),
+                    meta: stopPoint.meta as any
+                }) : null,
+                status: "PENDING"
+            })
+        })
 
         return getStudentsType.getStudentsRes.parse({
             data: formattedStudents,
             total: formattedStudents.length
         })
-        
-        // return students;
-        
-        throw new Error();
     }
 
 }
