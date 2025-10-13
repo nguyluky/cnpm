@@ -13,6 +13,7 @@ export @ApiRequestStatus({
     statusCode: 200,
     statusMess: "Success"
 }) class getAllRes extends ObjectType {
+
     @IsArray(StopPointsData)
     data: StopPointsData[];
 

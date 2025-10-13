@@ -20,7 +20,6 @@ export class SchedulessToDay extends ObjectType {
     @IsObject(RouteData)
     route: RouteData; 
 
-
     @IsObject(BusData)
     bus: BusData; 
 
