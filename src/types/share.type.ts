@@ -117,8 +117,8 @@ export class StopPointsData extends ObjectType {
     @IsObject(GeoLocation)
     location: GeoLocation;
 
-    @IsNumber()
-    sequence: number;
+    // @IsNumber()
+    // sequence: number;
 
     @IsObject(AnyObject)
     meta: AnyObject;

@@ -48,7 +48,6 @@ export default class routescontroller {
         })
     }
 
-
     @Get("/:id")
     @Validate(getByIdType.schema)
     async getById(req: getByIdType.Req): Promise<getByIdType.RerturnType> {
@@ -56,7 +55,11 @@ export default class routescontroller {
         const route = await prisma.route.findUnique({
             where: { id },
             include: {
-                StopPoint: true
+                RouteStopPoint: {
+                    include: {
+                        StopPoint: true
+                    },
+                }
             }
         });
         if (!route) throw new NotFoundError("Route not found");
@@ -68,11 +71,11 @@ export default class routescontroller {
             endLocation: GeoLocation.parse(route.endLocation),
             metadata: AnyObject.parse(route.meta),
             createdAt: route.createdAt.toISOString(),
-            stopPoints: route.StopPoint.map(sp => StopPointsData.parse({
+            stopPoints: route.RouteStopPoint.map(({StopPoint: sp, sequence}) => getByIdType.StopPointsWithSequence.parse({
                 id: sp.id,
                 name: sp.name,
                 location: GeoLocation.parse(sp.location),
-                sequence: sp.sequence,
+                sequence: sequence,
                 meta: AnyObject.parse(sp.meta)
             }))
         });
@@ -90,15 +93,19 @@ export default class routescontroller {
                 startLocation: startLocation as any,
                 endLocation: endLocation as any,
                 meta: meta as any,
-                direction: "MORNING",
-                StopPoint: {
-                    connect: stopPointIds.map((id, index) => ({
-                        id
+                RouteStopPoint: {
+                    create: stopPointIds.map((spId, index) => ({
+                        stopPointId: spId,
+                        sequence: index + 1
                     }))
                 }
             },
             include: {
-                StopPoint: true
+                RouteStopPoint: {
+                    include: {
+                        StopPoint: true
+                    }
+                }
             }
         });
 
@@ -106,13 +113,14 @@ export default class routescontroller {
         return createType.createRes.parse({
             id: newRoute.id,
             name: newRoute.name,
-            stopPoints: newRoute.StopPoint.map(sp => createType.StopPoints.parse({
+            stopPoints: newRoute.RouteStopPoint.map(({StopPoint: sp, sequence}) => getByIdType.StopPointsWithSequence.parse({
                 id: sp.id,
                 name: sp.name,
                 location: GeoLocation.parse(sp.location),
-                sequence: sp.sequence,
+                sequence: sequence,
                 meta: AnyObject.parse(sp.meta)
-            }))
+            })),
+            createdAt: newRoute.createdAt.toISOString()
         });
     }
 
@@ -125,7 +133,12 @@ export default class routescontroller {
 
         const existingRoute = await prisma.route.findUnique({
             where: { id },
-            include: { StopPoint: true }
+            include: { 
+                RouteStopPoint: {
+                    include: { StopPoint: true }
+                }
+
+            }
         });
         if (!existingRoute) throw new NotFoundError("Route not found");
 
@@ -134,12 +147,19 @@ export default class routescontroller {
             data: {
                 name,
                 meta: meta as any,
-                StopPoint: {
-                    set: [],
-                    connect: stopPointIds.map((spId) => ({ id: spId }))
+                RouteStopPoint: {
+                    deleteMany: {}, // Remove existing relations
+                    create: stopPointIds.map((spId, index) => ({
+                        stopPointId: spId,
+                        sequence: index + 1
+                    }))
                 }
             },
-            include: { StopPoint: true }
+            include: {
+                RouteStopPoint: {
+                    include: { StopPoint: true }
+                }
+            }
         });
 
         return updateType.updateRes.parse({

@@ -60,6 +60,9 @@ export @ApiRequestStatus({
 
     @IsArray(StopPoints)
     stopPoints: StopPoints[];
+
+    @IsString({ format: Formats["iso.datetime"]} )
+    createdAt: string;
 }
 
 export const schema = {
