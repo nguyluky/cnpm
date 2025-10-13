@@ -70,11 +70,11 @@ export const BusScalarFieldEnumSchema = z.enum(['id','licensePlate','capacity','
 
 export const ReportScalarFieldEnumSchema = z.enum(['id','reportType','description','timestamp','reporterId','tripId','meta','createdAt','updatedAt']);
 
-export const RouteScalarFieldEnumSchema = z.enum(['id','name','direction','estimatedDuration','startLocation','endLocation','isActive','meta','createdAt','updatedAt']);
+export const RouteScalarFieldEnumSchema = z.enum(['id','name','estimatedDuration','startLocation','endLocation','isActive','meta','createdAt','updatedAt']);
 
 export const ScheduleScalarFieldEnumSchema = z.enum(['id','routeId','busId','driverId','type','daysOfWeek','startTime','startDate','endDate','status','meta','createdAt','updatedAt']);
 
-export const StopPointScalarFieldEnumSchema = z.enum(['id','routeId','sequence','name','location','estimatedArrival','meta','createdAt','updatedAt']);
+export const StopPointScalarFieldEnumSchema = z.enum(['id','name','location','meta','createdAt','updatedAt']);
 
 export const StudentScalarFieldEnumSchema = z.enum(['id','name','meta','userId','createdAt','updatedAt']);
 
@@ -87,6 +87,8 @@ export const StudentAssignmentScalarFieldEnumSchema = z.enum(['id','studentId','
 export const TripScalarFieldEnumSchema = z.enum(['id','scheduleId','date','actualStartTime','actualEndTime','status','currentStopId','location','createdAt','updatedAt']);
 
 export const TripStopScalarFieldEnumSchema = z.enum(['id','tripId','stopId','actualArrival','actualDeparture','status']);
+
+export const RouteStopPointScalarFieldEnumSchema = z.enum(['id','routeId','stopPointId','sequence']);
 
 export const SortOrderSchema = z.enum(['asc','desc']);
 
@@ -116,7 +118,7 @@ export const RouteOrderByRelevanceFieldEnumSchema = z.enum(['id','name']);
 
 export const ScheduleOrderByRelevanceFieldEnumSchema = z.enum(['id','routeId','busId','driverId']);
 
-export const StopPointOrderByRelevanceFieldEnumSchema = z.enum(['id','routeId','name']);
+export const StopPointOrderByRelevanceFieldEnumSchema = z.enum(['id','name']);
 
 export const StudentOrderByRelevanceFieldEnumSchema = z.enum(['id','name','userId']);
 
@@ -130,9 +132,7 @@ export const TripOrderByRelevanceFieldEnumSchema = z.enum(['id','scheduleId','cu
 
 export const TripStopOrderByRelevanceFieldEnumSchema = z.enum(['id','tripId','stopId']);
 
-export const Route_directionSchema = z.enum(['MORNING','AFTERNOON']);
-
-export type Route_directionType = `${z.infer<typeof Route_directionSchema>}`
+export const RouteStopPointOrderByRelevanceFieldEnumSchema = z.enum(['routeId','stopPointId']);
 
 export const Bus_statusSchema = z.enum(['ACTIVE','MAINTENANCE']);
 
@@ -268,7 +268,6 @@ export type Report = z.infer<typeof ReportSchema>
 /////////////////////////////////////////
 
 export const RouteSchema = z.object({
-  direction: Route_directionSchema,
   id: z.string(),
   name: z.string(),
   estimatedDuration: z.number().int().nullable(),
@@ -310,11 +309,8 @@ export type Schedule = z.infer<typeof ScheduleSchema>
 
 export const StopPointSchema = z.object({
   id: z.string(),
-  routeId: z.string(),
-  sequence: z.number().int(),
   name: z.string(),
   location: JsonValueSchema,
-  estimatedArrival: z.coerce.date().nullable(),
   meta: JsonValueSchema.nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
@@ -416,6 +412,19 @@ export const TripStopSchema = z.object({
 })
 
 export type TripStop = z.infer<typeof TripStopSchema>
+
+/////////////////////////////////////////
+// ROUTE STOP POINT SCHEMA
+/////////////////////////////////////////
+
+export const RouteStopPointSchema = z.object({
+  id: z.number().int(),
+  routeId: z.string(),
+  stopPointId: z.string(),
+  sequence: z.number().int(),
+})
+
+export type RouteStopPoint = z.infer<typeof RouteStopPointSchema>
 
 /////////////////////////////////////////
 // SELECT & INCLUDE
@@ -628,8 +637,8 @@ export const ReportSelectSchema: z.ZodType<Prisma.ReportSelect> = z.object({
 //------------------------------------------------------
 
 export const RouteIncludeSchema: z.ZodType<Prisma.RouteInclude> = z.object({
+  RouteStopPoint: z.union([z.boolean(),z.lazy(() => RouteStopPointFindManyArgsSchema)]).optional(),
   Schedule: z.union([z.boolean(),z.lazy(() => ScheduleFindManyArgsSchema)]).optional(),
-  StopPoint: z.union([z.boolean(),z.lazy(() => StopPointFindManyArgsSchema)]).optional(),
   StudentAssignment: z.union([z.boolean(),z.lazy(() => StudentAssignmentFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => RouteCountOutputTypeArgsSchema)]).optional(),
 }).strict()
@@ -644,15 +653,14 @@ export const RouteCountOutputTypeArgsSchema: z.ZodType<Prisma.RouteCountOutputTy
 }).strict();
 
 export const RouteCountOutputTypeSelectSchema: z.ZodType<Prisma.RouteCountOutputTypeSelect> = z.object({
+  RouteStopPoint: z.boolean().optional(),
   Schedule: z.boolean().optional(),
-  StopPoint: z.boolean().optional(),
   StudentAssignment: z.boolean().optional(),
 }).strict();
 
 export const RouteSelectSchema: z.ZodType<Prisma.RouteSelect> = z.object({
   id: z.boolean().optional(),
   name: z.boolean().optional(),
-  direction: z.boolean().optional(),
   estimatedDuration: z.boolean().optional(),
   startLocation: z.boolean().optional(),
   endLocation: z.boolean().optional(),
@@ -660,8 +668,8 @@ export const RouteSelectSchema: z.ZodType<Prisma.RouteSelect> = z.object({
   meta: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
+  RouteStopPoint: z.union([z.boolean(),z.lazy(() => RouteStopPointFindManyArgsSchema)]).optional(),
   Schedule: z.union([z.boolean(),z.lazy(() => ScheduleFindManyArgsSchema)]).optional(),
-  StopPoint: z.union([z.boolean(),z.lazy(() => StopPointFindManyArgsSchema)]).optional(),
   StudentAssignment: z.union([z.boolean(),z.lazy(() => StudentAssignmentFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => RouteCountOutputTypeArgsSchema)]).optional(),
 }).strict()
@@ -715,7 +723,7 @@ export const ScheduleSelectSchema: z.ZodType<Prisma.ScheduleSelect> = z.object({
 //------------------------------------------------------
 
 export const StopPointIncludeSchema: z.ZodType<Prisma.StopPointInclude> = z.object({
-  Route: z.union([z.boolean(),z.lazy(() => RouteArgsSchema)]).optional(),
+  RouteStopPoint: z.union([z.boolean(),z.lazy(() => RouteStopPointFindManyArgsSchema)]).optional(),
   StudentAssignment: z.union([z.boolean(),z.lazy(() => StudentAssignmentFindManyArgsSchema)]).optional(),
   TripStop: z.union([z.boolean(),z.lazy(() => TripStopFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => StopPointCountOutputTypeArgsSchema)]).optional(),
@@ -731,21 +739,19 @@ export const StopPointCountOutputTypeArgsSchema: z.ZodType<Prisma.StopPointCount
 }).strict();
 
 export const StopPointCountOutputTypeSelectSchema: z.ZodType<Prisma.StopPointCountOutputTypeSelect> = z.object({
+  RouteStopPoint: z.boolean().optional(),
   StudentAssignment: z.boolean().optional(),
   TripStop: z.boolean().optional(),
 }).strict();
 
 export const StopPointSelectSchema: z.ZodType<Prisma.StopPointSelect> = z.object({
   id: z.boolean().optional(),
-  routeId: z.boolean().optional(),
-  sequence: z.boolean().optional(),
   name: z.boolean().optional(),
   location: z.boolean().optional(),
-  estimatedArrival: z.boolean().optional(),
   meta: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
-  Route: z.union([z.boolean(),z.lazy(() => RouteArgsSchema)]).optional(),
+  RouteStopPoint: z.union([z.boolean(),z.lazy(() => RouteStopPointFindManyArgsSchema)]).optional(),
   StudentAssignment: z.union([z.boolean(),z.lazy(() => StudentAssignmentFindManyArgsSchema)]).optional(),
   TripStop: z.union([z.boolean(),z.lazy(() => TripStopFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => StopPointCountOutputTypeArgsSchema)]).optional(),
@@ -930,6 +936,28 @@ export const TripStopSelectSchema: z.ZodType<Prisma.TripStopSelect> = z.object({
   status: z.boolean().optional(),
   StopPoint: z.union([z.boolean(),z.lazy(() => StopPointArgsSchema)]).optional(),
   Trip: z.union([z.boolean(),z.lazy(() => TripArgsSchema)]).optional(),
+}).strict()
+
+// ROUTE STOP POINT
+//------------------------------------------------------
+
+export const RouteStopPointIncludeSchema: z.ZodType<Prisma.RouteStopPointInclude> = z.object({
+  Route: z.union([z.boolean(),z.lazy(() => RouteArgsSchema)]).optional(),
+  StopPoint: z.union([z.boolean(),z.lazy(() => StopPointArgsSchema)]).optional(),
+}).strict()
+
+export const RouteStopPointArgsSchema: z.ZodType<Prisma.RouteStopPointDefaultArgs> = z.object({
+  select: z.lazy(() => RouteStopPointSelectSchema).optional(),
+  include: z.lazy(() => RouteStopPointIncludeSchema).optional(),
+}).strict();
+
+export const RouteStopPointSelectSchema: z.ZodType<Prisma.RouteStopPointSelect> = z.object({
+  id: z.boolean().optional(),
+  routeId: z.boolean().optional(),
+  stopPointId: z.boolean().optional(),
+  sequence: z.boolean().optional(),
+  Route: z.union([z.boolean(),z.lazy(() => RouteArgsSchema)]).optional(),
+  StopPoint: z.union([z.boolean(),z.lazy(() => StopPointArgsSchema)]).optional(),
 }).strict()
 
 
@@ -1435,7 +1463,6 @@ export const RouteWhereInputSchema: z.ZodType<Prisma.RouteWhereInput> = z.object
   NOT: z.union([ z.lazy(() => RouteWhereInputSchema),z.lazy(() => RouteWhereInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   name: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  direction: z.union([ z.lazy(() => EnumRoute_directionFilterSchema),z.lazy(() => Route_directionSchema) ]).optional(),
   estimatedDuration: z.union([ z.lazy(() => IntNullableFilterSchema),z.number() ]).optional().nullable(),
   startLocation: z.lazy(() => JsonFilterSchema).optional(),
   endLocation: z.lazy(() => JsonFilterSchema).optional(),
@@ -1443,15 +1470,14 @@ export const RouteWhereInputSchema: z.ZodType<Prisma.RouteWhereInput> = z.object
   meta: z.lazy(() => JsonNullableFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointListRelationFilterSchema).optional(),
   Schedule: z.lazy(() => ScheduleListRelationFilterSchema).optional(),
-  StopPoint: z.lazy(() => StopPointListRelationFilterSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentListRelationFilterSchema).optional()
 }).strict();
 
 export const RouteOrderByWithRelationInputSchema: z.ZodType<Prisma.RouteOrderByWithRelationInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
-  direction: z.lazy(() => SortOrderSchema).optional(),
   estimatedDuration: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   startLocation: z.lazy(() => SortOrderSchema).optional(),
   endLocation: z.lazy(() => SortOrderSchema).optional(),
@@ -1459,8 +1485,8 @@ export const RouteOrderByWithRelationInputSchema: z.ZodType<Prisma.RouteOrderByW
   meta: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointOrderByRelationAggregateInputSchema).optional(),
   Schedule: z.lazy(() => ScheduleOrderByRelationAggregateInputSchema).optional(),
-  StopPoint: z.lazy(() => StopPointOrderByRelationAggregateInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentOrderByRelationAggregateInputSchema).optional(),
   _relevance: z.lazy(() => RouteOrderByRelevanceInputSchema).optional()
 }).strict();
@@ -1474,7 +1500,6 @@ export const RouteWhereUniqueInputSchema: z.ZodType<Prisma.RouteWhereUniqueInput
   OR: z.lazy(() => RouteWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => RouteWhereInputSchema),z.lazy(() => RouteWhereInputSchema).array() ]).optional(),
   name: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  direction: z.union([ z.lazy(() => EnumRoute_directionFilterSchema),z.lazy(() => Route_directionSchema) ]).optional(),
   estimatedDuration: z.union([ z.lazy(() => IntNullableFilterSchema),z.number().int() ]).optional().nullable(),
   startLocation: z.lazy(() => JsonFilterSchema).optional(),
   endLocation: z.lazy(() => JsonFilterSchema).optional(),
@@ -1482,15 +1507,14 @@ export const RouteWhereUniqueInputSchema: z.ZodType<Prisma.RouteWhereUniqueInput
   meta: z.lazy(() => JsonNullableFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointListRelationFilterSchema).optional(),
   Schedule: z.lazy(() => ScheduleListRelationFilterSchema).optional(),
-  StopPoint: z.lazy(() => StopPointListRelationFilterSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentListRelationFilterSchema).optional()
 }).strict());
 
 export const RouteOrderByWithAggregationInputSchema: z.ZodType<Prisma.RouteOrderByWithAggregationInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
-  direction: z.lazy(() => SortOrderSchema).optional(),
   estimatedDuration: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   startLocation: z.lazy(() => SortOrderSchema).optional(),
   endLocation: z.lazy(() => SortOrderSchema).optional(),
@@ -1511,7 +1535,6 @@ export const RouteScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.RouteSc
   NOT: z.union([ z.lazy(() => RouteScalarWhereWithAggregatesInputSchema),z.lazy(() => RouteScalarWhereWithAggregatesInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   name: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
-  direction: z.union([ z.lazy(() => EnumRoute_directionWithAggregatesFilterSchema),z.lazy(() => Route_directionSchema) ]).optional(),
   estimatedDuration: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema),z.number() ]).optional().nullable(),
   startLocation: z.lazy(() => JsonWithAggregatesFilterSchema).optional(),
   endLocation: z.lazy(() => JsonWithAggregatesFilterSchema).optional(),
@@ -1634,30 +1657,24 @@ export const StopPointWhereInputSchema: z.ZodType<Prisma.StopPointWhereInput> = 
   OR: z.lazy(() => StopPointWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => StopPointWhereInputSchema),z.lazy(() => StopPointWhereInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  routeId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  sequence: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
   name: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   location: z.lazy(() => JsonFilterSchema).optional(),
-  estimatedArrival: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
   meta: z.lazy(() => JsonNullableFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  Route: z.union([ z.lazy(() => RouteScalarRelationFilterSchema),z.lazy(() => RouteWhereInputSchema) ]).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointListRelationFilterSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentListRelationFilterSchema).optional(),
   TripStop: z.lazy(() => TripStopListRelationFilterSchema).optional()
 }).strict();
 
 export const StopPointOrderByWithRelationInputSchema: z.ZodType<Prisma.StopPointOrderByWithRelationInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
-  routeId: z.lazy(() => SortOrderSchema).optional(),
-  sequence: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
   location: z.lazy(() => SortOrderSchema).optional(),
-  estimatedArrival: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   meta: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
-  Route: z.lazy(() => RouteOrderByWithRelationInputSchema).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointOrderByRelationAggregateInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentOrderByRelationAggregateInputSchema).optional(),
   TripStop: z.lazy(() => TripStopOrderByRelationAggregateInputSchema).optional(),
   _relevance: z.lazy(() => StopPointOrderByRelevanceInputSchema).optional()
@@ -1671,34 +1688,26 @@ export const StopPointWhereUniqueInputSchema: z.ZodType<Prisma.StopPointWhereUni
   AND: z.union([ z.lazy(() => StopPointWhereInputSchema),z.lazy(() => StopPointWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => StopPointWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => StopPointWhereInputSchema),z.lazy(() => StopPointWhereInputSchema).array() ]).optional(),
-  routeId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  sequence: z.union([ z.lazy(() => IntFilterSchema),z.number().int() ]).optional(),
   name: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   location: z.lazy(() => JsonFilterSchema).optional(),
-  estimatedArrival: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
   meta: z.lazy(() => JsonNullableFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  Route: z.union([ z.lazy(() => RouteScalarRelationFilterSchema),z.lazy(() => RouteWhereInputSchema) ]).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointListRelationFilterSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentListRelationFilterSchema).optional(),
   TripStop: z.lazy(() => TripStopListRelationFilterSchema).optional()
 }).strict());
 
 export const StopPointOrderByWithAggregationInputSchema: z.ZodType<Prisma.StopPointOrderByWithAggregationInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
-  routeId: z.lazy(() => SortOrderSchema).optional(),
-  sequence: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
   location: z.lazy(() => SortOrderSchema).optional(),
-  estimatedArrival: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   meta: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   _count: z.lazy(() => StopPointCountOrderByAggregateInputSchema).optional(),
-  _avg: z.lazy(() => StopPointAvgOrderByAggregateInputSchema).optional(),
   _max: z.lazy(() => StopPointMaxOrderByAggregateInputSchema).optional(),
-  _min: z.lazy(() => StopPointMinOrderByAggregateInputSchema).optional(),
-  _sum: z.lazy(() => StopPointSumOrderByAggregateInputSchema).optional()
+  _min: z.lazy(() => StopPointMinOrderByAggregateInputSchema).optional()
 }).strict();
 
 export const StopPointScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.StopPointScalarWhereWithAggregatesInput> = z.object({
@@ -1706,11 +1715,8 @@ export const StopPointScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Sto
   OR: z.lazy(() => StopPointScalarWhereWithAggregatesInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => StopPointScalarWhereWithAggregatesInputSchema),z.lazy(() => StopPointScalarWhereWithAggregatesInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
-  routeId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
-  sequence: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
   name: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   location: z.lazy(() => JsonWithAggregatesFilterSchema).optional(),
-  estimatedArrival: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema),z.coerce.date() ]).optional().nullable(),
   meta: z.lazy(() => JsonNullableWithAggregatesFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
@@ -2164,6 +2170,65 @@ export const TripStopScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Trip
   status: z.union([ z.lazy(() => EnumTripStop_statusNullableWithAggregatesFilterSchema),z.lazy(() => TripStop_statusSchema) ]).optional().nullable(),
 }).strict();
 
+export const RouteStopPointWhereInputSchema: z.ZodType<Prisma.RouteStopPointWhereInput> = z.object({
+  AND: z.union([ z.lazy(() => RouteStopPointWhereInputSchema),z.lazy(() => RouteStopPointWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => RouteStopPointWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => RouteStopPointWhereInputSchema),z.lazy(() => RouteStopPointWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  routeId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  stopPointId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  sequence: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  Route: z.union([ z.lazy(() => RouteScalarRelationFilterSchema),z.lazy(() => RouteWhereInputSchema) ]).optional(),
+  StopPoint: z.union([ z.lazy(() => StopPointScalarRelationFilterSchema),z.lazy(() => StopPointWhereInputSchema) ]).optional(),
+}).strict();
+
+export const RouteStopPointOrderByWithRelationInputSchema: z.ZodType<Prisma.RouteStopPointOrderByWithRelationInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  routeId: z.lazy(() => SortOrderSchema).optional(),
+  stopPointId: z.lazy(() => SortOrderSchema).optional(),
+  sequence: z.lazy(() => SortOrderSchema).optional(),
+  Route: z.lazy(() => RouteOrderByWithRelationInputSchema).optional(),
+  StopPoint: z.lazy(() => StopPointOrderByWithRelationInputSchema).optional(),
+  _relevance: z.lazy(() => RouteStopPointOrderByRelevanceInputSchema).optional()
+}).strict();
+
+export const RouteStopPointWhereUniqueInputSchema: z.ZodType<Prisma.RouteStopPointWhereUniqueInput> = z.object({
+  id: z.number().int()
+})
+.and(z.object({
+  id: z.number().int().optional(),
+  AND: z.union([ z.lazy(() => RouteStopPointWhereInputSchema),z.lazy(() => RouteStopPointWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => RouteStopPointWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => RouteStopPointWhereInputSchema),z.lazy(() => RouteStopPointWhereInputSchema).array() ]).optional(),
+  routeId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  stopPointId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  sequence: z.union([ z.lazy(() => IntFilterSchema),z.number().int() ]).optional(),
+  Route: z.union([ z.lazy(() => RouteScalarRelationFilterSchema),z.lazy(() => RouteWhereInputSchema) ]).optional(),
+  StopPoint: z.union([ z.lazy(() => StopPointScalarRelationFilterSchema),z.lazy(() => StopPointWhereInputSchema) ]).optional(),
+}).strict());
+
+export const RouteStopPointOrderByWithAggregationInputSchema: z.ZodType<Prisma.RouteStopPointOrderByWithAggregationInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  routeId: z.lazy(() => SortOrderSchema).optional(),
+  stopPointId: z.lazy(() => SortOrderSchema).optional(),
+  sequence: z.lazy(() => SortOrderSchema).optional(),
+  _count: z.lazy(() => RouteStopPointCountOrderByAggregateInputSchema).optional(),
+  _avg: z.lazy(() => RouteStopPointAvgOrderByAggregateInputSchema).optional(),
+  _max: z.lazy(() => RouteStopPointMaxOrderByAggregateInputSchema).optional(),
+  _min: z.lazy(() => RouteStopPointMinOrderByAggregateInputSchema).optional(),
+  _sum: z.lazy(() => RouteStopPointSumOrderByAggregateInputSchema).optional()
+}).strict();
+
+export const RouteStopPointScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.RouteStopPointScalarWhereWithAggregatesInput> = z.object({
+  AND: z.union([ z.lazy(() => RouteStopPointScalarWhereWithAggregatesInputSchema),z.lazy(() => RouteStopPointScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  OR: z.lazy(() => RouteStopPointScalarWhereWithAggregatesInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => RouteStopPointScalarWhereWithAggregatesInputSchema),z.lazy(() => RouteStopPointScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
+  routeId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  stopPointId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  sequence: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
+}).strict();
+
 export const UserCreateInputSchema: z.ZodType<Prisma.UserCreateInput> = z.object({
   id: z.string().uuid().optional(),
   username: z.string(),
@@ -2572,7 +2637,6 @@ export const ReportUncheckedUpdateManyInputSchema: z.ZodType<Prisma.ReportUnchec
 export const RouteCreateInputSchema: z.ZodType<Prisma.RouteCreateInput> = z.object({
   id: z.string(),
   name: z.string(),
-  direction: z.lazy(() => Route_directionSchema),
   estimatedDuration: z.number().int().optional().nullable(),
   startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
   endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
@@ -2580,15 +2644,14 @@ export const RouteCreateInputSchema: z.ZodType<Prisma.RouteCreateInput> = z.obje
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointCreateNestedManyWithoutRouteInputSchema).optional(),
   Schedule: z.lazy(() => ScheduleCreateNestedManyWithoutRouteInputSchema).optional(),
-  StopPoint: z.lazy(() => StopPointCreateNestedManyWithoutRouteInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentCreateNestedManyWithoutRouteInputSchema).optional()
 }).strict();
 
 export const RouteUncheckedCreateInputSchema: z.ZodType<Prisma.RouteUncheckedCreateInput> = z.object({
   id: z.string(),
   name: z.string(),
-  direction: z.lazy(() => Route_directionSchema),
   estimatedDuration: z.number().int().optional().nullable(),
   startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
   endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
@@ -2596,15 +2659,14 @@ export const RouteUncheckedCreateInputSchema: z.ZodType<Prisma.RouteUncheckedCre
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointUncheckedCreateNestedManyWithoutRouteInputSchema).optional(),
   Schedule: z.lazy(() => ScheduleUncheckedCreateNestedManyWithoutRouteInputSchema).optional(),
-  StopPoint: z.lazy(() => StopPointUncheckedCreateNestedManyWithoutRouteInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentUncheckedCreateNestedManyWithoutRouteInputSchema).optional()
 }).strict();
 
 export const RouteUpdateInputSchema: z.ZodType<Prisma.RouteUpdateInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  direction: z.union([ z.lazy(() => Route_directionSchema),z.lazy(() => EnumRoute_directionFieldUpdateOperationsInputSchema) ]).optional(),
   estimatedDuration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
@@ -2612,15 +2674,14 @@ export const RouteUpdateInputSchema: z.ZodType<Prisma.RouteUpdateInput> = z.obje
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointUpdateManyWithoutRouteNestedInputSchema).optional(),
   Schedule: z.lazy(() => ScheduleUpdateManyWithoutRouteNestedInputSchema).optional(),
-  StopPoint: z.lazy(() => StopPointUpdateManyWithoutRouteNestedInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentUpdateManyWithoutRouteNestedInputSchema).optional()
 }).strict();
 
 export const RouteUncheckedUpdateInputSchema: z.ZodType<Prisma.RouteUncheckedUpdateInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  direction: z.union([ z.lazy(() => Route_directionSchema),z.lazy(() => EnumRoute_directionFieldUpdateOperationsInputSchema) ]).optional(),
   estimatedDuration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
@@ -2628,15 +2689,14 @@ export const RouteUncheckedUpdateInputSchema: z.ZodType<Prisma.RouteUncheckedUpd
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointUncheckedUpdateManyWithoutRouteNestedInputSchema).optional(),
   Schedule: z.lazy(() => ScheduleUncheckedUpdateManyWithoutRouteNestedInputSchema).optional(),
-  StopPoint: z.lazy(() => StopPointUncheckedUpdateManyWithoutRouteNestedInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentUncheckedUpdateManyWithoutRouteNestedInputSchema).optional()
 }).strict();
 
 export const RouteCreateManyInputSchema: z.ZodType<Prisma.RouteCreateManyInput> = z.object({
   id: z.string(),
   name: z.string(),
-  direction: z.lazy(() => Route_directionSchema),
   estimatedDuration: z.number().int().optional().nullable(),
   startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
   endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
@@ -2649,7 +2709,6 @@ export const RouteCreateManyInputSchema: z.ZodType<Prisma.RouteCreateManyInput> 
 export const RouteUpdateManyMutationInputSchema: z.ZodType<Prisma.RouteUpdateManyMutationInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  direction: z.union([ z.lazy(() => Route_directionSchema),z.lazy(() => EnumRoute_directionFieldUpdateOperationsInputSchema) ]).optional(),
   estimatedDuration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
@@ -2662,7 +2721,6 @@ export const RouteUpdateManyMutationInputSchema: z.ZodType<Prisma.RouteUpdateMan
 export const RouteUncheckedUpdateManyInputSchema: z.ZodType<Prisma.RouteUncheckedUpdateManyInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  direction: z.union([ z.lazy(() => Route_directionSchema),z.lazy(() => EnumRoute_directionFieldUpdateOperationsInputSchema) ]).optional(),
   estimatedDuration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
@@ -2787,67 +2845,56 @@ export const ScheduleUncheckedUpdateManyInputSchema: z.ZodType<Prisma.ScheduleUn
 
 export const StopPointCreateInputSchema: z.ZodType<Prisma.StopPointCreateInput> = z.object({
   id: z.string(),
-  sequence: z.number().int(),
   name: z.string(),
   location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  estimatedArrival: z.coerce.date().optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  Route: z.lazy(() => RouteCreateNestedOneWithoutStopPointInputSchema),
+  RouteStopPoint: z.lazy(() => RouteStopPointCreateNestedManyWithoutStopPointInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentCreateNestedManyWithoutStopPointInputSchema).optional(),
   TripStop: z.lazy(() => TripStopCreateNestedManyWithoutStopPointInputSchema).optional()
 }).strict();
 
 export const StopPointUncheckedCreateInputSchema: z.ZodType<Prisma.StopPointUncheckedCreateInput> = z.object({
   id: z.string(),
-  routeId: z.string(),
-  sequence: z.number().int(),
   name: z.string(),
   location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  estimatedArrival: z.coerce.date().optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointUncheckedCreateNestedManyWithoutStopPointInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentUncheckedCreateNestedManyWithoutStopPointInputSchema).optional(),
   TripStop: z.lazy(() => TripStopUncheckedCreateNestedManyWithoutStopPointInputSchema).optional()
 }).strict();
 
 export const StopPointUpdateInputSchema: z.ZodType<Prisma.StopPointUpdateInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  estimatedArrival: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  Route: z.lazy(() => RouteUpdateOneRequiredWithoutStopPointNestedInputSchema).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointUpdateManyWithoutStopPointNestedInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentUpdateManyWithoutStopPointNestedInputSchema).optional(),
   TripStop: z.lazy(() => TripStopUpdateManyWithoutStopPointNestedInputSchema).optional()
 }).strict();
 
 export const StopPointUncheckedUpdateInputSchema: z.ZodType<Prisma.StopPointUncheckedUpdateInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  routeId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  estimatedArrival: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointUncheckedUpdateManyWithoutStopPointNestedInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentUncheckedUpdateManyWithoutStopPointNestedInputSchema).optional(),
   TripStop: z.lazy(() => TripStopUncheckedUpdateManyWithoutStopPointNestedInputSchema).optional()
 }).strict();
 
 export const StopPointCreateManyInputSchema: z.ZodType<Prisma.StopPointCreateManyInput> = z.object({
   id: z.string(),
-  routeId: z.string(),
-  sequence: z.number().int(),
   name: z.string(),
   location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  estimatedArrival: z.coerce.date().optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional()
@@ -2855,10 +2902,8 @@ export const StopPointCreateManyInputSchema: z.ZodType<Prisma.StopPointCreateMan
 
 export const StopPointUpdateManyMutationInputSchema: z.ZodType<Prisma.StopPointUpdateManyMutationInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  estimatedArrival: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -2866,11 +2911,8 @@ export const StopPointUpdateManyMutationInputSchema: z.ZodType<Prisma.StopPointU
 
 export const StopPointUncheckedUpdateManyInputSchema: z.ZodType<Prisma.StopPointUncheckedUpdateManyInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  routeId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  estimatedArrival: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -3301,6 +3343,50 @@ export const TripStopUncheckedUpdateManyInputSchema: z.ZodType<Prisma.TripStopUn
   actualArrival: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   actualDeparture: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   status: z.union([ z.lazy(() => TripStop_statusSchema),z.lazy(() => NullableEnumTripStop_statusFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+}).strict();
+
+export const RouteStopPointCreateInputSchema: z.ZodType<Prisma.RouteStopPointCreateInput> = z.object({
+  sequence: z.number().int(),
+  Route: z.lazy(() => RouteCreateNestedOneWithoutRouteStopPointInputSchema),
+  StopPoint: z.lazy(() => StopPointCreateNestedOneWithoutRouteStopPointInputSchema)
+}).strict();
+
+export const RouteStopPointUncheckedCreateInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedCreateInput> = z.object({
+  id: z.number().int().optional(),
+  routeId: z.string(),
+  stopPointId: z.string(),
+  sequence: z.number().int()
+}).strict();
+
+export const RouteStopPointUpdateInputSchema: z.ZodType<Prisma.RouteStopPointUpdateInput> = z.object({
+  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  Route: z.lazy(() => RouteUpdateOneRequiredWithoutRouteStopPointNestedInputSchema).optional(),
+  StopPoint: z.lazy(() => StopPointUpdateOneRequiredWithoutRouteStopPointNestedInputSchema).optional()
+}).strict();
+
+export const RouteStopPointUncheckedUpdateInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedUpdateInput> = z.object({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  routeId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  stopPointId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const RouteStopPointCreateManyInputSchema: z.ZodType<Prisma.RouteStopPointCreateManyInput> = z.object({
+  id: z.number().int().optional(),
+  routeId: z.string(),
+  stopPointId: z.string(),
+  sequence: z.number().int()
+}).strict();
+
+export const RouteStopPointUpdateManyMutationInputSchema: z.ZodType<Prisma.RouteStopPointUpdateManyMutationInput> = z.object({
+  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const RouteStopPointUncheckedUpdateManyInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedUpdateManyInput> = z.object({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  routeId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  stopPointId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const StringFilterSchema: z.ZodType<Prisma.StringFilter> = z.object({
@@ -3794,13 +3880,6 @@ export const StringNullableWithAggregatesFilterSchema: z.ZodType<Prisma.StringNu
   _max: z.lazy(() => NestedStringNullableFilterSchema).optional()
 }).strict();
 
-export const EnumRoute_directionFilterSchema: z.ZodType<Prisma.EnumRoute_directionFilter> = z.object({
-  equals: z.lazy(() => Route_directionSchema).optional(),
-  in: z.lazy(() => Route_directionSchema).array().optional(),
-  notIn: z.lazy(() => Route_directionSchema).array().optional(),
-  not: z.union([ z.lazy(() => Route_directionSchema),z.lazy(() => NestedEnumRoute_directionFilterSchema) ]).optional(),
-}).strict();
-
 export const IntNullableFilterSchema: z.ZodType<Prisma.IntNullableFilter> = z.object({
   equals: z.number().optional().nullable(),
   in: z.number().array().optional().nullable(),
@@ -3834,10 +3913,10 @@ export const BoolNullableFilterSchema: z.ZodType<Prisma.BoolNullableFilter> = z.
   not: z.union([ z.boolean(),z.lazy(() => NestedBoolNullableFilterSchema) ]).optional().nullable(),
 }).strict();
 
-export const StopPointListRelationFilterSchema: z.ZodType<Prisma.StopPointListRelationFilter> = z.object({
-  every: z.lazy(() => StopPointWhereInputSchema).optional(),
-  some: z.lazy(() => StopPointWhereInputSchema).optional(),
-  none: z.lazy(() => StopPointWhereInputSchema).optional()
+export const RouteStopPointListRelationFilterSchema: z.ZodType<Prisma.RouteStopPointListRelationFilter> = z.object({
+  every: z.lazy(() => RouteStopPointWhereInputSchema).optional(),
+  some: z.lazy(() => RouteStopPointWhereInputSchema).optional(),
+  none: z.lazy(() => RouteStopPointWhereInputSchema).optional()
 }).strict();
 
 export const StudentAssignmentListRelationFilterSchema: z.ZodType<Prisma.StudentAssignmentListRelationFilter> = z.object({
@@ -3846,7 +3925,7 @@ export const StudentAssignmentListRelationFilterSchema: z.ZodType<Prisma.Student
   none: z.lazy(() => StudentAssignmentWhereInputSchema).optional()
 }).strict();
 
-export const StopPointOrderByRelationAggregateInputSchema: z.ZodType<Prisma.StopPointOrderByRelationAggregateInput> = z.object({
+export const RouteStopPointOrderByRelationAggregateInputSchema: z.ZodType<Prisma.RouteStopPointOrderByRelationAggregateInput> = z.object({
   _count: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
@@ -3863,7 +3942,6 @@ export const RouteOrderByRelevanceInputSchema: z.ZodType<Prisma.RouteOrderByRele
 export const RouteCountOrderByAggregateInputSchema: z.ZodType<Prisma.RouteCountOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
-  direction: z.lazy(() => SortOrderSchema).optional(),
   estimatedDuration: z.lazy(() => SortOrderSchema).optional(),
   startLocation: z.lazy(() => SortOrderSchema).optional(),
   endLocation: z.lazy(() => SortOrderSchema).optional(),
@@ -3880,7 +3958,6 @@ export const RouteAvgOrderByAggregateInputSchema: z.ZodType<Prisma.RouteAvgOrder
 export const RouteMaxOrderByAggregateInputSchema: z.ZodType<Prisma.RouteMaxOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
-  direction: z.lazy(() => SortOrderSchema).optional(),
   estimatedDuration: z.lazy(() => SortOrderSchema).optional(),
   isActive: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
@@ -3890,7 +3967,6 @@ export const RouteMaxOrderByAggregateInputSchema: z.ZodType<Prisma.RouteMaxOrder
 export const RouteMinOrderByAggregateInputSchema: z.ZodType<Prisma.RouteMinOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
-  direction: z.lazy(() => SortOrderSchema).optional(),
   estimatedDuration: z.lazy(() => SortOrderSchema).optional(),
   isActive: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
@@ -3899,16 +3975,6 @@ export const RouteMinOrderByAggregateInputSchema: z.ZodType<Prisma.RouteMinOrder
 
 export const RouteSumOrderByAggregateInputSchema: z.ZodType<Prisma.RouteSumOrderByAggregateInput> = z.object({
   estimatedDuration: z.lazy(() => SortOrderSchema).optional()
-}).strict();
-
-export const EnumRoute_directionWithAggregatesFilterSchema: z.ZodType<Prisma.EnumRoute_directionWithAggregatesFilter> = z.object({
-  equals: z.lazy(() => Route_directionSchema).optional(),
-  in: z.lazy(() => Route_directionSchema).array().optional(),
-  notIn: z.lazy(() => Route_directionSchema).array().optional(),
-  not: z.union([ z.lazy(() => Route_directionSchema),z.lazy(() => NestedEnumRoute_directionWithAggregatesFilterSchema) ]).optional(),
-  _count: z.lazy(() => NestedIntFilterSchema).optional(),
-  _min: z.lazy(() => NestedEnumRoute_directionFilterSchema).optional(),
-  _max: z.lazy(() => NestedEnumRoute_directionFilterSchema).optional()
 }).strict();
 
 export const IntNullableWithAggregatesFilterSchema: z.ZodType<Prisma.IntNullableWithAggregatesFilter> = z.object({
@@ -4059,17 +4125,6 @@ export const EnumSchedule_statusNullableWithAggregatesFilterSchema: z.ZodType<Pr
   _max: z.lazy(() => NestedEnumSchedule_statusNullableFilterSchema).optional()
 }).strict();
 
-export const DateTimeNullableFilterSchema: z.ZodType<Prisma.DateTimeNullableFilter> = z.object({
-  equals: z.coerce.date().optional().nullable(),
-  in: z.coerce.date().array().optional().nullable(),
-  notIn: z.coerce.date().array().optional().nullable(),
-  lt: z.coerce.date().optional(),
-  lte: z.coerce.date().optional(),
-  gt: z.coerce.date().optional(),
-  gte: z.coerce.date().optional(),
-  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableFilterSchema) ]).optional().nullable(),
-}).strict();
-
 export const TripStopListRelationFilterSchema: z.ZodType<Prisma.TripStopListRelationFilter> = z.object({
   every: z.lazy(() => TripStopWhereInputSchema).optional(),
   some: z.lazy(() => TripStopWhereInputSchema).optional(),
@@ -4088,56 +4143,25 @@ export const StopPointOrderByRelevanceInputSchema: z.ZodType<Prisma.StopPointOrd
 
 export const StopPointCountOrderByAggregateInputSchema: z.ZodType<Prisma.StopPointCountOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
-  routeId: z.lazy(() => SortOrderSchema).optional(),
-  sequence: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
   location: z.lazy(() => SortOrderSchema).optional(),
-  estimatedArrival: z.lazy(() => SortOrderSchema).optional(),
   meta: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
-export const StopPointAvgOrderByAggregateInputSchema: z.ZodType<Prisma.StopPointAvgOrderByAggregateInput> = z.object({
-  sequence: z.lazy(() => SortOrderSchema).optional()
-}).strict();
-
 export const StopPointMaxOrderByAggregateInputSchema: z.ZodType<Prisma.StopPointMaxOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
-  routeId: z.lazy(() => SortOrderSchema).optional(),
-  sequence: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
-  estimatedArrival: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const StopPointMinOrderByAggregateInputSchema: z.ZodType<Prisma.StopPointMinOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
-  routeId: z.lazy(() => SortOrderSchema).optional(),
-  sequence: z.lazy(() => SortOrderSchema).optional(),
   name: z.lazy(() => SortOrderSchema).optional(),
-  estimatedArrival: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional()
-}).strict();
-
-export const StopPointSumOrderByAggregateInputSchema: z.ZodType<Prisma.StopPointSumOrderByAggregateInput> = z.object({
-  sequence: z.lazy(() => SortOrderSchema).optional()
-}).strict();
-
-export const DateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.DateTimeNullableWithAggregatesFilter> = z.object({
-  equals: z.coerce.date().optional().nullable(),
-  in: z.coerce.date().array().optional().nullable(),
-  notIn: z.coerce.date().array().optional().nullable(),
-  lt: z.coerce.date().optional(),
-  lte: z.coerce.date().optional(),
-  gt: z.coerce.date().optional(),
-  gte: z.coerce.date().optional(),
-  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableWithAggregatesFilterSchema) ]).optional().nullable(),
-  _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
-  _min: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
-  _max: z.lazy(() => NestedDateTimeNullableFilterSchema).optional()
 }).strict();
 
 export const StudentAttendanceListRelationFilterSchema: z.ZodType<Prisma.StudentAttendanceListRelationFilter> = z.object({
@@ -4179,6 +4203,17 @@ export const StudentMinOrderByAggregateInputSchema: z.ZodType<Prisma.StudentMinO
   userId: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const DateTimeNullableFilterSchema: z.ZodType<Prisma.DateTimeNullableFilter> = z.object({
+  equals: z.coerce.date().optional().nullable(),
+  in: z.coerce.date().array().optional().nullable(),
+  notIn: z.coerce.date().array().optional().nullable(),
+  lt: z.coerce.date().optional(),
+  lte: z.coerce.date().optional(),
+  gt: z.coerce.date().optional(),
+  gte: z.coerce.date().optional(),
+  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableFilterSchema) ]).optional().nullable(),
 }).strict();
 
 export const EnumStudentAttendance_statusNullableFilterSchema: z.ZodType<Prisma.EnumStudentAttendance_statusNullableFilter> = z.object({
@@ -4229,6 +4264,20 @@ export const StudentAttendanceMinOrderByAggregateInputSchema: z.ZodType<Prisma.S
   pickupTime: z.lazy(() => SortOrderSchema).optional(),
   dropoffTime: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const DateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.DateTimeNullableWithAggregatesFilter> = z.object({
+  equals: z.coerce.date().optional().nullable(),
+  in: z.coerce.date().array().optional().nullable(),
+  notIn: z.coerce.date().array().optional().nullable(),
+  lt: z.coerce.date().optional(),
+  lte: z.coerce.date().optional(),
+  gt: z.coerce.date().optional(),
+  gte: z.coerce.date().optional(),
+  not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableWithAggregatesFilterSchema) ]).optional().nullable(),
+  _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
+  _min: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
+  _max: z.lazy(() => NestedDateTimeNullableFilterSchema).optional()
 }).strict();
 
 export const EnumStudentAttendance_statusNullableWithAggregatesFilterSchema: z.ZodType<Prisma.EnumStudentAttendance_statusNullableWithAggregatesFilter> = z.object({
@@ -4453,6 +4502,43 @@ export const EnumTripStop_statusNullableWithAggregatesFilterSchema: z.ZodType<Pr
   _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
   _min: z.lazy(() => NestedEnumTripStop_statusNullableFilterSchema).optional(),
   _max: z.lazy(() => NestedEnumTripStop_statusNullableFilterSchema).optional()
+}).strict();
+
+export const RouteStopPointOrderByRelevanceInputSchema: z.ZodType<Prisma.RouteStopPointOrderByRelevanceInput> = z.object({
+  fields: z.union([ z.lazy(() => RouteStopPointOrderByRelevanceFieldEnumSchema),z.lazy(() => RouteStopPointOrderByRelevanceFieldEnumSchema).array() ]),
+  sort: z.lazy(() => SortOrderSchema),
+  search: z.string()
+}).strict();
+
+export const RouteStopPointCountOrderByAggregateInputSchema: z.ZodType<Prisma.RouteStopPointCountOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  routeId: z.lazy(() => SortOrderSchema).optional(),
+  stopPointId: z.lazy(() => SortOrderSchema).optional(),
+  sequence: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const RouteStopPointAvgOrderByAggregateInputSchema: z.ZodType<Prisma.RouteStopPointAvgOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  sequence: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const RouteStopPointMaxOrderByAggregateInputSchema: z.ZodType<Prisma.RouteStopPointMaxOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  routeId: z.lazy(() => SortOrderSchema).optional(),
+  stopPointId: z.lazy(() => SortOrderSchema).optional(),
+  sequence: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const RouteStopPointMinOrderByAggregateInputSchema: z.ZodType<Prisma.RouteStopPointMinOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  routeId: z.lazy(() => SortOrderSchema).optional(),
+  stopPointId: z.lazy(() => SortOrderSchema).optional(),
+  sequence: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const RouteStopPointSumOrderByAggregateInputSchema: z.ZodType<Prisma.RouteStopPointSumOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  sequence: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const ReportCreateNestedManyWithoutUserInputSchema: z.ZodType<Prisma.ReportCreateNestedManyWithoutUserInput> = z.object({
@@ -4891,18 +4977,18 @@ export const NullableStringFieldUpdateOperationsInputSchema: z.ZodType<Prisma.Nu
   set: z.string().optional().nullable()
 }).strict();
 
+export const RouteStopPointCreateNestedManyWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointCreateNestedManyWithoutRouteInput> = z.object({
+  create: z.union([ z.lazy(() => RouteStopPointCreateWithoutRouteInputSchema),z.lazy(() => RouteStopPointCreateWithoutRouteInputSchema).array(),z.lazy(() => RouteStopPointUncheckedCreateWithoutRouteInputSchema),z.lazy(() => RouteStopPointUncheckedCreateWithoutRouteInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => RouteStopPointCreateOrConnectWithoutRouteInputSchema),z.lazy(() => RouteStopPointCreateOrConnectWithoutRouteInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => RouteStopPointCreateManyRouteInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+}).strict();
+
 export const ScheduleCreateNestedManyWithoutRouteInputSchema: z.ZodType<Prisma.ScheduleCreateNestedManyWithoutRouteInput> = z.object({
   create: z.union([ z.lazy(() => ScheduleCreateWithoutRouteInputSchema),z.lazy(() => ScheduleCreateWithoutRouteInputSchema).array(),z.lazy(() => ScheduleUncheckedCreateWithoutRouteInputSchema),z.lazy(() => ScheduleUncheckedCreateWithoutRouteInputSchema).array() ]).optional(),
   connectOrCreate: z.union([ z.lazy(() => ScheduleCreateOrConnectWithoutRouteInputSchema),z.lazy(() => ScheduleCreateOrConnectWithoutRouteInputSchema).array() ]).optional(),
   createMany: z.lazy(() => ScheduleCreateManyRouteInputEnvelopeSchema).optional(),
   connect: z.union([ z.lazy(() => ScheduleWhereUniqueInputSchema),z.lazy(() => ScheduleWhereUniqueInputSchema).array() ]).optional(),
-}).strict();
-
-export const StopPointCreateNestedManyWithoutRouteInputSchema: z.ZodType<Prisma.StopPointCreateNestedManyWithoutRouteInput> = z.object({
-  create: z.union([ z.lazy(() => StopPointCreateWithoutRouteInputSchema),z.lazy(() => StopPointCreateWithoutRouteInputSchema).array(),z.lazy(() => StopPointUncheckedCreateWithoutRouteInputSchema),z.lazy(() => StopPointUncheckedCreateWithoutRouteInputSchema).array() ]).optional(),
-  connectOrCreate: z.union([ z.lazy(() => StopPointCreateOrConnectWithoutRouteInputSchema),z.lazy(() => StopPointCreateOrConnectWithoutRouteInputSchema).array() ]).optional(),
-  createMany: z.lazy(() => StopPointCreateManyRouteInputEnvelopeSchema).optional(),
-  connect: z.union([ z.lazy(() => StopPointWhereUniqueInputSchema),z.lazy(() => StopPointWhereUniqueInputSchema).array() ]).optional(),
 }).strict();
 
 export const StudentAssignmentCreateNestedManyWithoutRouteInputSchema: z.ZodType<Prisma.StudentAssignmentCreateNestedManyWithoutRouteInput> = z.object({
@@ -4912,6 +4998,13 @@ export const StudentAssignmentCreateNestedManyWithoutRouteInputSchema: z.ZodType
   connect: z.union([ z.lazy(() => StudentAssignmentWhereUniqueInputSchema),z.lazy(() => StudentAssignmentWhereUniqueInputSchema).array() ]).optional(),
 }).strict();
 
+export const RouteStopPointUncheckedCreateNestedManyWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedCreateNestedManyWithoutRouteInput> = z.object({
+  create: z.union([ z.lazy(() => RouteStopPointCreateWithoutRouteInputSchema),z.lazy(() => RouteStopPointCreateWithoutRouteInputSchema).array(),z.lazy(() => RouteStopPointUncheckedCreateWithoutRouteInputSchema),z.lazy(() => RouteStopPointUncheckedCreateWithoutRouteInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => RouteStopPointCreateOrConnectWithoutRouteInputSchema),z.lazy(() => RouteStopPointCreateOrConnectWithoutRouteInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => RouteStopPointCreateManyRouteInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+}).strict();
+
 export const ScheduleUncheckedCreateNestedManyWithoutRouteInputSchema: z.ZodType<Prisma.ScheduleUncheckedCreateNestedManyWithoutRouteInput> = z.object({
   create: z.union([ z.lazy(() => ScheduleCreateWithoutRouteInputSchema),z.lazy(() => ScheduleCreateWithoutRouteInputSchema).array(),z.lazy(() => ScheduleUncheckedCreateWithoutRouteInputSchema),z.lazy(() => ScheduleUncheckedCreateWithoutRouteInputSchema).array() ]).optional(),
   connectOrCreate: z.union([ z.lazy(() => ScheduleCreateOrConnectWithoutRouteInputSchema),z.lazy(() => ScheduleCreateOrConnectWithoutRouteInputSchema).array() ]).optional(),
@@ -4919,22 +5012,11 @@ export const ScheduleUncheckedCreateNestedManyWithoutRouteInputSchema: z.ZodType
   connect: z.union([ z.lazy(() => ScheduleWhereUniqueInputSchema),z.lazy(() => ScheduleWhereUniqueInputSchema).array() ]).optional(),
 }).strict();
 
-export const StopPointUncheckedCreateNestedManyWithoutRouteInputSchema: z.ZodType<Prisma.StopPointUncheckedCreateNestedManyWithoutRouteInput> = z.object({
-  create: z.union([ z.lazy(() => StopPointCreateWithoutRouteInputSchema),z.lazy(() => StopPointCreateWithoutRouteInputSchema).array(),z.lazy(() => StopPointUncheckedCreateWithoutRouteInputSchema),z.lazy(() => StopPointUncheckedCreateWithoutRouteInputSchema).array() ]).optional(),
-  connectOrCreate: z.union([ z.lazy(() => StopPointCreateOrConnectWithoutRouteInputSchema),z.lazy(() => StopPointCreateOrConnectWithoutRouteInputSchema).array() ]).optional(),
-  createMany: z.lazy(() => StopPointCreateManyRouteInputEnvelopeSchema).optional(),
-  connect: z.union([ z.lazy(() => StopPointWhereUniqueInputSchema),z.lazy(() => StopPointWhereUniqueInputSchema).array() ]).optional(),
-}).strict();
-
 export const StudentAssignmentUncheckedCreateNestedManyWithoutRouteInputSchema: z.ZodType<Prisma.StudentAssignmentUncheckedCreateNestedManyWithoutRouteInput> = z.object({
   create: z.union([ z.lazy(() => StudentAssignmentCreateWithoutRouteInputSchema),z.lazy(() => StudentAssignmentCreateWithoutRouteInputSchema).array(),z.lazy(() => StudentAssignmentUncheckedCreateWithoutRouteInputSchema),z.lazy(() => StudentAssignmentUncheckedCreateWithoutRouteInputSchema).array() ]).optional(),
   connectOrCreate: z.union([ z.lazy(() => StudentAssignmentCreateOrConnectWithoutRouteInputSchema),z.lazy(() => StudentAssignmentCreateOrConnectWithoutRouteInputSchema).array() ]).optional(),
   createMany: z.lazy(() => StudentAssignmentCreateManyRouteInputEnvelopeSchema).optional(),
   connect: z.union([ z.lazy(() => StudentAssignmentWhereUniqueInputSchema),z.lazy(() => StudentAssignmentWhereUniqueInputSchema).array() ]).optional(),
-}).strict();
-
-export const EnumRoute_directionFieldUpdateOperationsInputSchema: z.ZodType<Prisma.EnumRoute_directionFieldUpdateOperationsInput> = z.object({
-  set: z.lazy(() => Route_directionSchema).optional()
 }).strict();
 
 export const NullableIntFieldUpdateOperationsInputSchema: z.ZodType<Prisma.NullableIntFieldUpdateOperationsInput> = z.object({
@@ -4947,6 +5029,20 @@ export const NullableIntFieldUpdateOperationsInputSchema: z.ZodType<Prisma.Nulla
 
 export const NullableBoolFieldUpdateOperationsInputSchema: z.ZodType<Prisma.NullableBoolFieldUpdateOperationsInput> = z.object({
   set: z.boolean().optional().nullable()
+}).strict();
+
+export const RouteStopPointUpdateManyWithoutRouteNestedInputSchema: z.ZodType<Prisma.RouteStopPointUpdateManyWithoutRouteNestedInput> = z.object({
+  create: z.union([ z.lazy(() => RouteStopPointCreateWithoutRouteInputSchema),z.lazy(() => RouteStopPointCreateWithoutRouteInputSchema).array(),z.lazy(() => RouteStopPointUncheckedCreateWithoutRouteInputSchema),z.lazy(() => RouteStopPointUncheckedCreateWithoutRouteInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => RouteStopPointCreateOrConnectWithoutRouteInputSchema),z.lazy(() => RouteStopPointCreateOrConnectWithoutRouteInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => RouteStopPointUpsertWithWhereUniqueWithoutRouteInputSchema),z.lazy(() => RouteStopPointUpsertWithWhereUniqueWithoutRouteInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => RouteStopPointCreateManyRouteInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => RouteStopPointUpdateWithWhereUniqueWithoutRouteInputSchema),z.lazy(() => RouteStopPointUpdateWithWhereUniqueWithoutRouteInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => RouteStopPointUpdateManyWithWhereWithoutRouteInputSchema),z.lazy(() => RouteStopPointUpdateManyWithWhereWithoutRouteInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => RouteStopPointScalarWhereInputSchema),z.lazy(() => RouteStopPointScalarWhereInputSchema).array() ]).optional(),
 }).strict();
 
 export const ScheduleUpdateManyWithoutRouteNestedInputSchema: z.ZodType<Prisma.ScheduleUpdateManyWithoutRouteNestedInput> = z.object({
@@ -4963,20 +5059,6 @@ export const ScheduleUpdateManyWithoutRouteNestedInputSchema: z.ZodType<Prisma.S
   deleteMany: z.union([ z.lazy(() => ScheduleScalarWhereInputSchema),z.lazy(() => ScheduleScalarWhereInputSchema).array() ]).optional(),
 }).strict();
 
-export const StopPointUpdateManyWithoutRouteNestedInputSchema: z.ZodType<Prisma.StopPointUpdateManyWithoutRouteNestedInput> = z.object({
-  create: z.union([ z.lazy(() => StopPointCreateWithoutRouteInputSchema),z.lazy(() => StopPointCreateWithoutRouteInputSchema).array(),z.lazy(() => StopPointUncheckedCreateWithoutRouteInputSchema),z.lazy(() => StopPointUncheckedCreateWithoutRouteInputSchema).array() ]).optional(),
-  connectOrCreate: z.union([ z.lazy(() => StopPointCreateOrConnectWithoutRouteInputSchema),z.lazy(() => StopPointCreateOrConnectWithoutRouteInputSchema).array() ]).optional(),
-  upsert: z.union([ z.lazy(() => StopPointUpsertWithWhereUniqueWithoutRouteInputSchema),z.lazy(() => StopPointUpsertWithWhereUniqueWithoutRouteInputSchema).array() ]).optional(),
-  createMany: z.lazy(() => StopPointCreateManyRouteInputEnvelopeSchema).optional(),
-  set: z.union([ z.lazy(() => StopPointWhereUniqueInputSchema),z.lazy(() => StopPointWhereUniqueInputSchema).array() ]).optional(),
-  disconnect: z.union([ z.lazy(() => StopPointWhereUniqueInputSchema),z.lazy(() => StopPointWhereUniqueInputSchema).array() ]).optional(),
-  delete: z.union([ z.lazy(() => StopPointWhereUniqueInputSchema),z.lazy(() => StopPointWhereUniqueInputSchema).array() ]).optional(),
-  connect: z.union([ z.lazy(() => StopPointWhereUniqueInputSchema),z.lazy(() => StopPointWhereUniqueInputSchema).array() ]).optional(),
-  update: z.union([ z.lazy(() => StopPointUpdateWithWhereUniqueWithoutRouteInputSchema),z.lazy(() => StopPointUpdateWithWhereUniqueWithoutRouteInputSchema).array() ]).optional(),
-  updateMany: z.union([ z.lazy(() => StopPointUpdateManyWithWhereWithoutRouteInputSchema),z.lazy(() => StopPointUpdateManyWithWhereWithoutRouteInputSchema).array() ]).optional(),
-  deleteMany: z.union([ z.lazy(() => StopPointScalarWhereInputSchema),z.lazy(() => StopPointScalarWhereInputSchema).array() ]).optional(),
-}).strict();
-
 export const StudentAssignmentUpdateManyWithoutRouteNestedInputSchema: z.ZodType<Prisma.StudentAssignmentUpdateManyWithoutRouteNestedInput> = z.object({
   create: z.union([ z.lazy(() => StudentAssignmentCreateWithoutRouteInputSchema),z.lazy(() => StudentAssignmentCreateWithoutRouteInputSchema).array(),z.lazy(() => StudentAssignmentUncheckedCreateWithoutRouteInputSchema),z.lazy(() => StudentAssignmentUncheckedCreateWithoutRouteInputSchema).array() ]).optional(),
   connectOrCreate: z.union([ z.lazy(() => StudentAssignmentCreateOrConnectWithoutRouteInputSchema),z.lazy(() => StudentAssignmentCreateOrConnectWithoutRouteInputSchema).array() ]).optional(),
@@ -4991,6 +5073,20 @@ export const StudentAssignmentUpdateManyWithoutRouteNestedInputSchema: z.ZodType
   deleteMany: z.union([ z.lazy(() => StudentAssignmentScalarWhereInputSchema),z.lazy(() => StudentAssignmentScalarWhereInputSchema).array() ]).optional(),
 }).strict();
 
+export const RouteStopPointUncheckedUpdateManyWithoutRouteNestedInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedUpdateManyWithoutRouteNestedInput> = z.object({
+  create: z.union([ z.lazy(() => RouteStopPointCreateWithoutRouteInputSchema),z.lazy(() => RouteStopPointCreateWithoutRouteInputSchema).array(),z.lazy(() => RouteStopPointUncheckedCreateWithoutRouteInputSchema),z.lazy(() => RouteStopPointUncheckedCreateWithoutRouteInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => RouteStopPointCreateOrConnectWithoutRouteInputSchema),z.lazy(() => RouteStopPointCreateOrConnectWithoutRouteInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => RouteStopPointUpsertWithWhereUniqueWithoutRouteInputSchema),z.lazy(() => RouteStopPointUpsertWithWhereUniqueWithoutRouteInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => RouteStopPointCreateManyRouteInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => RouteStopPointUpdateWithWhereUniqueWithoutRouteInputSchema),z.lazy(() => RouteStopPointUpdateWithWhereUniqueWithoutRouteInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => RouteStopPointUpdateManyWithWhereWithoutRouteInputSchema),z.lazy(() => RouteStopPointUpdateManyWithWhereWithoutRouteInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => RouteStopPointScalarWhereInputSchema),z.lazy(() => RouteStopPointScalarWhereInputSchema).array() ]).optional(),
+}).strict();
+
 export const ScheduleUncheckedUpdateManyWithoutRouteNestedInputSchema: z.ZodType<Prisma.ScheduleUncheckedUpdateManyWithoutRouteNestedInput> = z.object({
   create: z.union([ z.lazy(() => ScheduleCreateWithoutRouteInputSchema),z.lazy(() => ScheduleCreateWithoutRouteInputSchema).array(),z.lazy(() => ScheduleUncheckedCreateWithoutRouteInputSchema),z.lazy(() => ScheduleUncheckedCreateWithoutRouteInputSchema).array() ]).optional(),
   connectOrCreate: z.union([ z.lazy(() => ScheduleCreateOrConnectWithoutRouteInputSchema),z.lazy(() => ScheduleCreateOrConnectWithoutRouteInputSchema).array() ]).optional(),
@@ -5003,20 +5099,6 @@ export const ScheduleUncheckedUpdateManyWithoutRouteNestedInputSchema: z.ZodType
   update: z.union([ z.lazy(() => ScheduleUpdateWithWhereUniqueWithoutRouteInputSchema),z.lazy(() => ScheduleUpdateWithWhereUniqueWithoutRouteInputSchema).array() ]).optional(),
   updateMany: z.union([ z.lazy(() => ScheduleUpdateManyWithWhereWithoutRouteInputSchema),z.lazy(() => ScheduleUpdateManyWithWhereWithoutRouteInputSchema).array() ]).optional(),
   deleteMany: z.union([ z.lazy(() => ScheduleScalarWhereInputSchema),z.lazy(() => ScheduleScalarWhereInputSchema).array() ]).optional(),
-}).strict();
-
-export const StopPointUncheckedUpdateManyWithoutRouteNestedInputSchema: z.ZodType<Prisma.StopPointUncheckedUpdateManyWithoutRouteNestedInput> = z.object({
-  create: z.union([ z.lazy(() => StopPointCreateWithoutRouteInputSchema),z.lazy(() => StopPointCreateWithoutRouteInputSchema).array(),z.lazy(() => StopPointUncheckedCreateWithoutRouteInputSchema),z.lazy(() => StopPointUncheckedCreateWithoutRouteInputSchema).array() ]).optional(),
-  connectOrCreate: z.union([ z.lazy(() => StopPointCreateOrConnectWithoutRouteInputSchema),z.lazy(() => StopPointCreateOrConnectWithoutRouteInputSchema).array() ]).optional(),
-  upsert: z.union([ z.lazy(() => StopPointUpsertWithWhereUniqueWithoutRouteInputSchema),z.lazy(() => StopPointUpsertWithWhereUniqueWithoutRouteInputSchema).array() ]).optional(),
-  createMany: z.lazy(() => StopPointCreateManyRouteInputEnvelopeSchema).optional(),
-  set: z.union([ z.lazy(() => StopPointWhereUniqueInputSchema),z.lazy(() => StopPointWhereUniqueInputSchema).array() ]).optional(),
-  disconnect: z.union([ z.lazy(() => StopPointWhereUniqueInputSchema),z.lazy(() => StopPointWhereUniqueInputSchema).array() ]).optional(),
-  delete: z.union([ z.lazy(() => StopPointWhereUniqueInputSchema),z.lazy(() => StopPointWhereUniqueInputSchema).array() ]).optional(),
-  connect: z.union([ z.lazy(() => StopPointWhereUniqueInputSchema),z.lazy(() => StopPointWhereUniqueInputSchema).array() ]).optional(),
-  update: z.union([ z.lazy(() => StopPointUpdateWithWhereUniqueWithoutRouteInputSchema),z.lazy(() => StopPointUpdateWithWhereUniqueWithoutRouteInputSchema).array() ]).optional(),
-  updateMany: z.union([ z.lazy(() => StopPointUpdateManyWithWhereWithoutRouteInputSchema),z.lazy(() => StopPointUpdateManyWithWhereWithoutRouteInputSchema).array() ]).optional(),
-  deleteMany: z.union([ z.lazy(() => StopPointScalarWhereInputSchema),z.lazy(() => StopPointScalarWhereInputSchema).array() ]).optional(),
 }).strict();
 
 export const StudentAssignmentUncheckedUpdateManyWithoutRouteNestedInputSchema: z.ZodType<Prisma.StudentAssignmentUncheckedUpdateManyWithoutRouteNestedInput> = z.object({
@@ -5125,10 +5207,11 @@ export const TripUncheckedUpdateManyWithoutScheduleNestedInputSchema: z.ZodType<
   deleteMany: z.union([ z.lazy(() => TripScalarWhereInputSchema),z.lazy(() => TripScalarWhereInputSchema).array() ]).optional(),
 }).strict();
 
-export const RouteCreateNestedOneWithoutStopPointInputSchema: z.ZodType<Prisma.RouteCreateNestedOneWithoutStopPointInput> = z.object({
-  create: z.union([ z.lazy(() => RouteCreateWithoutStopPointInputSchema),z.lazy(() => RouteUncheckedCreateWithoutStopPointInputSchema) ]).optional(),
-  connectOrCreate: z.lazy(() => RouteCreateOrConnectWithoutStopPointInputSchema).optional(),
-  connect: z.lazy(() => RouteWhereUniqueInputSchema).optional()
+export const RouteStopPointCreateNestedManyWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointCreateNestedManyWithoutStopPointInput> = z.object({
+  create: z.union([ z.lazy(() => RouteStopPointCreateWithoutStopPointInputSchema),z.lazy(() => RouteStopPointCreateWithoutStopPointInputSchema).array(),z.lazy(() => RouteStopPointUncheckedCreateWithoutStopPointInputSchema),z.lazy(() => RouteStopPointUncheckedCreateWithoutStopPointInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => RouteStopPointCreateOrConnectWithoutStopPointInputSchema),z.lazy(() => RouteStopPointCreateOrConnectWithoutStopPointInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => RouteStopPointCreateManyStopPointInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
 }).strict();
 
 export const StudentAssignmentCreateNestedManyWithoutStopPointInputSchema: z.ZodType<Prisma.StudentAssignmentCreateNestedManyWithoutStopPointInput> = z.object({
@@ -5145,6 +5228,13 @@ export const TripStopCreateNestedManyWithoutStopPointInputSchema: z.ZodType<Pris
   connect: z.union([ z.lazy(() => TripStopWhereUniqueInputSchema),z.lazy(() => TripStopWhereUniqueInputSchema).array() ]).optional(),
 }).strict();
 
+export const RouteStopPointUncheckedCreateNestedManyWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedCreateNestedManyWithoutStopPointInput> = z.object({
+  create: z.union([ z.lazy(() => RouteStopPointCreateWithoutStopPointInputSchema),z.lazy(() => RouteStopPointCreateWithoutStopPointInputSchema).array(),z.lazy(() => RouteStopPointUncheckedCreateWithoutStopPointInputSchema),z.lazy(() => RouteStopPointUncheckedCreateWithoutStopPointInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => RouteStopPointCreateOrConnectWithoutStopPointInputSchema),z.lazy(() => RouteStopPointCreateOrConnectWithoutStopPointInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => RouteStopPointCreateManyStopPointInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+}).strict();
+
 export const StudentAssignmentUncheckedCreateNestedManyWithoutStopPointInputSchema: z.ZodType<Prisma.StudentAssignmentUncheckedCreateNestedManyWithoutStopPointInput> = z.object({
   create: z.union([ z.lazy(() => StudentAssignmentCreateWithoutStopPointInputSchema),z.lazy(() => StudentAssignmentCreateWithoutStopPointInputSchema).array(),z.lazy(() => StudentAssignmentUncheckedCreateWithoutStopPointInputSchema),z.lazy(() => StudentAssignmentUncheckedCreateWithoutStopPointInputSchema).array() ]).optional(),
   connectOrCreate: z.union([ z.lazy(() => StudentAssignmentCreateOrConnectWithoutStopPointInputSchema),z.lazy(() => StudentAssignmentCreateOrConnectWithoutStopPointInputSchema).array() ]).optional(),
@@ -5159,16 +5249,18 @@ export const TripStopUncheckedCreateNestedManyWithoutStopPointInputSchema: z.Zod
   connect: z.union([ z.lazy(() => TripStopWhereUniqueInputSchema),z.lazy(() => TripStopWhereUniqueInputSchema).array() ]).optional(),
 }).strict();
 
-export const NullableDateTimeFieldUpdateOperationsInputSchema: z.ZodType<Prisma.NullableDateTimeFieldUpdateOperationsInput> = z.object({
-  set: z.coerce.date().optional().nullable()
-}).strict();
-
-export const RouteUpdateOneRequiredWithoutStopPointNestedInputSchema: z.ZodType<Prisma.RouteUpdateOneRequiredWithoutStopPointNestedInput> = z.object({
-  create: z.union([ z.lazy(() => RouteCreateWithoutStopPointInputSchema),z.lazy(() => RouteUncheckedCreateWithoutStopPointInputSchema) ]).optional(),
-  connectOrCreate: z.lazy(() => RouteCreateOrConnectWithoutStopPointInputSchema).optional(),
-  upsert: z.lazy(() => RouteUpsertWithoutStopPointInputSchema).optional(),
-  connect: z.lazy(() => RouteWhereUniqueInputSchema).optional(),
-  update: z.union([ z.lazy(() => RouteUpdateToOneWithWhereWithoutStopPointInputSchema),z.lazy(() => RouteUpdateWithoutStopPointInputSchema),z.lazy(() => RouteUncheckedUpdateWithoutStopPointInputSchema) ]).optional(),
+export const RouteStopPointUpdateManyWithoutStopPointNestedInputSchema: z.ZodType<Prisma.RouteStopPointUpdateManyWithoutStopPointNestedInput> = z.object({
+  create: z.union([ z.lazy(() => RouteStopPointCreateWithoutStopPointInputSchema),z.lazy(() => RouteStopPointCreateWithoutStopPointInputSchema).array(),z.lazy(() => RouteStopPointUncheckedCreateWithoutStopPointInputSchema),z.lazy(() => RouteStopPointUncheckedCreateWithoutStopPointInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => RouteStopPointCreateOrConnectWithoutStopPointInputSchema),z.lazy(() => RouteStopPointCreateOrConnectWithoutStopPointInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => RouteStopPointUpsertWithWhereUniqueWithoutStopPointInputSchema),z.lazy(() => RouteStopPointUpsertWithWhereUniqueWithoutStopPointInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => RouteStopPointCreateManyStopPointInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => RouteStopPointUpdateWithWhereUniqueWithoutStopPointInputSchema),z.lazy(() => RouteStopPointUpdateWithWhereUniqueWithoutStopPointInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => RouteStopPointUpdateManyWithWhereWithoutStopPointInputSchema),z.lazy(() => RouteStopPointUpdateManyWithWhereWithoutStopPointInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => RouteStopPointScalarWhereInputSchema),z.lazy(() => RouteStopPointScalarWhereInputSchema).array() ]).optional(),
 }).strict();
 
 export const StudentAssignmentUpdateManyWithoutStopPointNestedInputSchema: z.ZodType<Prisma.StudentAssignmentUpdateManyWithoutStopPointNestedInput> = z.object({
@@ -5197,6 +5289,20 @@ export const TripStopUpdateManyWithoutStopPointNestedInputSchema: z.ZodType<Pris
   update: z.union([ z.lazy(() => TripStopUpdateWithWhereUniqueWithoutStopPointInputSchema),z.lazy(() => TripStopUpdateWithWhereUniqueWithoutStopPointInputSchema).array() ]).optional(),
   updateMany: z.union([ z.lazy(() => TripStopUpdateManyWithWhereWithoutStopPointInputSchema),z.lazy(() => TripStopUpdateManyWithWhereWithoutStopPointInputSchema).array() ]).optional(),
   deleteMany: z.union([ z.lazy(() => TripStopScalarWhereInputSchema),z.lazy(() => TripStopScalarWhereInputSchema).array() ]).optional(),
+}).strict();
+
+export const RouteStopPointUncheckedUpdateManyWithoutStopPointNestedInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedUpdateManyWithoutStopPointNestedInput> = z.object({
+  create: z.union([ z.lazy(() => RouteStopPointCreateWithoutStopPointInputSchema),z.lazy(() => RouteStopPointCreateWithoutStopPointInputSchema).array(),z.lazy(() => RouteStopPointUncheckedCreateWithoutStopPointInputSchema),z.lazy(() => RouteStopPointUncheckedCreateWithoutStopPointInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => RouteStopPointCreateOrConnectWithoutStopPointInputSchema),z.lazy(() => RouteStopPointCreateOrConnectWithoutStopPointInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => RouteStopPointUpsertWithWhereUniqueWithoutStopPointInputSchema),z.lazy(() => RouteStopPointUpsertWithWhereUniqueWithoutStopPointInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => RouteStopPointCreateManyStopPointInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => RouteStopPointWhereUniqueInputSchema),z.lazy(() => RouteStopPointWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => RouteStopPointUpdateWithWhereUniqueWithoutStopPointInputSchema),z.lazy(() => RouteStopPointUpdateWithWhereUniqueWithoutStopPointInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => RouteStopPointUpdateManyWithWhereWithoutStopPointInputSchema),z.lazy(() => RouteStopPointUpdateManyWithWhereWithoutStopPointInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => RouteStopPointScalarWhereInputSchema),z.lazy(() => RouteStopPointScalarWhereInputSchema).array() ]).optional(),
 }).strict();
 
 export const StudentAssignmentUncheckedUpdateManyWithoutStopPointNestedInputSchema: z.ZodType<Prisma.StudentAssignmentUncheckedUpdateManyWithoutStopPointNestedInput> = z.object({
@@ -5335,6 +5441,10 @@ export const TripCreateNestedOneWithoutStudentAttendanceInputSchema: z.ZodType<P
   create: z.union([ z.lazy(() => TripCreateWithoutStudentAttendanceInputSchema),z.lazy(() => TripUncheckedCreateWithoutStudentAttendanceInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => TripCreateOrConnectWithoutStudentAttendanceInputSchema).optional(),
   connect: z.lazy(() => TripWhereUniqueInputSchema).optional()
+}).strict();
+
+export const NullableDateTimeFieldUpdateOperationsInputSchema: z.ZodType<Prisma.NullableDateTimeFieldUpdateOperationsInput> = z.object({
+  set: z.coerce.date().optional().nullable()
 }).strict();
 
 export const NullableEnumStudentAttendance_statusFieldUpdateOperationsInputSchema: z.ZodType<Prisma.NullableEnumStudentAttendance_statusFieldUpdateOperationsInput> = z.object({
@@ -5635,6 +5745,34 @@ export const TripUpdateOneRequiredWithoutTripStopNestedInputSchema: z.ZodType<Pr
   update: z.union([ z.lazy(() => TripUpdateToOneWithWhereWithoutTripStopInputSchema),z.lazy(() => TripUpdateWithoutTripStopInputSchema),z.lazy(() => TripUncheckedUpdateWithoutTripStopInputSchema) ]).optional(),
 }).strict();
 
+export const RouteCreateNestedOneWithoutRouteStopPointInputSchema: z.ZodType<Prisma.RouteCreateNestedOneWithoutRouteStopPointInput> = z.object({
+  create: z.union([ z.lazy(() => RouteCreateWithoutRouteStopPointInputSchema),z.lazy(() => RouteUncheckedCreateWithoutRouteStopPointInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => RouteCreateOrConnectWithoutRouteStopPointInputSchema).optional(),
+  connect: z.lazy(() => RouteWhereUniqueInputSchema).optional()
+}).strict();
+
+export const StopPointCreateNestedOneWithoutRouteStopPointInputSchema: z.ZodType<Prisma.StopPointCreateNestedOneWithoutRouteStopPointInput> = z.object({
+  create: z.union([ z.lazy(() => StopPointCreateWithoutRouteStopPointInputSchema),z.lazy(() => StopPointUncheckedCreateWithoutRouteStopPointInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => StopPointCreateOrConnectWithoutRouteStopPointInputSchema).optional(),
+  connect: z.lazy(() => StopPointWhereUniqueInputSchema).optional()
+}).strict();
+
+export const RouteUpdateOneRequiredWithoutRouteStopPointNestedInputSchema: z.ZodType<Prisma.RouteUpdateOneRequiredWithoutRouteStopPointNestedInput> = z.object({
+  create: z.union([ z.lazy(() => RouteCreateWithoutRouteStopPointInputSchema),z.lazy(() => RouteUncheckedCreateWithoutRouteStopPointInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => RouteCreateOrConnectWithoutRouteStopPointInputSchema).optional(),
+  upsert: z.lazy(() => RouteUpsertWithoutRouteStopPointInputSchema).optional(),
+  connect: z.lazy(() => RouteWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => RouteUpdateToOneWithWhereWithoutRouteStopPointInputSchema),z.lazy(() => RouteUpdateWithoutRouteStopPointInputSchema),z.lazy(() => RouteUncheckedUpdateWithoutRouteStopPointInputSchema) ]).optional(),
+}).strict();
+
+export const StopPointUpdateOneRequiredWithoutRouteStopPointNestedInputSchema: z.ZodType<Prisma.StopPointUpdateOneRequiredWithoutRouteStopPointNestedInput> = z.object({
+  create: z.union([ z.lazy(() => StopPointCreateWithoutRouteStopPointInputSchema),z.lazy(() => StopPointUncheckedCreateWithoutRouteStopPointInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => StopPointCreateOrConnectWithoutRouteStopPointInputSchema).optional(),
+  upsert: z.lazy(() => StopPointUpsertWithoutRouteStopPointInputSchema).optional(),
+  connect: z.lazy(() => StopPointWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => StopPointUpdateToOneWithWhereWithoutRouteStopPointInputSchema),z.lazy(() => StopPointUpdateWithoutRouteStopPointInputSchema),z.lazy(() => StopPointUncheckedUpdateWithoutRouteStopPointInputSchema) ]).optional(),
+}).strict();
+
 export const NestedStringFilterSchema: z.ZodType<Prisma.NestedStringFilter> = z.object({
   equals: z.string().optional(),
   in: z.string().array().optional(),
@@ -5809,26 +5947,9 @@ export const NestedStringNullableWithAggregatesFilterSchema: z.ZodType<Prisma.Ne
   _max: z.lazy(() => NestedStringNullableFilterSchema).optional()
 }).strict();
 
-export const NestedEnumRoute_directionFilterSchema: z.ZodType<Prisma.NestedEnumRoute_directionFilter> = z.object({
-  equals: z.lazy(() => Route_directionSchema).optional(),
-  in: z.lazy(() => Route_directionSchema).array().optional(),
-  notIn: z.lazy(() => Route_directionSchema).array().optional(),
-  not: z.union([ z.lazy(() => Route_directionSchema),z.lazy(() => NestedEnumRoute_directionFilterSchema) ]).optional(),
-}).strict();
-
 export const NestedBoolNullableFilterSchema: z.ZodType<Prisma.NestedBoolNullableFilter> = z.object({
   equals: z.boolean().optional().nullable(),
   not: z.union([ z.boolean(),z.lazy(() => NestedBoolNullableFilterSchema) ]).optional().nullable(),
-}).strict();
-
-export const NestedEnumRoute_directionWithAggregatesFilterSchema: z.ZodType<Prisma.NestedEnumRoute_directionWithAggregatesFilter> = z.object({
-  equals: z.lazy(() => Route_directionSchema).optional(),
-  in: z.lazy(() => Route_directionSchema).array().optional(),
-  notIn: z.lazy(() => Route_directionSchema).array().optional(),
-  not: z.union([ z.lazy(() => Route_directionSchema),z.lazy(() => NestedEnumRoute_directionWithAggregatesFilterSchema) ]).optional(),
-  _count: z.lazy(() => NestedIntFilterSchema).optional(),
-  _min: z.lazy(() => NestedEnumRoute_directionFilterSchema).optional(),
-  _max: z.lazy(() => NestedEnumRoute_directionFilterSchema).optional()
 }).strict();
 
 export const NestedIntNullableWithAggregatesFilterSchema: z.ZodType<Prisma.NestedIntNullableWithAggregatesFilter> = z.object({
@@ -5928,6 +6049,13 @@ export const NestedDateTimeNullableFilterSchema: z.ZodType<Prisma.NestedDateTime
   not: z.union([ z.coerce.date(),z.lazy(() => NestedDateTimeNullableFilterSchema) ]).optional().nullable(),
 }).strict();
 
+export const NestedEnumStudentAttendance_statusNullableFilterSchema: z.ZodType<Prisma.NestedEnumStudentAttendance_statusNullableFilter> = z.object({
+  equals: z.lazy(() => StudentAttendance_statusSchema).optional().nullable(),
+  in: z.lazy(() => StudentAttendance_statusSchema).array().optional().nullable(),
+  notIn: z.lazy(() => StudentAttendance_statusSchema).array().optional().nullable(),
+  not: z.union([ z.lazy(() => StudentAttendance_statusSchema),z.lazy(() => NestedEnumStudentAttendance_statusNullableFilterSchema) ]).optional().nullable(),
+}).strict();
+
 export const NestedDateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.NestedDateTimeNullableWithAggregatesFilter> = z.object({
   equals: z.coerce.date().optional().nullable(),
   in: z.coerce.date().array().optional().nullable(),
@@ -5940,13 +6068,6 @@ export const NestedDateTimeNullableWithAggregatesFilterSchema: z.ZodType<Prisma.
   _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
   _min: z.lazy(() => NestedDateTimeNullableFilterSchema).optional(),
   _max: z.lazy(() => NestedDateTimeNullableFilterSchema).optional()
-}).strict();
-
-export const NestedEnumStudentAttendance_statusNullableFilterSchema: z.ZodType<Prisma.NestedEnumStudentAttendance_statusNullableFilter> = z.object({
-  equals: z.lazy(() => StudentAttendance_statusSchema).optional().nullable(),
-  in: z.lazy(() => StudentAttendance_statusSchema).array().optional().nullable(),
-  notIn: z.lazy(() => StudentAttendance_statusSchema).array().optional().nullable(),
-  not: z.union([ z.lazy(() => StudentAttendance_statusSchema),z.lazy(() => NestedEnumStudentAttendance_statusNullableFilterSchema) ]).optional().nullable(),
 }).strict();
 
 export const NestedEnumStudentAttendance_statusNullableWithAggregatesFilterSchema: z.ZodType<Prisma.NestedEnumStudentAttendance_statusNullableWithAggregatesFilter> = z.object({
@@ -6758,6 +6879,27 @@ export const TripUncheckedUpdateWithoutReportInputSchema: z.ZodType<Prisma.TripU
   TripStop: z.lazy(() => TripStopUncheckedUpdateManyWithoutTripNestedInputSchema).optional()
 }).strict();
 
+export const RouteStopPointCreateWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointCreateWithoutRouteInput> = z.object({
+  sequence: z.number().int(),
+  StopPoint: z.lazy(() => StopPointCreateNestedOneWithoutRouteStopPointInputSchema)
+}).strict();
+
+export const RouteStopPointUncheckedCreateWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedCreateWithoutRouteInput> = z.object({
+  id: z.number().int().optional(),
+  stopPointId: z.string(),
+  sequence: z.number().int()
+}).strict();
+
+export const RouteStopPointCreateOrConnectWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointCreateOrConnectWithoutRouteInput> = z.object({
+  where: z.lazy(() => RouteStopPointWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => RouteStopPointCreateWithoutRouteInputSchema),z.lazy(() => RouteStopPointUncheckedCreateWithoutRouteInputSchema) ]),
+}).strict();
+
+export const RouteStopPointCreateManyRouteInputEnvelopeSchema: z.ZodType<Prisma.RouteStopPointCreateManyRouteInputEnvelope> = z.object({
+  data: z.union([ z.lazy(() => RouteStopPointCreateManyRouteInputSchema),z.lazy(() => RouteStopPointCreateManyRouteInputSchema).array() ]),
+  skipDuplicates: z.boolean().optional()
+}).strict();
+
 export const ScheduleCreateWithoutRouteInputSchema: z.ZodType<Prisma.ScheduleCreateWithoutRouteInput> = z.object({
   id: z.string(),
   type: z.lazy(() => Schedule_typeSchema),
@@ -6800,42 +6942,6 @@ export const ScheduleCreateManyRouteInputEnvelopeSchema: z.ZodType<Prisma.Schedu
   skipDuplicates: z.boolean().optional()
 }).strict();
 
-export const StopPointCreateWithoutRouteInputSchema: z.ZodType<Prisma.StopPointCreateWithoutRouteInput> = z.object({
-  id: z.string(),
-  sequence: z.number().int(),
-  name: z.string(),
-  location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  estimatedArrival: z.coerce.date().optional().nullable(),
-  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  createdAt: z.coerce.date().optional(),
-  updatedAt: z.coerce.date().optional(),
-  StudentAssignment: z.lazy(() => StudentAssignmentCreateNestedManyWithoutStopPointInputSchema).optional(),
-  TripStop: z.lazy(() => TripStopCreateNestedManyWithoutStopPointInputSchema).optional()
-}).strict();
-
-export const StopPointUncheckedCreateWithoutRouteInputSchema: z.ZodType<Prisma.StopPointUncheckedCreateWithoutRouteInput> = z.object({
-  id: z.string(),
-  sequence: z.number().int(),
-  name: z.string(),
-  location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  estimatedArrival: z.coerce.date().optional().nullable(),
-  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  createdAt: z.coerce.date().optional(),
-  updatedAt: z.coerce.date().optional(),
-  StudentAssignment: z.lazy(() => StudentAssignmentUncheckedCreateNestedManyWithoutStopPointInputSchema).optional(),
-  TripStop: z.lazy(() => TripStopUncheckedCreateNestedManyWithoutStopPointInputSchema).optional()
-}).strict();
-
-export const StopPointCreateOrConnectWithoutRouteInputSchema: z.ZodType<Prisma.StopPointCreateOrConnectWithoutRouteInput> = z.object({
-  where: z.lazy(() => StopPointWhereUniqueInputSchema),
-  create: z.union([ z.lazy(() => StopPointCreateWithoutRouteInputSchema),z.lazy(() => StopPointUncheckedCreateWithoutRouteInputSchema) ]),
-}).strict();
-
-export const StopPointCreateManyRouteInputEnvelopeSchema: z.ZodType<Prisma.StopPointCreateManyRouteInputEnvelope> = z.object({
-  data: z.union([ z.lazy(() => StopPointCreateManyRouteInputSchema),z.lazy(() => StopPointCreateManyRouteInputSchema).array() ]),
-  skipDuplicates: z.boolean().optional()
-}).strict();
-
 export const StudentAssignmentCreateWithoutRouteInputSchema: z.ZodType<Prisma.StudentAssignmentCreateWithoutRouteInput> = z.object({
   id: z.string(),
   direction: z.lazy(() => StudentAssignment_directionSchema),
@@ -6868,6 +6974,32 @@ export const StudentAssignmentCreateManyRouteInputEnvelopeSchema: z.ZodType<Pris
   skipDuplicates: z.boolean().optional()
 }).strict();
 
+export const RouteStopPointUpsertWithWhereUniqueWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointUpsertWithWhereUniqueWithoutRouteInput> = z.object({
+  where: z.lazy(() => RouteStopPointWhereUniqueInputSchema),
+  update: z.union([ z.lazy(() => RouteStopPointUpdateWithoutRouteInputSchema),z.lazy(() => RouteStopPointUncheckedUpdateWithoutRouteInputSchema) ]),
+  create: z.union([ z.lazy(() => RouteStopPointCreateWithoutRouteInputSchema),z.lazy(() => RouteStopPointUncheckedCreateWithoutRouteInputSchema) ]),
+}).strict();
+
+export const RouteStopPointUpdateWithWhereUniqueWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointUpdateWithWhereUniqueWithoutRouteInput> = z.object({
+  where: z.lazy(() => RouteStopPointWhereUniqueInputSchema),
+  data: z.union([ z.lazy(() => RouteStopPointUpdateWithoutRouteInputSchema),z.lazy(() => RouteStopPointUncheckedUpdateWithoutRouteInputSchema) ]),
+}).strict();
+
+export const RouteStopPointUpdateManyWithWhereWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointUpdateManyWithWhereWithoutRouteInput> = z.object({
+  where: z.lazy(() => RouteStopPointScalarWhereInputSchema),
+  data: z.union([ z.lazy(() => RouteStopPointUpdateManyMutationInputSchema),z.lazy(() => RouteStopPointUncheckedUpdateManyWithoutRouteInputSchema) ]),
+}).strict();
+
+export const RouteStopPointScalarWhereInputSchema: z.ZodType<Prisma.RouteStopPointScalarWhereInput> = z.object({
+  AND: z.union([ z.lazy(() => RouteStopPointScalarWhereInputSchema),z.lazy(() => RouteStopPointScalarWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => RouteStopPointScalarWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => RouteStopPointScalarWhereInputSchema),z.lazy(() => RouteStopPointScalarWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  routeId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  stopPointId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  sequence: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+}).strict();
+
 export const ScheduleUpsertWithWhereUniqueWithoutRouteInputSchema: z.ZodType<Prisma.ScheduleUpsertWithWhereUniqueWithoutRouteInput> = z.object({
   where: z.lazy(() => ScheduleWhereUniqueInputSchema),
   update: z.union([ z.lazy(() => ScheduleUpdateWithoutRouteInputSchema),z.lazy(() => ScheduleUncheckedUpdateWithoutRouteInputSchema) ]),
@@ -6882,37 +7014,6 @@ export const ScheduleUpdateWithWhereUniqueWithoutRouteInputSchema: z.ZodType<Pri
 export const ScheduleUpdateManyWithWhereWithoutRouteInputSchema: z.ZodType<Prisma.ScheduleUpdateManyWithWhereWithoutRouteInput> = z.object({
   where: z.lazy(() => ScheduleScalarWhereInputSchema),
   data: z.union([ z.lazy(() => ScheduleUpdateManyMutationInputSchema),z.lazy(() => ScheduleUncheckedUpdateManyWithoutRouteInputSchema) ]),
-}).strict();
-
-export const StopPointUpsertWithWhereUniqueWithoutRouteInputSchema: z.ZodType<Prisma.StopPointUpsertWithWhereUniqueWithoutRouteInput> = z.object({
-  where: z.lazy(() => StopPointWhereUniqueInputSchema),
-  update: z.union([ z.lazy(() => StopPointUpdateWithoutRouteInputSchema),z.lazy(() => StopPointUncheckedUpdateWithoutRouteInputSchema) ]),
-  create: z.union([ z.lazy(() => StopPointCreateWithoutRouteInputSchema),z.lazy(() => StopPointUncheckedCreateWithoutRouteInputSchema) ]),
-}).strict();
-
-export const StopPointUpdateWithWhereUniqueWithoutRouteInputSchema: z.ZodType<Prisma.StopPointUpdateWithWhereUniqueWithoutRouteInput> = z.object({
-  where: z.lazy(() => StopPointWhereUniqueInputSchema),
-  data: z.union([ z.lazy(() => StopPointUpdateWithoutRouteInputSchema),z.lazy(() => StopPointUncheckedUpdateWithoutRouteInputSchema) ]),
-}).strict();
-
-export const StopPointUpdateManyWithWhereWithoutRouteInputSchema: z.ZodType<Prisma.StopPointUpdateManyWithWhereWithoutRouteInput> = z.object({
-  where: z.lazy(() => StopPointScalarWhereInputSchema),
-  data: z.union([ z.lazy(() => StopPointUpdateManyMutationInputSchema),z.lazy(() => StopPointUncheckedUpdateManyWithoutRouteInputSchema) ]),
-}).strict();
-
-export const StopPointScalarWhereInputSchema: z.ZodType<Prisma.StopPointScalarWhereInput> = z.object({
-  AND: z.union([ z.lazy(() => StopPointScalarWhereInputSchema),z.lazy(() => StopPointScalarWhereInputSchema).array() ]).optional(),
-  OR: z.lazy(() => StopPointScalarWhereInputSchema).array().optional(),
-  NOT: z.union([ z.lazy(() => StopPointScalarWhereInputSchema),z.lazy(() => StopPointScalarWhereInputSchema).array() ]).optional(),
-  id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  routeId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  sequence: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
-  name: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  location: z.lazy(() => JsonFilterSchema).optional(),
-  estimatedArrival: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
-  meta: z.lazy(() => JsonNullableFilterSchema).optional(),
-  createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
 }).strict();
 
 export const StudentAssignmentUpsertWithWhereUniqueWithoutRouteInputSchema: z.ZodType<Prisma.StudentAssignmentUpsertWithWhereUniqueWithoutRouteInput> = z.object({
@@ -7003,7 +7104,6 @@ export const UserCreateOrConnectWithoutScheduleInputSchema: z.ZodType<Prisma.Use
 export const RouteCreateWithoutScheduleInputSchema: z.ZodType<Prisma.RouteCreateWithoutScheduleInput> = z.object({
   id: z.string(),
   name: z.string(),
-  direction: z.lazy(() => Route_directionSchema),
   estimatedDuration: z.number().int().optional().nullable(),
   startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
   endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
@@ -7011,14 +7111,13 @@ export const RouteCreateWithoutScheduleInputSchema: z.ZodType<Prisma.RouteCreate
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  StopPoint: z.lazy(() => StopPointCreateNestedManyWithoutRouteInputSchema).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointCreateNestedManyWithoutRouteInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentCreateNestedManyWithoutRouteInputSchema).optional()
 }).strict();
 
 export const RouteUncheckedCreateWithoutScheduleInputSchema: z.ZodType<Prisma.RouteUncheckedCreateWithoutScheduleInput> = z.object({
   id: z.string(),
   name: z.string(),
-  direction: z.lazy(() => Route_directionSchema),
   estimatedDuration: z.number().int().optional().nullable(),
   startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
   endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
@@ -7026,7 +7125,7 @@ export const RouteUncheckedCreateWithoutScheduleInputSchema: z.ZodType<Prisma.Ro
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  StopPoint: z.lazy(() => StopPointUncheckedCreateNestedManyWithoutRouteInputSchema).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointUncheckedCreateNestedManyWithoutRouteInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentUncheckedCreateNestedManyWithoutRouteInputSchema).optional()
 }).strict();
 
@@ -7157,7 +7256,6 @@ export const RouteUpdateToOneWithWhereWithoutScheduleInputSchema: z.ZodType<Pris
 export const RouteUpdateWithoutScheduleInputSchema: z.ZodType<Prisma.RouteUpdateWithoutScheduleInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  direction: z.union([ z.lazy(() => Route_directionSchema),z.lazy(() => EnumRoute_directionFieldUpdateOperationsInputSchema) ]).optional(),
   estimatedDuration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
@@ -7165,14 +7263,13 @@ export const RouteUpdateWithoutScheduleInputSchema: z.ZodType<Prisma.RouteUpdate
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  StopPoint: z.lazy(() => StopPointUpdateManyWithoutRouteNestedInputSchema).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointUpdateManyWithoutRouteNestedInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentUpdateManyWithoutRouteNestedInputSchema).optional()
 }).strict();
 
 export const RouteUncheckedUpdateWithoutScheduleInputSchema: z.ZodType<Prisma.RouteUncheckedUpdateWithoutScheduleInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  direction: z.union([ z.lazy(() => Route_directionSchema),z.lazy(() => EnumRoute_directionFieldUpdateOperationsInputSchema) ]).optional(),
   estimatedDuration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
@@ -7180,7 +7277,7 @@ export const RouteUncheckedUpdateWithoutScheduleInputSchema: z.ZodType<Prisma.Ro
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  StopPoint: z.lazy(() => StopPointUncheckedUpdateManyWithoutRouteNestedInputSchema).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointUncheckedUpdateManyWithoutRouteNestedInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentUncheckedUpdateManyWithoutRouteNestedInputSchema).optional()
 }).strict();
 
@@ -7216,39 +7313,25 @@ export const TripScalarWhereInputSchema: z.ZodType<Prisma.TripScalarWhereInput> 
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
 }).strict();
 
-export const RouteCreateWithoutStopPointInputSchema: z.ZodType<Prisma.RouteCreateWithoutStopPointInput> = z.object({
-  id: z.string(),
-  name: z.string(),
-  direction: z.lazy(() => Route_directionSchema),
-  estimatedDuration: z.number().int().optional().nullable(),
-  startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  isActive: z.boolean().optional().nullable(),
-  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  createdAt: z.coerce.date().optional(),
-  updatedAt: z.coerce.date().optional(),
-  Schedule: z.lazy(() => ScheduleCreateNestedManyWithoutRouteInputSchema).optional(),
-  StudentAssignment: z.lazy(() => StudentAssignmentCreateNestedManyWithoutRouteInputSchema).optional()
+export const RouteStopPointCreateWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointCreateWithoutStopPointInput> = z.object({
+  sequence: z.number().int(),
+  Route: z.lazy(() => RouteCreateNestedOneWithoutRouteStopPointInputSchema)
 }).strict();
 
-export const RouteUncheckedCreateWithoutStopPointInputSchema: z.ZodType<Prisma.RouteUncheckedCreateWithoutStopPointInput> = z.object({
-  id: z.string(),
-  name: z.string(),
-  direction: z.lazy(() => Route_directionSchema),
-  estimatedDuration: z.number().int().optional().nullable(),
-  startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  isActive: z.boolean().optional().nullable(),
-  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  createdAt: z.coerce.date().optional(),
-  updatedAt: z.coerce.date().optional(),
-  Schedule: z.lazy(() => ScheduleUncheckedCreateNestedManyWithoutRouteInputSchema).optional(),
-  StudentAssignment: z.lazy(() => StudentAssignmentUncheckedCreateNestedManyWithoutRouteInputSchema).optional()
+export const RouteStopPointUncheckedCreateWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedCreateWithoutStopPointInput> = z.object({
+  id: z.number().int().optional(),
+  routeId: z.string(),
+  sequence: z.number().int()
 }).strict();
 
-export const RouteCreateOrConnectWithoutStopPointInputSchema: z.ZodType<Prisma.RouteCreateOrConnectWithoutStopPointInput> = z.object({
-  where: z.lazy(() => RouteWhereUniqueInputSchema),
-  create: z.union([ z.lazy(() => RouteCreateWithoutStopPointInputSchema),z.lazy(() => RouteUncheckedCreateWithoutStopPointInputSchema) ]),
+export const RouteStopPointCreateOrConnectWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointCreateOrConnectWithoutStopPointInput> = z.object({
+  where: z.lazy(() => RouteStopPointWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => RouteStopPointCreateWithoutStopPointInputSchema),z.lazy(() => RouteStopPointUncheckedCreateWithoutStopPointInputSchema) ]),
+}).strict();
+
+export const RouteStopPointCreateManyStopPointInputEnvelopeSchema: z.ZodType<Prisma.RouteStopPointCreateManyStopPointInputEnvelope> = z.object({
+  data: z.union([ z.lazy(() => RouteStopPointCreateManyStopPointInputSchema),z.lazy(() => RouteStopPointCreateManyStopPointInputSchema).array() ]),
+  skipDuplicates: z.boolean().optional()
 }).strict();
 
 export const StudentAssignmentCreateWithoutStopPointInputSchema: z.ZodType<Prisma.StudentAssignmentCreateWithoutStopPointInput> = z.object({
@@ -7309,45 +7392,20 @@ export const TripStopCreateManyStopPointInputEnvelopeSchema: z.ZodType<Prisma.Tr
   skipDuplicates: z.boolean().optional()
 }).strict();
 
-export const RouteUpsertWithoutStopPointInputSchema: z.ZodType<Prisma.RouteUpsertWithoutStopPointInput> = z.object({
-  update: z.union([ z.lazy(() => RouteUpdateWithoutStopPointInputSchema),z.lazy(() => RouteUncheckedUpdateWithoutStopPointInputSchema) ]),
-  create: z.union([ z.lazy(() => RouteCreateWithoutStopPointInputSchema),z.lazy(() => RouteUncheckedCreateWithoutStopPointInputSchema) ]),
-  where: z.lazy(() => RouteWhereInputSchema).optional()
+export const RouteStopPointUpsertWithWhereUniqueWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointUpsertWithWhereUniqueWithoutStopPointInput> = z.object({
+  where: z.lazy(() => RouteStopPointWhereUniqueInputSchema),
+  update: z.union([ z.lazy(() => RouteStopPointUpdateWithoutStopPointInputSchema),z.lazy(() => RouteStopPointUncheckedUpdateWithoutStopPointInputSchema) ]),
+  create: z.union([ z.lazy(() => RouteStopPointCreateWithoutStopPointInputSchema),z.lazy(() => RouteStopPointUncheckedCreateWithoutStopPointInputSchema) ]),
 }).strict();
 
-export const RouteUpdateToOneWithWhereWithoutStopPointInputSchema: z.ZodType<Prisma.RouteUpdateToOneWithWhereWithoutStopPointInput> = z.object({
-  where: z.lazy(() => RouteWhereInputSchema).optional(),
-  data: z.union([ z.lazy(() => RouteUpdateWithoutStopPointInputSchema),z.lazy(() => RouteUncheckedUpdateWithoutStopPointInputSchema) ]),
+export const RouteStopPointUpdateWithWhereUniqueWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointUpdateWithWhereUniqueWithoutStopPointInput> = z.object({
+  where: z.lazy(() => RouteStopPointWhereUniqueInputSchema),
+  data: z.union([ z.lazy(() => RouteStopPointUpdateWithoutStopPointInputSchema),z.lazy(() => RouteStopPointUncheckedUpdateWithoutStopPointInputSchema) ]),
 }).strict();
 
-export const RouteUpdateWithoutStopPointInputSchema: z.ZodType<Prisma.RouteUpdateWithoutStopPointInput> = z.object({
-  id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  direction: z.union([ z.lazy(() => Route_directionSchema),z.lazy(() => EnumRoute_directionFieldUpdateOperationsInputSchema) ]).optional(),
-  estimatedDuration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  isActive: z.union([ z.boolean(),z.lazy(() => NullableBoolFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  Schedule: z.lazy(() => ScheduleUpdateManyWithoutRouteNestedInputSchema).optional(),
-  StudentAssignment: z.lazy(() => StudentAssignmentUpdateManyWithoutRouteNestedInputSchema).optional()
-}).strict();
-
-export const RouteUncheckedUpdateWithoutStopPointInputSchema: z.ZodType<Prisma.RouteUncheckedUpdateWithoutStopPointInput> = z.object({
-  id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  direction: z.union([ z.lazy(() => Route_directionSchema),z.lazy(() => EnumRoute_directionFieldUpdateOperationsInputSchema) ]).optional(),
-  estimatedDuration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  isActive: z.union([ z.boolean(),z.lazy(() => NullableBoolFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  Schedule: z.lazy(() => ScheduleUncheckedUpdateManyWithoutRouteNestedInputSchema).optional(),
-  StudentAssignment: z.lazy(() => StudentAssignmentUncheckedUpdateManyWithoutRouteNestedInputSchema).optional()
+export const RouteStopPointUpdateManyWithWhereWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointUpdateManyWithWhereWithoutStopPointInput> = z.object({
+  where: z.lazy(() => RouteStopPointScalarWhereInputSchema),
+  data: z.union([ z.lazy(() => RouteStopPointUpdateManyMutationInputSchema),z.lazy(() => RouteStopPointUncheckedUpdateManyWithoutStopPointInputSchema) ]),
 }).strict();
 
 export const StudentAssignmentUpsertWithWhereUniqueWithoutStopPointInputSchema: z.ZodType<Prisma.StudentAssignmentUpsertWithWhereUniqueWithoutStopPointInput> = z.object({
@@ -7779,7 +7837,6 @@ export const TripUncheckedUpdateWithoutTrackingBusHistoryInputSchema: z.ZodType<
 export const RouteCreateWithoutStudentAssignmentInputSchema: z.ZodType<Prisma.RouteCreateWithoutStudentAssignmentInput> = z.object({
   id: z.string(),
   name: z.string(),
-  direction: z.lazy(() => Route_directionSchema),
   estimatedDuration: z.number().int().optional().nullable(),
   startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
   endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
@@ -7787,14 +7844,13 @@ export const RouteCreateWithoutStudentAssignmentInputSchema: z.ZodType<Prisma.Ro
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  Schedule: z.lazy(() => ScheduleCreateNestedManyWithoutRouteInputSchema).optional(),
-  StopPoint: z.lazy(() => StopPointCreateNestedManyWithoutRouteInputSchema).optional()
+  RouteStopPoint: z.lazy(() => RouteStopPointCreateNestedManyWithoutRouteInputSchema).optional(),
+  Schedule: z.lazy(() => ScheduleCreateNestedManyWithoutRouteInputSchema).optional()
 }).strict();
 
 export const RouteUncheckedCreateWithoutStudentAssignmentInputSchema: z.ZodType<Prisma.RouteUncheckedCreateWithoutStudentAssignmentInput> = z.object({
   id: z.string(),
   name: z.string(),
-  direction: z.lazy(() => Route_directionSchema),
   estimatedDuration: z.number().int().optional().nullable(),
   startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
   endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
@@ -7802,8 +7858,8 @@ export const RouteUncheckedCreateWithoutStudentAssignmentInputSchema: z.ZodType<
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  Schedule: z.lazy(() => ScheduleUncheckedCreateNestedManyWithoutRouteInputSchema).optional(),
-  StopPoint: z.lazy(() => StopPointUncheckedCreateNestedManyWithoutRouteInputSchema).optional()
+  RouteStopPoint: z.lazy(() => RouteStopPointUncheckedCreateNestedManyWithoutRouteInputSchema).optional(),
+  Schedule: z.lazy(() => ScheduleUncheckedCreateNestedManyWithoutRouteInputSchema).optional()
 }).strict();
 
 export const RouteCreateOrConnectWithoutStudentAssignmentInputSchema: z.ZodType<Prisma.RouteCreateOrConnectWithoutStudentAssignmentInput> = z.object({
@@ -7813,27 +7869,23 @@ export const RouteCreateOrConnectWithoutStudentAssignmentInputSchema: z.ZodType<
 
 export const StopPointCreateWithoutStudentAssignmentInputSchema: z.ZodType<Prisma.StopPointCreateWithoutStudentAssignmentInput> = z.object({
   id: z.string(),
-  sequence: z.number().int(),
   name: z.string(),
   location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  estimatedArrival: z.coerce.date().optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  Route: z.lazy(() => RouteCreateNestedOneWithoutStopPointInputSchema),
+  RouteStopPoint: z.lazy(() => RouteStopPointCreateNestedManyWithoutStopPointInputSchema).optional(),
   TripStop: z.lazy(() => TripStopCreateNestedManyWithoutStopPointInputSchema).optional()
 }).strict();
 
 export const StopPointUncheckedCreateWithoutStudentAssignmentInputSchema: z.ZodType<Prisma.StopPointUncheckedCreateWithoutStudentAssignmentInput> = z.object({
   id: z.string(),
-  routeId: z.string(),
-  sequence: z.number().int(),
   name: z.string(),
   location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  estimatedArrival: z.coerce.date().optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointUncheckedCreateNestedManyWithoutStopPointInputSchema).optional(),
   TripStop: z.lazy(() => TripStopUncheckedCreateNestedManyWithoutStopPointInputSchema).optional()
 }).strict();
 
@@ -7881,7 +7933,6 @@ export const RouteUpdateToOneWithWhereWithoutStudentAssignmentInputSchema: z.Zod
 export const RouteUpdateWithoutStudentAssignmentInputSchema: z.ZodType<Prisma.RouteUpdateWithoutStudentAssignmentInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  direction: z.union([ z.lazy(() => Route_directionSchema),z.lazy(() => EnumRoute_directionFieldUpdateOperationsInputSchema) ]).optional(),
   estimatedDuration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
@@ -7889,14 +7940,13 @@ export const RouteUpdateWithoutStudentAssignmentInputSchema: z.ZodType<Prisma.Ro
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  Schedule: z.lazy(() => ScheduleUpdateManyWithoutRouteNestedInputSchema).optional(),
-  StopPoint: z.lazy(() => StopPointUpdateManyWithoutRouteNestedInputSchema).optional()
+  RouteStopPoint: z.lazy(() => RouteStopPointUpdateManyWithoutRouteNestedInputSchema).optional(),
+  Schedule: z.lazy(() => ScheduleUpdateManyWithoutRouteNestedInputSchema).optional()
 }).strict();
 
 export const RouteUncheckedUpdateWithoutStudentAssignmentInputSchema: z.ZodType<Prisma.RouteUncheckedUpdateWithoutStudentAssignmentInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  direction: z.union([ z.lazy(() => Route_directionSchema),z.lazy(() => EnumRoute_directionFieldUpdateOperationsInputSchema) ]).optional(),
   estimatedDuration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
@@ -7904,8 +7954,8 @@ export const RouteUncheckedUpdateWithoutStudentAssignmentInputSchema: z.ZodType<
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  Schedule: z.lazy(() => ScheduleUncheckedUpdateManyWithoutRouteNestedInputSchema).optional(),
-  StopPoint: z.lazy(() => StopPointUncheckedUpdateManyWithoutRouteNestedInputSchema).optional()
+  RouteStopPoint: z.lazy(() => RouteStopPointUncheckedUpdateManyWithoutRouteNestedInputSchema).optional(),
+  Schedule: z.lazy(() => ScheduleUncheckedUpdateManyWithoutRouteNestedInputSchema).optional()
 }).strict();
 
 export const StopPointUpsertWithoutStudentAssignmentInputSchema: z.ZodType<Prisma.StopPointUpsertWithoutStudentAssignmentInput> = z.object({
@@ -7921,27 +7971,23 @@ export const StopPointUpdateToOneWithWhereWithoutStudentAssignmentInputSchema: z
 
 export const StopPointUpdateWithoutStudentAssignmentInputSchema: z.ZodType<Prisma.StopPointUpdateWithoutStudentAssignmentInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  estimatedArrival: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  Route: z.lazy(() => RouteUpdateOneRequiredWithoutStopPointNestedInputSchema).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointUpdateManyWithoutStopPointNestedInputSchema).optional(),
   TripStop: z.lazy(() => TripStopUpdateManyWithoutStopPointNestedInputSchema).optional()
 }).strict();
 
 export const StopPointUncheckedUpdateWithoutStudentAssignmentInputSchema: z.ZodType<Prisma.StopPointUncheckedUpdateWithoutStudentAssignmentInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  routeId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  estimatedArrival: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointUncheckedUpdateManyWithoutStopPointNestedInputSchema).optional(),
   TripStop: z.lazy(() => TripStopUncheckedUpdateManyWithoutStopPointNestedInputSchema).optional()
 }).strict();
 
@@ -8238,27 +8284,23 @@ export const TripStopUpdateManyWithWhereWithoutTripInputSchema: z.ZodType<Prisma
 
 export const StopPointCreateWithoutTripStopInputSchema: z.ZodType<Prisma.StopPointCreateWithoutTripStopInput> = z.object({
   id: z.string(),
-  sequence: z.number().int(),
   name: z.string(),
   location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  estimatedArrival: z.coerce.date().optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  Route: z.lazy(() => RouteCreateNestedOneWithoutStopPointInputSchema),
+  RouteStopPoint: z.lazy(() => RouteStopPointCreateNestedManyWithoutStopPointInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentCreateNestedManyWithoutStopPointInputSchema).optional()
 }).strict();
 
 export const StopPointUncheckedCreateWithoutTripStopInputSchema: z.ZodType<Prisma.StopPointUncheckedCreateWithoutTripStopInput> = z.object({
   id: z.string(),
-  routeId: z.string(),
-  sequence: z.number().int(),
   name: z.string(),
   location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  estimatedArrival: z.coerce.date().optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointUncheckedCreateNestedManyWithoutStopPointInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentUncheckedCreateNestedManyWithoutStopPointInputSchema).optional()
 }).strict();
 
@@ -8317,27 +8359,23 @@ export const StopPointUpdateToOneWithWhereWithoutTripStopInputSchema: z.ZodType<
 
 export const StopPointUpdateWithoutTripStopInputSchema: z.ZodType<Prisma.StopPointUpdateWithoutTripStopInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  estimatedArrival: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  Route: z.lazy(() => RouteUpdateOneRequiredWithoutStopPointNestedInputSchema).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointUpdateManyWithoutStopPointNestedInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentUpdateManyWithoutStopPointNestedInputSchema).optional()
 }).strict();
 
 export const StopPointUncheckedUpdateWithoutTripStopInputSchema: z.ZodType<Prisma.StopPointUncheckedUpdateWithoutTripStopInput> = z.object({
   id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  routeId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  estimatedArrival: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  RouteStopPoint: z.lazy(() => RouteStopPointUncheckedUpdateManyWithoutStopPointNestedInputSchema).optional(),
   StudentAssignment: z.lazy(() => StudentAssignmentUncheckedUpdateManyWithoutStopPointNestedInputSchema).optional()
 }).strict();
 
@@ -8382,6 +8420,138 @@ export const TripUncheckedUpdateWithoutTripStopInputSchema: z.ZodType<Prisma.Tri
   Report: z.lazy(() => ReportUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUncheckedUpdateManyWithoutTripNestedInputSchema).optional()
+}).strict();
+
+export const RouteCreateWithoutRouteStopPointInputSchema: z.ZodType<Prisma.RouteCreateWithoutRouteStopPointInput> = z.object({
+  id: z.string(),
+  name: z.string(),
+  estimatedDuration: z.number().int().optional().nullable(),
+  startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
+  endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
+  isActive: z.boolean().optional().nullable(),
+  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  Schedule: z.lazy(() => ScheduleCreateNestedManyWithoutRouteInputSchema).optional(),
+  StudentAssignment: z.lazy(() => StudentAssignmentCreateNestedManyWithoutRouteInputSchema).optional()
+}).strict();
+
+export const RouteUncheckedCreateWithoutRouteStopPointInputSchema: z.ZodType<Prisma.RouteUncheckedCreateWithoutRouteStopPointInput> = z.object({
+  id: z.string(),
+  name: z.string(),
+  estimatedDuration: z.number().int().optional().nullable(),
+  startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
+  endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
+  isActive: z.boolean().optional().nullable(),
+  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  Schedule: z.lazy(() => ScheduleUncheckedCreateNestedManyWithoutRouteInputSchema).optional(),
+  StudentAssignment: z.lazy(() => StudentAssignmentUncheckedCreateNestedManyWithoutRouteInputSchema).optional()
+}).strict();
+
+export const RouteCreateOrConnectWithoutRouteStopPointInputSchema: z.ZodType<Prisma.RouteCreateOrConnectWithoutRouteStopPointInput> = z.object({
+  where: z.lazy(() => RouteWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => RouteCreateWithoutRouteStopPointInputSchema),z.lazy(() => RouteUncheckedCreateWithoutRouteStopPointInputSchema) ]),
+}).strict();
+
+export const StopPointCreateWithoutRouteStopPointInputSchema: z.ZodType<Prisma.StopPointCreateWithoutRouteStopPointInput> = z.object({
+  id: z.string(),
+  name: z.string(),
+  location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
+  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  StudentAssignment: z.lazy(() => StudentAssignmentCreateNestedManyWithoutStopPointInputSchema).optional(),
+  TripStop: z.lazy(() => TripStopCreateNestedManyWithoutStopPointInputSchema).optional()
+}).strict();
+
+export const StopPointUncheckedCreateWithoutRouteStopPointInputSchema: z.ZodType<Prisma.StopPointUncheckedCreateWithoutRouteStopPointInput> = z.object({
+  id: z.string(),
+  name: z.string(),
+  location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
+  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  StudentAssignment: z.lazy(() => StudentAssignmentUncheckedCreateNestedManyWithoutStopPointInputSchema).optional(),
+  TripStop: z.lazy(() => TripStopUncheckedCreateNestedManyWithoutStopPointInputSchema).optional()
+}).strict();
+
+export const StopPointCreateOrConnectWithoutRouteStopPointInputSchema: z.ZodType<Prisma.StopPointCreateOrConnectWithoutRouteStopPointInput> = z.object({
+  where: z.lazy(() => StopPointWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => StopPointCreateWithoutRouteStopPointInputSchema),z.lazy(() => StopPointUncheckedCreateWithoutRouteStopPointInputSchema) ]),
+}).strict();
+
+export const RouteUpsertWithoutRouteStopPointInputSchema: z.ZodType<Prisma.RouteUpsertWithoutRouteStopPointInput> = z.object({
+  update: z.union([ z.lazy(() => RouteUpdateWithoutRouteStopPointInputSchema),z.lazy(() => RouteUncheckedUpdateWithoutRouteStopPointInputSchema) ]),
+  create: z.union([ z.lazy(() => RouteCreateWithoutRouteStopPointInputSchema),z.lazy(() => RouteUncheckedCreateWithoutRouteStopPointInputSchema) ]),
+  where: z.lazy(() => RouteWhereInputSchema).optional()
+}).strict();
+
+export const RouteUpdateToOneWithWhereWithoutRouteStopPointInputSchema: z.ZodType<Prisma.RouteUpdateToOneWithWhereWithoutRouteStopPointInput> = z.object({
+  where: z.lazy(() => RouteWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => RouteUpdateWithoutRouteStopPointInputSchema),z.lazy(() => RouteUncheckedUpdateWithoutRouteStopPointInputSchema) ]),
+}).strict();
+
+export const RouteUpdateWithoutRouteStopPointInputSchema: z.ZodType<Prisma.RouteUpdateWithoutRouteStopPointInput> = z.object({
+  id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  estimatedDuration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => NullableBoolFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  Schedule: z.lazy(() => ScheduleUpdateManyWithoutRouteNestedInputSchema).optional(),
+  StudentAssignment: z.lazy(() => StudentAssignmentUpdateManyWithoutRouteNestedInputSchema).optional()
+}).strict();
+
+export const RouteUncheckedUpdateWithoutRouteStopPointInputSchema: z.ZodType<Prisma.RouteUncheckedUpdateWithoutRouteStopPointInput> = z.object({
+  id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  estimatedDuration: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  startLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  endLocation: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  isActive: z.union([ z.boolean(),z.lazy(() => NullableBoolFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  Schedule: z.lazy(() => ScheduleUncheckedUpdateManyWithoutRouteNestedInputSchema).optional(),
+  StudentAssignment: z.lazy(() => StudentAssignmentUncheckedUpdateManyWithoutRouteNestedInputSchema).optional()
+}).strict();
+
+export const StopPointUpsertWithoutRouteStopPointInputSchema: z.ZodType<Prisma.StopPointUpsertWithoutRouteStopPointInput> = z.object({
+  update: z.union([ z.lazy(() => StopPointUpdateWithoutRouteStopPointInputSchema),z.lazy(() => StopPointUncheckedUpdateWithoutRouteStopPointInputSchema) ]),
+  create: z.union([ z.lazy(() => StopPointCreateWithoutRouteStopPointInputSchema),z.lazy(() => StopPointUncheckedCreateWithoutRouteStopPointInputSchema) ]),
+  where: z.lazy(() => StopPointWhereInputSchema).optional()
+}).strict();
+
+export const StopPointUpdateToOneWithWhereWithoutRouteStopPointInputSchema: z.ZodType<Prisma.StopPointUpdateToOneWithWhereWithoutRouteStopPointInput> = z.object({
+  where: z.lazy(() => StopPointWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => StopPointUpdateWithoutRouteStopPointInputSchema),z.lazy(() => StopPointUncheckedUpdateWithoutRouteStopPointInputSchema) ]),
+}).strict();
+
+export const StopPointUpdateWithoutRouteStopPointInputSchema: z.ZodType<Prisma.StopPointUpdateWithoutRouteStopPointInput> = z.object({
+  id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  StudentAssignment: z.lazy(() => StudentAssignmentUpdateManyWithoutStopPointNestedInputSchema).optional(),
+  TripStop: z.lazy(() => TripStopUpdateManyWithoutStopPointNestedInputSchema).optional()
+}).strict();
+
+export const StopPointUncheckedUpdateWithoutRouteStopPointInputSchema: z.ZodType<Prisma.StopPointUncheckedUpdateWithoutRouteStopPointInput> = z.object({
+  id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  StudentAssignment: z.lazy(() => StudentAssignmentUncheckedUpdateManyWithoutStopPointNestedInputSchema).optional(),
+  TripStop: z.lazy(() => TripStopUncheckedUpdateManyWithoutStopPointNestedInputSchema).optional()
 }).strict();
 
 export const ReportCreateManyUserInputSchema: z.ZodType<Prisma.ReportCreateManyUserInput> = z.object({
@@ -8616,6 +8786,12 @@ export const ScheduleUncheckedUpdateManyWithoutBusInputSchema: z.ZodType<Prisma.
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
+export const RouteStopPointCreateManyRouteInputSchema: z.ZodType<Prisma.RouteStopPointCreateManyRouteInput> = z.object({
+  id: z.number().int().optional(),
+  stopPointId: z.string(),
+  sequence: z.number().int()
+}).strict();
+
 export const ScheduleCreateManyRouteInputSchema: z.ZodType<Prisma.ScheduleCreateManyRouteInput> = z.object({
   id: z.string(),
   busId: z.string(),
@@ -8631,17 +8807,6 @@ export const ScheduleCreateManyRouteInputSchema: z.ZodType<Prisma.ScheduleCreate
   updatedAt: z.coerce.date().optional()
 }).strict();
 
-export const StopPointCreateManyRouteInputSchema: z.ZodType<Prisma.StopPointCreateManyRouteInput> = z.object({
-  id: z.string(),
-  sequence: z.number().int(),
-  name: z.string(),
-  location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]),
-  estimatedArrival: z.coerce.date().optional().nullable(),
-  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  createdAt: z.coerce.date().optional(),
-  updatedAt: z.coerce.date().optional()
-}).strict();
-
 export const StudentAssignmentCreateManyRouteInputSchema: z.ZodType<Prisma.StudentAssignmentCreateManyRouteInput> = z.object({
   id: z.string(),
   studentId: z.string(),
@@ -8651,6 +8816,23 @@ export const StudentAssignmentCreateManyRouteInputSchema: z.ZodType<Prisma.Stude
   effectiveTo: z.coerce.date().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional()
+}).strict();
+
+export const RouteStopPointUpdateWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointUpdateWithoutRouteInput> = z.object({
+  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  StopPoint: z.lazy(() => StopPointUpdateOneRequiredWithoutRouteStopPointNestedInputSchema).optional()
+}).strict();
+
+export const RouteStopPointUncheckedUpdateWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedUpdateWithoutRouteInput> = z.object({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  stopPointId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const RouteStopPointUncheckedUpdateManyWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedUpdateManyWithoutRouteInput> = z.object({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  stopPointId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const ScheduleUpdateWithoutRouteInputSchema: z.ZodType<Prisma.ScheduleUpdateWithoutRouteInput> = z.object({
@@ -8695,43 +8877,6 @@ export const ScheduleUncheckedUpdateManyWithoutRouteInputSchema: z.ZodType<Prism
   startDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   endDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.lazy(() => Schedule_statusSchema),z.lazy(() => NullableEnumSchedule_statusFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-}).strict();
-
-export const StopPointUpdateWithoutRouteInputSchema: z.ZodType<Prisma.StopPointUpdateWithoutRouteInput> = z.object({
-  id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
-  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  estimatedArrival: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  StudentAssignment: z.lazy(() => StudentAssignmentUpdateManyWithoutStopPointNestedInputSchema).optional(),
-  TripStop: z.lazy(() => TripStopUpdateManyWithoutStopPointNestedInputSchema).optional()
-}).strict();
-
-export const StopPointUncheckedUpdateWithoutRouteInputSchema: z.ZodType<Prisma.StopPointUncheckedUpdateWithoutRouteInput> = z.object({
-  id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
-  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  estimatedArrival: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  StudentAssignment: z.lazy(() => StudentAssignmentUncheckedUpdateManyWithoutStopPointNestedInputSchema).optional(),
-  TripStop: z.lazy(() => TripStopUncheckedUpdateManyWithoutStopPointNestedInputSchema).optional()
-}).strict();
-
-export const StopPointUncheckedUpdateManyWithoutRouteInputSchema: z.ZodType<Prisma.StopPointUncheckedUpdateManyWithoutRouteInput> = z.object({
-  id: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
-  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  location: z.union([ z.lazy(() => JsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
-  estimatedArrival: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   meta: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -8826,6 +8971,12 @@ export const TripUncheckedUpdateManyWithoutScheduleInputSchema: z.ZodType<Prisma
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
+export const RouteStopPointCreateManyStopPointInputSchema: z.ZodType<Prisma.RouteStopPointCreateManyStopPointInput> = z.object({
+  id: z.number().int().optional(),
+  routeId: z.string(),
+  sequence: z.number().int()
+}).strict();
+
 export const StudentAssignmentCreateManyStopPointInputSchema: z.ZodType<Prisma.StudentAssignmentCreateManyStopPointInput> = z.object({
   id: z.string(),
   studentId: z.string(),
@@ -8843,6 +8994,23 @@ export const TripStopCreateManyStopPointInputSchema: z.ZodType<Prisma.TripStopCr
   actualArrival: z.coerce.date().optional().nullable(),
   actualDeparture: z.coerce.date().optional().nullable(),
   status: z.lazy(() => TripStop_statusSchema).optional().nullable()
+}).strict();
+
+export const RouteStopPointUpdateWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointUpdateWithoutStopPointInput> = z.object({
+  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  Route: z.lazy(() => RouteUpdateOneRequiredWithoutRouteStopPointNestedInputSchema).optional()
+}).strict();
+
+export const RouteStopPointUncheckedUpdateWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedUpdateWithoutStopPointInput> = z.object({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  routeId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+}).strict();
+
+export const RouteStopPointUncheckedUpdateManyWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedUpdateManyWithoutStopPointInput> = z.object({
+  id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  routeId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const StudentAssignmentUpdateWithoutStopPointInputSchema: z.ZodType<Prisma.StudentAssignmentUpdateWithoutStopPointInput> = z.object({
@@ -10106,6 +10274,68 @@ export const TripStopFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.TripStopFindU
   where: TripStopWhereUniqueInputSchema,
 }).strict() ;
 
+export const RouteStopPointFindFirstArgsSchema: z.ZodType<Prisma.RouteStopPointFindFirstArgs> = z.object({
+  select: RouteStopPointSelectSchema.optional(),
+  include: RouteStopPointIncludeSchema.optional(),
+  where: RouteStopPointWhereInputSchema.optional(),
+  orderBy: z.union([ RouteStopPointOrderByWithRelationInputSchema.array(),RouteStopPointOrderByWithRelationInputSchema ]).optional(),
+  cursor: RouteStopPointWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ RouteStopPointScalarFieldEnumSchema,RouteStopPointScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const RouteStopPointFindFirstOrThrowArgsSchema: z.ZodType<Prisma.RouteStopPointFindFirstOrThrowArgs> = z.object({
+  select: RouteStopPointSelectSchema.optional(),
+  include: RouteStopPointIncludeSchema.optional(),
+  where: RouteStopPointWhereInputSchema.optional(),
+  orderBy: z.union([ RouteStopPointOrderByWithRelationInputSchema.array(),RouteStopPointOrderByWithRelationInputSchema ]).optional(),
+  cursor: RouteStopPointWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ RouteStopPointScalarFieldEnumSchema,RouteStopPointScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const RouteStopPointFindManyArgsSchema: z.ZodType<Prisma.RouteStopPointFindManyArgs> = z.object({
+  select: RouteStopPointSelectSchema.optional(),
+  include: RouteStopPointIncludeSchema.optional(),
+  where: RouteStopPointWhereInputSchema.optional(),
+  orderBy: z.union([ RouteStopPointOrderByWithRelationInputSchema.array(),RouteStopPointOrderByWithRelationInputSchema ]).optional(),
+  cursor: RouteStopPointWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ RouteStopPointScalarFieldEnumSchema,RouteStopPointScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const RouteStopPointAggregateArgsSchema: z.ZodType<Prisma.RouteStopPointAggregateArgs> = z.object({
+  where: RouteStopPointWhereInputSchema.optional(),
+  orderBy: z.union([ RouteStopPointOrderByWithRelationInputSchema.array(),RouteStopPointOrderByWithRelationInputSchema ]).optional(),
+  cursor: RouteStopPointWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict() ;
+
+export const RouteStopPointGroupByArgsSchema: z.ZodType<Prisma.RouteStopPointGroupByArgs> = z.object({
+  where: RouteStopPointWhereInputSchema.optional(),
+  orderBy: z.union([ RouteStopPointOrderByWithAggregationInputSchema.array(),RouteStopPointOrderByWithAggregationInputSchema ]).optional(),
+  by: RouteStopPointScalarFieldEnumSchema.array(),
+  having: RouteStopPointScalarWhereWithAggregatesInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict() ;
+
+export const RouteStopPointFindUniqueArgsSchema: z.ZodType<Prisma.RouteStopPointFindUniqueArgs> = z.object({
+  select: RouteStopPointSelectSchema.optional(),
+  include: RouteStopPointIncludeSchema.optional(),
+  where: RouteStopPointWhereUniqueInputSchema,
+}).strict() ;
+
+export const RouteStopPointFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.RouteStopPointFindUniqueOrThrowArgs> = z.object({
+  select: RouteStopPointSelectSchema.optional(),
+  include: RouteStopPointIncludeSchema.optional(),
+  where: RouteStopPointWhereUniqueInputSchema,
+}).strict() ;
+
 export const UserCreateArgsSchema: z.ZodType<Prisma.UserCreateArgs> = z.object({
   select: UserSelectSchema.optional(),
   include: UserIncludeSchema.optional(),
@@ -10791,5 +11021,48 @@ export const TripStopUpdateManyArgsSchema: z.ZodType<Prisma.TripStopUpdateManyAr
 
 export const TripStopDeleteManyArgsSchema: z.ZodType<Prisma.TripStopDeleteManyArgs> = z.object({
   where: TripStopWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const RouteStopPointCreateArgsSchema: z.ZodType<Prisma.RouteStopPointCreateArgs> = z.object({
+  select: RouteStopPointSelectSchema.optional(),
+  include: RouteStopPointIncludeSchema.optional(),
+  data: z.union([ RouteStopPointCreateInputSchema,RouteStopPointUncheckedCreateInputSchema ]),
+}).strict() ;
+
+export const RouteStopPointUpsertArgsSchema: z.ZodType<Prisma.RouteStopPointUpsertArgs> = z.object({
+  select: RouteStopPointSelectSchema.optional(),
+  include: RouteStopPointIncludeSchema.optional(),
+  where: RouteStopPointWhereUniqueInputSchema,
+  create: z.union([ RouteStopPointCreateInputSchema,RouteStopPointUncheckedCreateInputSchema ]),
+  update: z.union([ RouteStopPointUpdateInputSchema,RouteStopPointUncheckedUpdateInputSchema ]),
+}).strict() ;
+
+export const RouteStopPointCreateManyArgsSchema: z.ZodType<Prisma.RouteStopPointCreateManyArgs> = z.object({
+  data: z.union([ RouteStopPointCreateManyInputSchema,RouteStopPointCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict() ;
+
+export const RouteStopPointDeleteArgsSchema: z.ZodType<Prisma.RouteStopPointDeleteArgs> = z.object({
+  select: RouteStopPointSelectSchema.optional(),
+  include: RouteStopPointIncludeSchema.optional(),
+  where: RouteStopPointWhereUniqueInputSchema,
+}).strict() ;
+
+export const RouteStopPointUpdateArgsSchema: z.ZodType<Prisma.RouteStopPointUpdateArgs> = z.object({
+  select: RouteStopPointSelectSchema.optional(),
+  include: RouteStopPointIncludeSchema.optional(),
+  data: z.union([ RouteStopPointUpdateInputSchema,RouteStopPointUncheckedUpdateInputSchema ]),
+  where: RouteStopPointWhereUniqueInputSchema,
+}).strict() ;
+
+export const RouteStopPointUpdateManyArgsSchema: z.ZodType<Prisma.RouteStopPointUpdateManyArgs> = z.object({
+  data: z.union([ RouteStopPointUpdateManyMutationInputSchema,RouteStopPointUncheckedUpdateManyInputSchema ]),
+  where: RouteStopPointWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const RouteStopPointDeleteManyArgsSchema: z.ZodType<Prisma.RouteStopPointDeleteManyArgs> = z.object({
+  where: RouteStopPointWhereInputSchema.optional(),
   limit: z.number().optional(),
 }).strict() ;

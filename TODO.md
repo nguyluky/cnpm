@@ -1,133 +1,115 @@
-# Auth
+Tốt lắm 😎 — nếu `Route.path` đã được lưu trong `meta` (rất hợp lý để linh hoạt sau này), thì ta có thể giữ schema như cũ và tập trung vào **API thực tế đầy đủ**, bám đúng **database** mà bạn đang dùng.
 
-| Method | Endpoint                  | Description                           |
-| ------ | ------------------------- | ------------------------------------- |
-| `POST` | `/api/auth/login`         | Đăng nhập (username/email + password) |
-| `POST` | `/api/auth/register`      | Đăng ký người dùng mới                |
-| `POST` | `/api/auth/logout`        | Đăng xuất                             |
-| `POST` | `/api/auth/refresh-token` | Làm mới token                         |
-| `GET`  | `/api/auth/profile`       | Lấy thông tin người dùng hiện tại     |
+Dưới đây là danh sách **API endpoints thực tế** được thiết kế chuẩn REST, chia theo vai trò:
 
+---
 
+# 🧩 **Smart School Bus API – SSB 1.0**
 
-# Users
-| Method   | Endpoint          | Description          |
-| -------- | ----------------- | -------------------- |
-| `GET`    | `/api/users`      | Danh sách người dùng |
-| `GET`    | `/api/users/{id}` | Chi tiết người dùng  |
-| `POST`   | `/api/users`      | Tạo người dùng       |
-| `PUT`    | `/api/users/{id}` | Cập nhật người dùng  | 
-| `DELETE` | `/api/users/{id}` | Xóa người dùng       |
+## **Auth & User**
 
+| Method | Endpoint         | Description                               | body                                                                                                                                                         | response                                                                                                                                                                          |
+| ------ | ---------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST` | `/auth/register` | Đăng ký tài khoản (Parent, Driver, Admin) | <pre><code>interface RegisterRequest {<br>username: string;<br>email: string;<br>password: string;<br>role: 'ADMIN' | 'DRIVER' | 'PARENT';<br>}</code></pre> | <pre><code>interface RegisterResponse {<br>accessToken: string;<br>refreshToken: string;<br>user: { id: string; username: string; email: string; role: string }<br>}</code></pre> |
+| `POST` | `/auth/login`    | Đăng nhập                                 | <pre><code>interface LoginRequest {<br>email: string;<br>password: string;<br>}</code></pre>                                                                 | <pre><code>interface LoginResponse {<br>accessToken: string;<br>refreshToken: string;<br>user: {...}<br>}</code></pre>                                                            |
+| `POST` | `/auth/refresh`  | Làm mới token                             | <pre><code>{ refreshToken: string }</code></pre>                                                                                                             | <pre><code>{ accessToken: string }</code></pre>                                                                                                                                   |
+| `GET`  | `/auth/profile`  | Lấy thông tin người dùng hiện tại         | -                                                                                                                                                            | <pre><code>{ id, username, email, roles: ['DRIVER'] }</code></pre>                                                                                                                |
 
-# ROLES & PERMISSIONS                   V
-| Method   | Endpoint                      | Description                     |
-| -------- | ----------------------------- | ------------------------------- |
-| `GET`    | `/api/roles`                  | Danh sách vai trò               |
-| `GET`    | `/api/roles/{id}`             | Chi tiết vai trò                |
-| `POST`   | `/api/roles`                  | Tạo vai trò                     |
-| `PUT`    | `/api/roles/{id}`             | Cập nhật vai trò                |
-| `DELETE` | `/api/roles/{id}`             | Xóa vai trò                     |
-| `GET`    | `/api/roles/{id}/permissions` | Lấy danh sách quyền của vai trò |
-| `POST`   | `/api/roles/{id}/permissions` | Gán quyền cho vai trò           |
+---
 
-# Permission
-| Method   | Endpoint                | Description     |
-| -------- | ----------------------- | --------------- |
-| `GET`    | `/api/permissions`      | Danh sách quyền |
-| `POST`   | `/api/permissions`      | Tạo quyền       |
-| `DELETE` | `/api/permissions/{id}` | Xóa quyền       |
+## **Bus Management (Admin)**
 
-# BUS MANAGEMENT
-| Method   | Endpoint                   | Description                    |
-| -------- | -------------------------- | ------------------------------ |
-| `GET`    | `/api/buses`               | Danh sách xe buýt              |
-| `GET`    | `/api/buses/{id}`          | Chi tiết xe buýt               |
-| `POST`   | `/api/buses`               | Thêm xe buýt mới               |
-| `PUT`    | `/api/buses/{id}`          | Cập nhật thông tin xe buýt     |
-| `DELETE` | `/api/buses/{id}`          | Xóa xe buýt                    |
-| `GET`    | `/api/buses/{id}/schedule` | Lấy các lịch trình của xe buýt |
+| Method   | Endpoint     | Description                  | body                                                                           | response                                                          |
+| -------- | ------------ | ---------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `GET`    | `/buses`     | Lấy danh sách tất cả xe buýt | -                                                                              | <pre><code>[{ id, licensePlate, capacity, meta }]</code></pre>    |
+| `POST`   | `/buses`     | Thêm xe buýt mới             | <pre><code>{ licensePlate: string; capacity: number; meta?: any }</code></pre> | <pre><code>{ id, licensePlate, capacity }</code></pre>            |
+| `PUT`    | `/buses/:id` | Cập nhật thông tin xe        | <pre><code>{ capacity?: number; meta?: any }</code></pre>                      | <pre><code>{ id, licensePlate, capacity, updatedAt }</code></pre> |
+| `DELETE` | `/buses/:id` | Xóa xe buýt                  | -                                                                              | <pre><code>{ success: true }</code></pre>                         |
 
+---
 
-# ROUTE & STOP POINTS
-| Method   | Endpoint                 | Description                       |
-| -------- | ------------------------ | --------------------------------- |
-| `GET`    | `/api/routes`            | Danh sách tuyến đường             |
-| `GET`    | `/api/routes/{id}`       | Chi tiết tuyến đường              |
-| `POST`   | `/api/routes`            | Tạo tuyến đường                   |
-| `PUT`    | `/api/routes/{id}`       | Cập nhật tuyến đường              |
-| `DELETE` | `/api/routes/{id}`       | Xóa tuyến đường                   |
-| `GET`    | `/api/routes/{id}/stops` | Lấy các điểm dừng của tuyến       |
-| `POST`   | `/api/routes/{id}/stops` | Gán danh sách điểm dừng vào tuyến |
+## **Route Management (Admin)**
 
-# StopPoint
-| Method   | Endpoint               | Description         |
-| -------- | ---------------------- | ------------------- |
-| `GET`    | `/api/stoppoints`      | Danh sách điểm dừng |
-| `GET`    | `/api/stoppoints/{id}` | Chi tiết điểm dừng  |
-| `POST`   | `/api/stoppoints`      | Tạo điểm dừng       |
-| `PUT`    | `/api/stoppoints/{id}` | Cập nhật điểm dừng  |
-| `DELETE` | `/api/stoppoints/{id}` | Xóa điểm dừng       |
+| Method   | Endpoint      | Description                                   | body                                                                                                               | response                                                                                  |
+| -------- | ------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `GET`    | `/routes`     | Lấy danh sách tuyến đường                     | -                                                                                                                  | <pre><code>[{ id, name, startLocation, endLocation, meta }]</code></pre>                  |
+| `GET`    | `/routes/:id` | Lấy chi tiết tuyến đường (bao gồm StopPoints) | -                                                                                                                  | <pre><code>{ id, name, startLocation, endLocation, meta, stopPoints: [...] }</code></pre> |
+| `POST`   | `/routes`     | Tạo tuyến đường mới                           | <pre><code>{ name: string; startLocation: any; endLocation: any; meta?: any; stopPointIds: string[] }</code></pre> | <pre><code>{ id, name, stopPoints: [...] }</code></pre>                                   |
+| `PUT`    | `/routes/:id` | Cập nhật tuyến đường                          | <pre><code>{ name?: string; meta?: any; stopPointIds?: string[] }</code></pre>                                     | <pre><code>{ id, name, updatedAt }</code></pre>                                           |
+| `DELETE` | `/routes/:id` | Xóa tuyến đường                               | -                                                                                                                  | <pre><code>{ success: true }</code></pre>                                                 |
 
+---
 
-# SCHEDULE MANAGEMENT
-| Method   | Endpoint                       | Description                                 |
-| -------- | ------------------------------ | ------------------------------------------- |
-| `GET`    | `/api/schedules`               | Danh sách lịch trình                        |
-| `GET`    | `/api/schedules/{id}`          | Chi tiết lịch trình                         |
-| `POST`   | `/api/schedules`               | Tạo lịch trình (bus + route + driver)       |
-| `PUT`    | `/api/schedules/{id}`          | Cập nhật lịch trình                         |
-| `DELETE` | `/api/schedules/{id}`          | Xóa lịch trình                              |
-| `GET`    | `/api/schedules/{id}/students` | Danh sách học sinh trong lịch trình         |
-| `POST`   | `/api/schedules/{id}/students` | Gán học sinh vào lịch trình (qua StopPoint) |
+## **StopPoint Management**
 
-# STUDENT SCHEDULE MAPPING
-| Method   | Endpoint                                         | Description                         |
-| -------- | ------------------------------------------------ | ----------------------------------- |
-| `GET`    | `/api/student-schedule`                          | Danh sách gán học sinh – lịch trình |
-| `POST`   | `/api/student-schedule`                          | Gán học sinh vào điểm dừng cụ thể   |
-| `DELETE` | `/api/student-schedule/{studentId}/{scheduleId}` | Gỡ học sinh khỏi lịch trình         |
+| Method   | Endpoint          | Description             | body                                                                                           | response                                                         |
+| -------- | ----------------- | ----------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `GET`    | `/stoppoints`     | Lấy danh sách điểm dừng | -                                                                                              | <pre><code>[{ id, name, location, sequence, meta }]</code></pre> |
+| `POST`   | `/stoppoints`     | Tạo điểm dừng mới       | <pre><code>{ name: string; location: {lat:number; lng:number}; sequence: number }</code></pre> | <pre><code>{ id, name, location }</code></pre>                   |
+| `PUT`    | `/stoppoints/:id` | Cập nhật điểm dừng      | <pre><code>{ name?: string; location?: any; sequence?: number }</code></pre>                   | <pre><code>{ id, updatedAt }</code></pre>                        |
+| `DELETE` | `/stoppoints/:id` | Xóa điểm dừng           | -                                                                                              | <pre><code>{ success: true }</code></pre>                        |
 
+---
 
-# ATTENDANCE TRACKING
-| Method | Endpoint                                | Description                     |
-| ------ | --------------------------------------- | ------------------------------- |
-| `GET`  | `/api/attendance`                       | Lấy danh sách điểm danh         |
-| `GET`  | `/api/attendance/{id}`                  | Chi tiết điểm danh              |
-| `POST` | `/api/attendance`                       | Ghi nhận trạng thái đón/trả     |
-| `GET`  | `/api/attendance/student/{studentId}`   | Lịch sử điểm danh theo học sinh |
-| `GET`  | `/api/attendance/schedule/{scheduleId}` | Lịch sử điểm danh theo chuyến   |
+## **Schedule (Quản lý lịch trình)**
 
+| Method   | Endpoint         | Description              | body                                                                                                                                            | response                                                                                      |
+| -------- | ---------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `GET`    | `/schedules`     | Lấy danh sách lịch trình | -                                                                                                                                               | <pre><code>[{ id, bus, route, driver, meta }]</code></pre>                                    |
+| `GET`    | `/schedules/:id` | Lấy chi tiết lịch trình  | -                                                                                                                                               | <pre><code>{ id, bus, route, driver, times: [{dayOfWeek, departureTime}], meta }</code></pre> |
+| `POST`   | `/schedules`     | Tạo lịch trình mới       | <pre><code>{ busId: string; routeId: string; driverId: string; times: [{ dayOfWeek: number; departureTime: string }]; meta?: any }</code></pre> | <pre><code>{ id, busId, routeId, driverId, times: [...] }</code></pre>                        |
+| `PUT`    | `/schedules/:id` | Cập nhật lịch trình      | <pre><code>{ busId?: string; driverId?: string; meta?: any }</code></pre>                                                                       | <pre><code>{ id, updatedAt }</code></pre>                                                     |
+| `DELETE` | `/schedules/:id` | Xóa lịch trình           | -                                                                                                                                               | <pre><code>{ success: true }</code></pre>                                                     |
 
-# TRACKING BUS LOCATION
-| Method           | Endpoint                              | Description                             |
-| ---------------- | ------------------------------------- | --------------------------------------- |
-| `POST`           | `/api/tracking/update`                | Driver cập nhật vị trí xe buýt (mỗi 3s) |
-| `GET`            | `/api/tracking/schedule/{scheduleId}` | Lấy toàn bộ vị trí theo chuyến          |
-| `GET`            | `/api/tracking/bus/{busId}/latest`    | Lấy vị trí hiện tại của xe buýt         |
-| `WS` / `SignalR` | `/hubs/tracking`                      | Stream vị trí realtime cho phụ huynh    |
+---
 
-# REPORT MANAGEMENT
-| Method   | Endpoint                             | Description                          |
-| -------- | ------------------------------------ | ------------------------------------ |
-| `GET`    | `/api/reports`                       | Danh sách báo cáo                    |
-| `GET`    | `/api/reports/{id}`                  | Chi tiết báo cáo                     |
-| `POST`   | `/api/reports`                       | Tạo báo cáo (incident / maintenance) |
-| `DELETE` | `/api/reports/{id}`                  | Xóa báo cáo                          |
-| `GET`    | `/api/reports/schedule/{scheduleId}` | Lấy báo cáo theo chuyến              |
+## **Driver APIs**
 
-# DASHBOARD / ANALYTICS
-| Method | Endpoint                    | Description                                    |
-| ------ | --------------------------- | ---------------------------------------------- |
-| `GET`  | `/api/dashboard/overview`   | Tổng quan số lượng bus, student, route, driver |
-| `GET`  | `/api/dashboard/reports`    | Thống kê báo cáo sự cố                         |
-| `GET`  | `/api/dashboard/attendance` | Tỉ lệ điểm danh                                |
+| Method | Endpoint                  | Description                            | body                                                                                                              | response                                                                  |
+| ------ | ------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `GET`  | `/driver/schedules/today` | Xem lịch trình hôm nay                 | -                                                                                                                 | <pre><code>{ id, route: {...}, bus: {...}, students: [...] }</code></pre> |
+| `POST` | `/driver/tracking`        | Cập nhật vị trí xe theo thời gian thực | <pre><code>{ scheduleId: string; location: {lat, lng}; timestamp: string }</code></pre>                           | <pre><code>{ success: true }</code></pre>                                 |
+| `POST` | `/driver/report`          | Gửi báo cáo sự cố                      | <pre><code>{ scheduleId?: string; reportType: string; description: string; }</code></pre>                         | <pre><code>{ id, createdAt }</code></pre>                                 |
+| `POST` | `/driver/attendance`      | Cập nhật trạng thái đón/trả học sinh   | <pre><code>{ studentId: string; scheduleId: string; status: 'picked_up' \| 'dropped_off' \| 'missed' }</code></pre> | <pre><code>{ id, status, updatedAt }</code></pre>                         |
 
-# NOTIFICATION (OPTIONAL)
-| Method   | Endpoint                  | Description                           |
-| -------- | ------------------------- | ------------------------------------- |
-| `GET`    | `/api/notifications`      | Lấy danh sách thông báo               |
-| `POST`   | `/api/notifications`      | Gửi thông báo (admin → driver/parent) |
-| `GET`    | `/api/notifications/{id}` | Chi tiết thông báo                    |
-| `DELETE` | `/api/notifications/{id}` | Xóa thông báo                         |
+---
+
+## **Parent APIs**
+
+| Method | Endpoint                         | Description                          | body                                            | response                                                                    |
+| ------ | -------------------------------- | ------------------------------------ | ----------------------------------------------- | --------------------------------------------------------------------------- |
+| `GET`  | `/parent/students`               | Lấy danh sách con của phụ huynh      | -                                               | <pre><code>[{ id, name, stopPoint, attendanceStatus }]</code></pre>         |
+| `GET`  | `/parent/students/:id/track`     | Theo dõi xe buýt con đang đi         | -                                               | <pre><code>{ studentId, busLocation: {lat, lng}, eta: number }</code></pre> |
+| `GET`  | `/parent/notifications`          | Lấy thông báo về xe đến gần hoặc trễ | -                                               | <pre><code>[{ type, message, timestamp }]</code></pre>                      |
+| `PUT`  | `/parent/students/:id/stoppoint` | Thay đổi điểm đón/trả cho học sinh   | <pre><code>{ stopPointId: string }</code></pre> | <pre><code>{ success: true }</code></pre>                                   |
+
+---
+
+## **Report Management (Admin)**
+
+| Method | Endpoint       | Description           | body | response                                                                                  |
+| ------ | -------------- | --------------------- | ---- | ----------------------------------------------------------------------------------------- |
+| `GET`  | `/reports`     | Lấy danh sách báo cáo | -    | <pre><code>[{ id, reportType, description, reporter, scheduleId }]</code></pre>           |
+| `GET`  | `/reports/:id` | Xem chi tiết báo cáo  | -    | <pre><code>{ id, reportType, description, reporter: {...}, schedule: {...} }</code></pre> |
+
+---
+
+## **Tracking & History**
+
+| Method | Endpoint                | Description                        | body | response                                                      |
+| ------ | ----------------------- | ---------------------------------- | ---- | ------------------------------------------------------------- |
+| `GET`  | `/tracking/:scheduleId` | Lấy lịch sử vị trí xe trong chuyến | -    | <pre><code>[{ timestamp, location: {lat, lng} }]</code></pre> |
+
+---
+
+Tổng cộng ~ **25 endpoint chính**, đủ cho hệ thống vận hành thật:
+
+* Admin quản lý toàn bộ
+* Driver cập nhật tracking và báo cáo
+* Phụ huynh xem theo dõi & thông báo
+
+---
+
+Bạn có muốn tôi tạo **OpenAPI 3.0 (Swagger YAML)** từ danh sách này luôn không?
+→ Sẽ tiện để import vào Swagger UI / Postman.
 

@@ -7,6 +7,7 @@ import RoutesController from "./routes/controller";
 import SchedulesController from "./schedules/controller";
 import DriversController from "./drivers/controller";
 import ParentsController from "./parents/controller";
+import StoppointsController from "./stoppoints/controller";
 
 class RootRouter {
     @Use()
@@ -26,6 +27,9 @@ class RootRouter {
 
     @Use()
     parents = ParentsController
+  
+    @Use()
+    stoppoints = StoppointsController
 }
 
 

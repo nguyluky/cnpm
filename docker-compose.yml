@@ -2,13 +2,13 @@ version: '3.8'
 
 services:
   api:
-    image: nguyluky/api_tiktok_clone
+    build: .
     ports:
       - "3000:3000"
     env_file: .env
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=mysql://user:password@db:3306/tiktok_clone
+      - DATABASE_URL=mysql://user:password@db:3306/software_engineering
     restart: unless-stopped
     depends_on:
       - db
@@ -16,7 +16,7 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: tiktok_clone
+      MYSQL_DATABASE: software_engineering
       MYSQL_USER: user
       MYSQL_PASSWORD: password
     ports:

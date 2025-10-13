@@ -2,15 +2,12 @@ import "reflect-metadata";
 import { ApiRequestStatus } from "@lib/httpMethod";
 import { Request } from "express";
 import { ObjectType } from "@lib/validate";
-import { IsArray, IsNumber, IsString } from "@lib/type_declaration";
 import { StopPointsData } from "@src/types/share.type";
+import { IsArray, IsNumber } from "@lib/type_declaration";
 
 export class getAllReqBody {}
 export class getAllReqQuery {}
-export class getAllReqParams {
-  @IsString()
-  id: string;
-}
+export class getAllReqParams {}
 
 export @ApiRequestStatus({
     statusCode: 200,

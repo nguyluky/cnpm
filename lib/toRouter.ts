@@ -15,17 +15,23 @@ import { json } from "stream/consumers";
 
 
 const toJSONSchema = (schema: z.ZodTypeAny) => {
-    // @ts-ignore
-    const schema_ = z.toJSONSchema(schema, {
-        uri: (id: string) => `#/components/schemas/${id}`,
-        external: {
-            registry: globalRegistry,
+    try {
+        // @ts-ignore
+        const schema_ = z.toJSONSchema(schema, {
             uri: (id: string) => `#/components/schemas/${id}`,
-            defs: {}
-        }
-    });
+            external: {
+                registry: globalRegistry,
+                uri: (id: string) => `#/components/schemas/${id}`,
+                defs: {}
+            }
+        });
 
-    return schema_
+        return schema_
+    } catch (error) {
+        console.error("Error converting to JSON Schema:", error);
+        console.log((schema as any).shape);
+        throw error;
+    }
 }
 
 interface ZodApiSchemas {
@@ -66,9 +72,9 @@ function convertToZodSchemas(schemas: ApiSchemas, module?: string): ZodApiSchema
         const value = (schemas || {})[key];
         if (!value) continue;
         if (Array.isArray(value) && key != 'params') {
-            const sch = value.map((e) => { 
+            const sch = value.map((e) => {
                 (e as any).module_name = module ? module : "";
-                return toSchema(e) 
+                return toSchema(e)
             }).filter((e) => e !== null);
             schema_zod[key] = {
                 schemaClass: value,
@@ -182,6 +188,7 @@ function validateRequest(
 
         else {
             const dataParse = schema.schema.safeParse((req as any)[key] || {});
+            console.log(dataParse)
 
             if (!dataParse.success) {
                 console.error("Validation error:", (req as any)[key]);

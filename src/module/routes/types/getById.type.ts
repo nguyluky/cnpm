@@ -14,13 +14,19 @@ export class getByIdReqParams {
     id: string;
 }
 
+
+export class StopPointsWithSequence extends StopPointsData {
+    @IsNumber()
+    sequence: number;
+} 
+
 export @ApiRequestStatus({
     statusCode: 200,
     statusMess: "Success"
 }) class getByIdRes extends RouteData {
 
-    @IsArray(StopPointsData)
-    stopPoints: StopPointsData[];
+    @IsArray(StopPointsWithSequence)
+    stopPoints: StopPointsWithSequence[];
 
     @IsString({
     format: Formats["iso.datetime"]

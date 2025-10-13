@@ -68,7 +68,7 @@ export default class DriverController {
                     id: sa.StopPoint.id,
                     name: sa.StopPoint.name,
                     location: GeoLocation.parse(sa.StopPoint.location),
-                    sequence: sa.StopPoint.sequence,
+                    sequence: -1,
                     meta: sa.StopPoint.meta as any
                 }) : undefined,
             }))

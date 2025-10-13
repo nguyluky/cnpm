@@ -5,6 +5,7 @@ import { ObjectType } from "@lib/validate";
 import { Formats, IsArray, IsEnum, IsObject, IsString } from "@lib/type_declaration";
 import { ScheduleInfo, TimeTable } from "./share.type";
 import { BusData, RouteData } from "@src/types/share.type";
+import { warn } from "console";
 
 // { busId: string; routeId: string; driverId: string; times: [{ dayOfWeek: number; departureTime: string }]; meta?: any }
 export class createReqBody {
@@ -59,6 +60,7 @@ export const schema = {
     query: createReqQuery,
     params: createReqParams
 };
+
 export type RerturnType = typeof schema['res'] extends (infer R)[] 
   ? R extends new (...args: any[]) => any 
     ? InstanceType<R>

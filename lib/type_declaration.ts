@@ -16,7 +16,7 @@ interface SchemaData {
     className?: string;
 }
 
-export enum Formats {
+export enum Formats{
     /**
      * email format (see https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address)
      * example:
@@ -45,31 +45,31 @@ export enum Formats {
     *  - valid: "😀"
     *  - invalid: "abc"
    */
-    "emoji",         // validates a single emoji character
+    // "emoji",         // validates a single emoji character
     /**
     * Base64 format (see https://en.wikipedia.org/wiki/Base64)
     * example:
     *  - valid: "SGVsbG8gd29ybGQ="
     *  - invalid: "Hello world"
    */
-    "base64",
+    // "base64",
     /**
     * Base64url format (see https://en.wikipedia.org/wiki/Base64#Variants_summary)
     * example:
     *  - valid: "SGVsbG8gd29ybGQ"
     *  - invalid: "Hello world"
    */
-    "base64url",
+    // "base64url",
     /**
     * Nano ID format (see https://github.com/ai/nanoid?tab=readme-ov-file)
     * example:
     *  - valid: "V1StGXR8_Z5jdHi6B-myT"
     *  - invalid: "Hello world"
    */
-    "nanoid",
-    "cuid",
-    "cuid2",
-    "ulid",
+    // "nanoid",
+    // "cuid",
+    // "cuid2",
+    // "ulid",
     /**
     * IPv4 format (see https://en.wikipedia.org/wiki/IPv4)
     * example:
@@ -84,8 +84,8 @@ export enum Formats {
     *  - invalid: "2001:0db8:85a3:0000:0000:8a2e:0370:733Z"
    */
     "ipv6",
-    "cidrv4",        // ipv4 CIDR block
-    "cidrv6",        // ipv6 CIDR block
+    // "cidrv4",        // ipv4 CIDR block
+    // "cidrv6",        // ipv6 CIDR block
     /**
     * ISO 8601 date format (see https://en.wikipedia.org/wiki/ISO_8601)
     * example:
@@ -123,13 +123,12 @@ interface NumberOptions {
     max?: number;
     optional?: boolean;
     coerce?: boolean;
-    description?: string; 
+    description?: string;
 }
 
 interface StringOptions {
     minLength?: number;
     maxLength?: number;
-    email?: boolean;
     optional?: boolean;
     format?: Formats
     description?: string;
@@ -159,31 +158,31 @@ interface EnumOptions {
 }
 
 
-function addFormat(z_: z.ZodString, format: Formats) {
-
-
+function addFormat(format: Formats) {
     switch (format) {
-        case Formats.email: return z_.email()
-        case Formats.uuid: return z_.uuid()
-        case Formats.url: return z_.url()
-        case Formats.emoji: return z_.emoji()
-        case Formats.base64: return z_.base64()
-        case Formats.base64url: return z_.base64url()
-        case Formats.nanoid: return z_.nanoid()
-        case Formats.cuid: return z_.cuid()
-        case Formats.cuid2: return z_.cuid2()
-        case Formats.ulid: return z_.ulid()
-        case Formats.ipv4: return z_.ipv4()
-        case Formats.ipv6: return z_.ipv6()
-        case Formats.cidrv4: return z_.cidrv4()
-        case Formats.cidrv6: return z_.cidrv6()
-        case Formats["iso.date"]: return z_.date()
-        case Formats["iso.time"]: return z_.time()
-        case Formats["iso.datetime"]: return z_.datetime()
-        case Formats["iso.duration"]: return z_.duration()
+        case Formats.email: return z.email()
+        case Formats.uuid: return z.uuid()
+        case Formats.url: return z.url()
+        // case Formats.emoji: return z.emoji()
+        // case Formats.base64: return z.base64()
+        // case Formats.base64url: return z.base64url()
+        // case Formats.nanoid: return z.nanoid()
+        // case Formats.cuid: return z.cuid()
+        // case Formats.cuid2: return z.cuid2()
+        // case Formats.ulid: return z.ulid()
+        case Formats.ipv4: return z.ipv4()
+        case Formats.ipv6: return z.ipv6()
+        // case Formats.cidrv4: return z.cidrv4()
+        // case Formats.cidrv6: return z.cidrv6()
+        case Formats["iso.date"]: return z.iso.date()
+        case Formats["iso.time"]: return z.iso.time()
+        case Formats["iso.datetime"]: return z.iso.datetime()
+        case Formats["iso.duration"]: return z.iso.duration()
     }
 
-    return z_;
+    console.log("Unknown format, return string", format);
+
+    return z.string();
 }
 
 // Decorator cho Number
@@ -202,11 +201,15 @@ export function IsNumber(options: NumberOptions = {}) {
 // Decorator cho String
 export function IsString(options: StringOptions = {}) {
     return function (target: any, propertyKey: PropertyKey) {
-        let schema: any = z.string();
-        if (options.minLength !== undefined) schema = schema.min(options.minLength);
-        if (options.maxLength !== undefined) schema = schema.max(options.maxLength);
-        if (options.email) schema = schema.email();
-        if (options.format) schema = addFormat(schema, options.format);
+        let schema: any;
+        if (options.format !== undefined) {
+            schema = addFormat(options.format);
+        }
+        else {
+            schema = z.string();
+            if (options.minLength !== undefined) schema = schema.min(options.minLength);
+            if (options.maxLength !== undefined) schema = schema.max(options.maxLength);
+        }
         if (options.optional) schema = schema.optional();
         if (options.description) schema = schema.meta({ description: options.description });
         Reflect.defineMetadata(SCHEMA_METADATA_KEY, schema, target, wa(propertyKey));
@@ -368,17 +371,21 @@ export function toSchema<T extends ClassType_>(target: T, allowSaveGb = false): 
 }
 
 export function toJsonSchema<T extends ClassType_>(target: T | T[]) {
+    try {
+        if (Array.isArray(target)) {
+            let b = target.map(e => toSchema(e)).filter(e => e !== null);
+            return z.toJSONSchema(z.union(b));
+        }
+        const zod_schema = toSchema(target);
 
-    if (Array.isArray(target)) {
-        let b = target.map(e => toSchema(e)).filter(e => e !== null);
-        return z.toJSONSchema(z.union(b));
+        if (!zod_schema) {
+            return null;
+        }
+
+        return z.toJSONSchema(zod_schema);
+    } catch (error) {
+        console.error("Error in toJsonSchema:", error);
+        throw error;
     }
-    const zod_schema = toSchema(target);
-
-    if (!zod_schema) {
-        return null;
-    }
-
-    return z.toJSONSchema(zod_schema);
 }
 

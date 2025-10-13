@@ -92,7 +92,6 @@ model Report {
 model Route {
   id                String              @id
   name              String
-  direction         Route_direction
   estimatedDuration Int?                @default(0)
   startLocation     Json
   endLocation       Json
@@ -100,8 +99,8 @@ model Route {
   meta              Json?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @default(now())
+  RouteStopPoint    RouteStopPoint[]
   Schedule          Schedule[]
-  StopPoint         StopPoint[]
   StudentAssignment StudentAssignment[]
 }
 
@@ -131,19 +130,14 @@ model Schedule {
 
 model StopPoint {
   id                String              @id
-  routeId           String
-  sequence          Int
   name              String
   location          Json
-  estimatedArrival  DateTime?           @db.Time(0)
   meta              Json?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @default(now())
-  Route             Route               @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  RouteStopPoint    RouteStopPoint[]
   StudentAssignment StudentAssignment[]
   TripStop          TripStop[]
-
-  @@index([routeId], map: "StopPoint_routeId_fkey")
 }
 
 model Student {
@@ -235,9 +229,16 @@ model TripStop {
   @@index([tripId], map: "TripStop_tripId_fkey")
 }
 
-enum Route_direction {
-  MORNING
-  AFTERNOON
+model RouteStopPoint {
+  id          Int       @id @default(autoincrement())
+  routeId     String
+  stopPointId String
+  sequence    Int
+  Route       Route     @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  StopPoint   StopPoint @relation(fields: [stopPointId], references: [id], onDelete: Cascade)
+
+  @@index([routeId], map: "RouteStopPoint_routeId_fkey")
+  @@index([stopPointId], map: "RouteStopPoint_stopPointId_fkey")
 }
 
 enum Bus_status {
