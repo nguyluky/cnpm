@@ -36,7 +36,7 @@ export class createReqBody {
     endDate: string;
 
     @IsString({
-        format: Formats["iso.time"]
+        format: Formats["iso.datetime"]
     })
     startTime: string;
 

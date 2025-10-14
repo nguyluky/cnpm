@@ -3,10 +3,12 @@ import { ObjectType } from "@lib/validate";
 import { BusData, RouteData } from "@src/types/share.type";
 
 export class TimeTable extends ObjectType {
-    @IsString()
-    dayOfWeek: string;
+    @IsArray(String)
+    dayOfWeek: string[];
 
-    @IsString()
+    @IsString({
+        format: Formats["iso.time"]
+    })
     departureTime: string;
 }
 
