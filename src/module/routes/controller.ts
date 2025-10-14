@@ -3,17 +3,20 @@ import * as updateType from "./types/update.type";
 import * as createType from "./types/create.type";
 import * as getByIdType from "./types/getById.type";
 import * as getAllType from "./types/getAll.type";
-import { Get, Post, Put, Delete } from "@lib/httpMethod";
+import { Get, Post, Put, Delete, useAuth } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
 import { AnyObject, GeoLocation, RouteData, StopPointsData } from "@src/types/share.type";
 import { v4 as uuidv4 } from "uuid";
 import { NotFoundError } from "@lib/exception";
+import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
 
 export default class routescontroller {
 
     @Get("/")
     @Validate(getAllType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["read:route"])
     async getAll(req: getAllType.Req): Promise<getAllType.RerturnType> {
         const { page, limit, search } = req.query;
         const where = search ? {
@@ -50,6 +53,8 @@ export default class routescontroller {
 
     @Get("/:id")
     @Validate(getByIdType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["read:route_detail"])
     async getById(req: getByIdType.Req): Promise<getByIdType.RerturnType> {
         const { id } = req.params;
         const route = await prisma.route.findUnique({
@@ -84,6 +89,8 @@ export default class routescontroller {
 
     @Post("/")
     @Validate(createType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["create:route"])
     async create(req: createType.Req): Promise<createType.RerturnType> {
         const { name, startLocation, endLocation, meta, stopPointIds } = req.body;
         const newRoute = await prisma.route.create({
@@ -127,6 +134,8 @@ export default class routescontroller {
 
     @Put("/:id")
     @Validate(updateType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["update:route"])
     async update(req: updateType.Req): Promise<updateType.RerturnType> {
         const { id } = req.params;
         const { name, meta, stopPointIds } = req.body;
@@ -172,6 +181,8 @@ export default class routescontroller {
 
     @Delete("/")
     @Validate(deleteByIdType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["delete:route"])
     async deleteById(req: deleteByIdType.Req): Promise<deleteByIdType.RerturnType> {
         const { id } = req.params;
         const existingRoute = await prisma.route.findUnique({ where: { id } });

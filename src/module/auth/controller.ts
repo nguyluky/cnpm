@@ -5,7 +5,9 @@ import * as registerType from "./types/register.type";
 import { Get, Post, Put, Delete } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
-import { ConflictError } from "@lib/exception";
+import { BadRequestError, ConflictError } from "@lib/exception";
+import bcrypt from "bcryptjs";
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "@src/utils/jwt";
 
 export default class AuthController {
 
@@ -27,7 +29,7 @@ export default class AuthController {
             data: {
                 username,
                 // TODO: 
-                passwordHash: password, // In a real application, hash the password before storing it
+                passwordHash: bcrypt.hashSync(password, 10), // In a real application, hash the password
                 email,
             },
             select: {
@@ -65,35 +67,91 @@ export default class AuthController {
                 email: true,
                 passwordHash: true,
                 UserRoles: {
-                    select: {
-                        Roles: true
+                    include: {
+                        Roles: {
+                            include: {
+                                RolePermissions: {
+                                    include: {
+                                        Permission: true
+                                    }
+                                }
+                            }
+                        }
+
                     }
                 }
             }
         });
 
-        if (!user || user.passwordHash !== password) { // In a real application, use a secure password comparison
-            throw new Error("Invalid username or password");
+        if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
+            throw new BadRequestError("Invalid username or password");
         }
+
+
+        const accessToken = generateAccessToken({
+            id: user.id,
+            username: user.username,
+            roles: user.UserRoles.map(ur => ur.Roles.name),
+            email: user.email,
+            permissions: user.UserRoles.flatMap(ur => ur.Roles.RolePermissions.map(rp => rp.Permission.name))
+        });
+
+        const refreshToken = generateRefreshToken(user.id)
 
         return loginType.loginRes.parse({
             id: user.id,
             username: user.username,
             email: user.email,
             roles: user.UserRoles.map(ur => ur.Roles.name),
-            accessToken: "dummy-access-token", // TODO: Generate JWT or similar token
-            refreshToken: "dummy-refresh-token" // TODO: Generate refresh token
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            permissions: user.UserRoles.flatMap(ur => ur.Roles.RolePermissions.map(rp => rp.Permission.name))
         });
     }
-
 
     @Post("/refresh")
     @Validate(refreshType.schema)
     async refresh(req: refreshType.Req): Promise<refreshType.RerturnType> {
         const { refreshToken } = req.body;
-        // TODO: Validate the refresh token and generate a new access token
+
+        const data = verifyRefreshToken(refreshToken);
+
+        const user = await prisma.user.findUnique({
+            where: { id: data.userid },
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                UserRoles: {
+                    include: {
+                        Roles: {
+                            include: {
+                                RolePermissions: {
+                                    include: {
+                                        Permission: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!user) {
+            throw new BadRequestError("Invalid refresh token");
+        }
+
+        const accessToken = generateAccessToken({
+            id: user.id,
+            username: user.username,
+            roles: user.UserRoles.map(ur => ur.Roles.name),
+            email: user.email,
+            permissions: user.UserRoles.flatMap(ur => ur.Roles.RolePermissions.map(rp => rp.Permission.name))
+        });
+
         return refreshType.refreshRes.parse({
-            accessToken: "ddddd"
+            accessToken: accessToken
         });
     }
 

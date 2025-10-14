@@ -2,17 +2,20 @@ import * as deleteBusType from "./types/deleteBus.type";
 import * as createBusType from "./types/createBus.type";
 import * as getByIdType from "./types/getById.type";
 import * as getAllType from "./types/getAll.type";
-import { Get, Post, Put, Delete } from "@lib/httpMethod";
+import { Get, Post, Put, Delete, useAuth } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
 import { AnyObject, BusData } from "@src/types/share.type";
 import { NotFoundError } from "@lib/exception";
 import { v4 as uuidv4 } from "uuid";
+import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
 
 export default class BusesController {
 
     @Get("/")
     @Validate(getAllType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["read:bus"])
     async getAll(req: getAllType.Req): Promise<getAllType.RerturnType> {
         const { page, limit, search } = req.query;
         const where = search ? {
@@ -53,6 +56,8 @@ export default class BusesController {
 
     @Get("/:id")
     @Validate(getByIdType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["read:bus_detail"])
     async getById(req: getByIdType.Req): Promise<getByIdType.RerturnType> {
         const { id } = req.params;
         const bus = await prisma.bus.findUnique({
@@ -75,6 +80,8 @@ export default class BusesController {
 
     @Post("/")
     @Validate(createBusType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["create:bus"])
     async createBus(req: createBusType.Req): Promise<createBusType.RerturnType> {
         const { licensePlate, capacity, metadata } = req.body;
         const bus = await prisma.bus.create({
@@ -96,6 +103,8 @@ export default class BusesController {
 
     @Delete("/:id")
     @Validate(deleteBusType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["delete:bus"])
     async deleteBus(req: deleteBusType.Req): Promise<deleteBusType.RerturnType> {
         const { id } = req.params;
         const bus = await prisma.bus.findUnique({
@@ -112,5 +121,4 @@ export default class BusesController {
 
         return deleteBusType.deleteBusRes.parse({});
     }
-
 }

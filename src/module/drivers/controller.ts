@@ -2,7 +2,7 @@ import * as getToDaySchedulesType from "./types/getToDaySchedules.type";
 import { Get, Post, Put, Delete, useAuth } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
-import { JWT_AUTH } from "@src/utils/jwt";
+import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
 import { BusData, GeoLocation, RouteData, StudentData } from "@src/types/share.type";
 import { StopPoints } from "../routes/types/create.type";
 
@@ -11,6 +11,7 @@ export default class DriverController {
     @Get("/schedules/today")
     @Validate(getToDaySchedulesType.schema)
     @useAuth(JWT_AUTH)
+    @usePremisstion(["read:driver_schedule"])
     async getToDaySchedules(req: getToDaySchedulesType.Req): Promise<getToDaySchedulesType.RerturnType> {
         const userId = req.user.id;
 

@@ -6,7 +6,7 @@ import { HttpScheme, HttpSecurityScheme } from "@lib/BaseAuth";
 import { Middleware } from "@lib/httpMethod";
 import { User } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
-import { ApiError, TokenTimeoutError, TokenVerificationError } from "@lib/exception";
+import { ApiError, ForbiddenError, TokenTimeoutError, TokenVerificationError, UnauthorizedError } from "@lib/exception";
 
 // sử dụng để xác thực JWT 
 class JWTAuth extends HttpSecurityScheme {
@@ -26,29 +26,56 @@ class JWTAuth extends HttpSecurityScheme {
 
 }
 
-type Premisstion = 'update:user' | 
+type Premisstion = 'update:user' |
     'read:profile' |
     'read:public_profile' |
     'delete:user' |
     'create:bus' |
     'update:bus' |
     'delete:bus' |
+    'read:bus' |
+    'read:bus_detail' |
     'role:read' |
     'role:create' |
     'role:update' |
     'role:delete' |
-    'permission:read';
+    'permission:read' |
+    'read:driver_schedule' |
+    'read:parent_students' |
+    'read:routes' |
+    'read:route' |
+    'read:route_detail' |
+    'create:route' |
+    'update:route' |
+    'delete:route' |
+    'read:schedule' |
+    'read:schedule_detail' |
+    'create:schedule' |
+    'update:schedule' |
+    'delete:schedule' |
+    'read:stoppoints' |
+    'read:stoppoints_detail' |
+    'create:stoppoints' |
+    'update:stoppoints' |
+    'delete:stoppoints';
+
 
 
 // kiểm tra quyền hạng
-export const perDecorator = (
+export const usePremisstion = (
     requiredPermissions: Premisstion[]
 ) => {
-    return Middleware.bind(null, async (req, metaData ) => {
+    return Middleware.bind(null, async (req, metaData) => {
         // @ts-ignore
         const user = req.user as RequestWithUser['user'];
-        // TODO: check permissions here
-        // console.log(user, metaData)
+
+        const userPermissions = user.permissions || [];
+
+        const hasPermission = requiredPermissions.every(permission => userPermissions.includes(permission));
+
+        if (!hasPermission) {
+            throw new ForbiddenError("You do not have permission to access this resource.");
+        }
     })();
 }
 
@@ -77,14 +104,22 @@ export const verifyTempToken = (token: string) => {
     }
 }
 
-export const generateAccessToken = (user: User) => {
-    const { passwordHash, ...userWithoutSensitiveData } = user;
+type UserWithoutSensitiveData = {
+    id: string;
+    email: string;
+    roles: string[];
+    username: string;
+    permissions: string[];
+}
+
+export const generateAccessToken = (user: UserWithoutSensitiveData) => {
+    const {...userWithoutSensitiveData } = user;
     const token = jwt.sign({ user: userWithoutSensitiveData }, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRATION as StringValue });
     return token;
 }
 
 
-export type RequestWithUser = { user: Omit<User, 'password' | 'two_factor_secret'> };
+export type RequestWithUser = { user: UserWithoutSensitiveData };
 export const verifyAccessToken = (token: string) => {
     try {
         const decoded = jwt.verify(token, env.JWT_SECRET);

@@ -3,17 +3,20 @@ import * as updateStoppointsType from "./types/updateStoppoints.type";
 import * as getAllType from "./types/getAll.type";
 import * as createStoppointsType from "./types/createStoppoints.type";
 import * as getStoppointsType from "./types/getStoppoints.type";
-import { Get, Post, Put, Delete } from "@lib/httpMethod";
+import { Get, Post, Put, Delete, useAuth } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
 import { GeoLocation, StopPointsData } from "@src/types/share.type";
 import { v4 as uuidv4 } from "uuid";
 import { NotFoundError } from "@lib/exception";
+import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
 
 export default class StoppointsController {
 
     @Get("/stoppoints")
     @Validate(getAllType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["read:stoppoints"])
     async getAll(req: getAllType.Req): Promise<getAllType.RerturnType> {
         const stoppoints = await prisma.stopPoint.findMany({})
 
@@ -32,6 +35,8 @@ export default class StoppointsController {
 
     @Get("/stoppoints/:id")
     @Validate(getStoppointsType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["read:stoppoints_detail"])
     async getStoppoints(req: getStoppointsType.Req): Promise<getStoppointsType.RerturnType> {
         const { id } = req.params;
         const stoppoint = await prisma.stopPoint.findUnique({
@@ -53,6 +58,8 @@ export default class StoppointsController {
 
     @Post("/stoppoints")
     @Validate(createStoppointsType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["create:stoppoints"])
     async createStoppoints(req: createStoppointsType.Req): Promise<createStoppointsType.RerturnType> {
         const { name, location, sequence } = req.body;
         const stoppoint = await prisma.stopPoint.create({
@@ -72,6 +79,8 @@ export default class StoppointsController {
 
     @Put("/stoppoints/:id")
     @Validate(updateStoppointsType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["update:stoppoints"])
     async updateStoppoints(req: updateStoppointsType.Req): Promise<updateStoppointsType.RerturnType> {
         const { id } = req.params;
         const data = {
@@ -100,6 +109,8 @@ export default class StoppointsController {
 
     @Delete("/stoppoints/:id")
     @Validate(deleteStoppointsType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["delete:stoppoints"])
     async deleteStoppoints(req: deleteStoppointsType.Req): Promise<deleteStoppointsType.RerturnType> {
         const { id } = req.params;
         const stoppoint = await prisma.stopPoint.findUnique({

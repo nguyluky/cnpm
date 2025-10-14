@@ -31,6 +31,9 @@ export @ApiRequestStatus({
     @IsArray(String)
     roles: string[];
 
+    @IsArray(String)
+    permissions: string[];
+
     @IsString()
     accessToken: string;
 

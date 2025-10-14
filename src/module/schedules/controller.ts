@@ -3,18 +3,21 @@ import * as updateType from "./types/update.type";
 import * as createType from "./types/create.type";
 import * as getByIdType from "./types/getById.type";
 import * as getAllType from "./types/getAll.type";
-import { Get, Post, Put, Delete } from "@lib/httpMethod";
+import { Get, Post, Put, Delete, useAuth } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
 import { AnyObject, BusData, GeoLocation, RouteData } from "@src/types/share.type";
 import { NotFoundError } from "@lib/exception";
 import { ScheduleInfo, TimeTable } from "./types/share.type";
 import { v4 as uuid } from "uuid";
+import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
 
 export default class SchedulesController {
 
     @Get("/")
     @Validate(getAllType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["read:schedule"])
     async getAll(req: getAllType.Req): Promise<getAllType.RerturnType> {
         const { page, limit, search } = req.query;
         const where = search ? {
@@ -76,6 +79,8 @@ export default class SchedulesController {
 
     @Get("/:id")
     @Validate(getByIdType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["read:schedule_detail"])
     async getById(req: getByIdType.Req): Promise<getByIdType.RerturnType> {
         const {id} = req.params;
         const schedule = await prisma.schedule.findUnique({
@@ -120,6 +125,8 @@ export default class SchedulesController {
 
     @Post("/")
     @Validate(createType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["create:schedule"])
     async create(req: createType.Req): Promise<createType.RerturnType> {
         const { busId, routeId, driverId, times, meta, type} = req.body;
 
@@ -172,6 +179,8 @@ export default class SchedulesController {
 
     @Put("/:id")
     @Validate(updateType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["update:schedule"])
     async update(req: updateType.Req): Promise<updateType.RerturnType> {
         const { busId, routeId, driverId, times, meta, type} = req.body;
         const { id } = req.params;
@@ -232,6 +241,8 @@ export default class SchedulesController {
 
     @Delete("/:id")
     @Validate(deleteType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["delete:schedule"])
     async delete(req: deleteType.Req): Promise<deleteType.RerturnType> {
         const { id } = req.params;
         

@@ -2,7 +2,7 @@ import * as getStudentsType from "./types/getStudents.type";
 import { Get, Post, Put, Delete, useAuth } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
-import { JWT_AUTH } from "@src/utils/jwt";
+import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
 import { GeoLocation, StopPointsData, StudentData } from "@src/types/share.type";
 import { StopPoints } from "@src/module/routes/types/create.type";
 import { NotBeforeError } from "jsonwebtoken";
@@ -13,6 +13,7 @@ export default class ParentController {
     @Get("/getStudents")
     @Validate(getStudentsType.schema)
     @useAuth(JWT_AUTH)
+    @usePremisstion(["read:parent_students"])
     async getStudents(req: getStudentsType.Req) {
         const userId = req.user.id;
         const students = await prisma.student.findMany({
