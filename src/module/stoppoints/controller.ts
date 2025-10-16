@@ -13,12 +13,16 @@ import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
 
 export default class StoppointsController {
 
-    @Get("/stoppoints")
+    @Get("/")
     @Validate(getAllType.schema)
     @useAuth(JWT_AUTH)
     @usePremisstion(["read:stoppoints"])
     async getAll(req: getAllType.Req): Promise<getAllType.RerturnType> {
         const stoppoints = await prisma.stopPoint.findMany({})
+
+        if (!stoppoints) {
+            throw new NotFoundError("Stoppoint not found");
+        }
 
         const formattedStoppoints = stoppoints.map(stoppoint => StopPointsData.parse({
             id: stoppoint.id,
@@ -33,7 +37,7 @@ export default class StoppointsController {
         })
     }
 
-    @Get("/stoppoints/:id")
+    @Get("/:id")
     @Validate(getStoppointsType.schema)
     @useAuth(JWT_AUTH)
     @usePremisstion(["read:stoppoints_detail"])
@@ -56,7 +60,7 @@ export default class StoppointsController {
         });
     }
 
-    @Post("/stoppoints")
+    @Post("/")
     @Validate(createStoppointsType.schema)
     @useAuth(JWT_AUTH)
     @usePremisstion(["create:stoppoints"])
@@ -77,7 +81,7 @@ export default class StoppointsController {
         })
     }
 
-    @Put("/stoppoints/:id")
+    @Put("/:id")
     @Validate(updateStoppointsType.schema)
     @useAuth(JWT_AUTH)
     @usePremisstion(["update:stoppoints"])
@@ -107,7 +111,7 @@ export default class StoppointsController {
         })
     }
 
-    @Delete("/stoppoints/:id")
+    @Delete("/:id")
     @Validate(deleteStoppointsType.schema)
     @useAuth(JWT_AUTH)
     @usePremisstion(["delete:stoppoints"])
@@ -118,7 +122,7 @@ export default class StoppointsController {
         });
 
         if (!stoppoint) {
-            throw new NotFoundError("Stoppoints not found");
+            throw new NotFoundError("Stoppoint not found");
         }
 
         await prisma.stopPoint.delete({
