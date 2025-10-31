@@ -14,6 +14,8 @@ export class createStoppointsReqBody {
 
     @IsObject(GeoLocation)
     location: GeoLocation;
+
+
     
 }
 export class createStoppointsReqQuery {}

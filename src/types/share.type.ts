@@ -100,6 +100,38 @@ export class RouteData extends ObjectType {
   metadata: Object;
 }
 
+
+// #     "meta": {
+// #         "zone": "string",
+// #         "ward": "string",
+// #         "addressNo": "string",
+// #         "street": "string",
+// #         "supportDisability": "string",
+// #         "status": "string",
+// #         "search": "string"
+export class StopPointsMeta extends ObjectType {
+    @IsString({ optional: true })
+    zone?: string;
+    
+    @IsString({ optional: true })
+    ward?: string;
+
+    @IsString({ optional: true })
+    addressNo?: string;
+
+    @IsString({ optional: true })
+    street?: string;
+
+    @IsString({ optional: true })
+    supportDisability?: string;
+
+    @IsString({ optional: true })
+    status?: string;
+
+    @IsString({ optional: true })
+    search?: string;
+}
+
 export class StopPointsData extends ObjectType {
   @IsString({
     format: Formats.uuid,
@@ -112,11 +144,8 @@ export class StopPointsData extends ObjectType {
   @IsObject(GeoLocation)
   location: GeoLocation;
 
-  // @IsNumber()
-  // sequence: number;
-
-  @IsObject(AnyObject)
-  meta: AnyObject;
+  @IsObject(StopPointsMeta)
+  meta: StopPointsMeta;
 }
 
 export class StudentData extends ObjectType {
