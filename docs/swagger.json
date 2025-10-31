@@ -48,9 +48,6 @@
             "type": "string"
           }
         },
-        "required": [
-          "__"
-        ],
         "additionalProperties": false,
         "id": "AnyObject"
       },
@@ -1412,7 +1409,8 @@
                     "$ref": "#/components/schemas/AnyObject"
                   },
                   "stopPointIds": {
-                    "maxItems": 1,
+                    "minItems": 1,
+                    "maxItems": 50,
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -1530,137 +1528,6 @@
                     "message": {
                       "type": "string",
                       "description": "Human-readable error message"
-                    }
-                  },
-                  "required": []
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "http://json-schema.org/draft-07/schema#",
-                  "title": "ApiErrorResponse",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer",
-                      "description": "HTTP status code of the error",
-                      "minimum": 400,
-                      "maximum": 599
-                    },
-                    "message": {
-                      "type": "string",
-                      "description": "Human-readable error message"
-                    },
-                    "name": {
-                      "type": "string",
-                      "description": "Error class name"
-                    }
-                  },
-                  "required": []
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "JWTAuth": []
-          }
-        ]
-      },
-      "delete": {
-        "tags": [
-          "routescontroller"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "$schema": "https://json-schema.org/draft/2020-12/schema",
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "http://json-schema.org/draft-07/schema#",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer",
-                      "description": "HTTP status code of the error",
-                      "minimum": 200,
-                      "maximum": 300
-                    },
-                    "message": {
-                      "type": "string",
-                      "description": "Human-readable error message"
-                    }
-                  },
-                  "required": []
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "http://json-schema.org/draft-07/schema#",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer",
-                      "description": "HTTP status code of the error",
-                      "minimum": 400,
-                      "maximum": 599
-                    },
-                    "message": {
-                      "type": "string",
-                      "description": "Human-readable error message"
-                    }
-                  },
-                  "required": []
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "http://json-schema.org/draft-07/schema#",
-                  "title": "ApiErrorResponse",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer",
-                      "description": "HTTP status code of the error",
-                      "minimum": 400,
-                      "maximum": 599
-                    },
-                    "message": {
-                      "type": "string",
-                      "description": "Human-readable error message"
-                    },
-                    "name": {
-                      "type": "string",
-                      "description": "Error class name"
                     }
                   },
                   "required": []
@@ -1918,15 +1785,14 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$"
+                    "type": "string"
                   },
                   "meta": {
                     "$ref": "#/components/schemas/AnyObject"
                   },
                   "stopPointIds": {
                     "minItems": 1,
+                    "maxItems": 50,
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -1935,7 +1801,6 @@
                 },
                 "required": [
                   "name",
-                  "meta",
                   "stopPointIds"
                 ],
                 "additionalProperties": false
@@ -2000,6 +1865,137 @@
                         "updatedAt"
                       ],
                       "additionalProperties": false
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "HTTP status code of the error",
+                      "minimum": 400,
+                      "maximum": 599
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "title": "ApiErrorResponse",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "HTTP status code of the error",
+                      "minimum": 400,
+                      "maximum": 599
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Error class name"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "title": "ApiErrorResponse",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "HTTP status code of the error",
+                      "minimum": 400,
+                      "maximum": 599
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Error class name"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWTAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "routescontroller"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "HTTP status code of the error",
+                      "minimum": 200,
+                      "maximum": 300
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
                     }
                   },
                   "required": []
