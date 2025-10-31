@@ -61,7 +61,9 @@ export default class StoppointsController {
     @useAuth(JWT_AUTH)
     @usePremisstion(["create:stoppoints"])
     async createStoppoints(req: createStoppointsType.Req): Promise<createStoppointsType.RerturnType> {
-        const { name, location, sequence } = req.body;
+        const { name, location } = req.body;
+        // Note: sequence is not stored in database, only used for validation
+        
         const stoppoint = await prisma.stopPoint.create({
             data: {
                 id: uuidv4(),
@@ -83,9 +85,12 @@ export default class StoppointsController {
     @usePremisstion(["update:stoppoints"])
     async updateStoppoints(req: updateStoppointsType.Req): Promise<updateStoppointsType.RerturnType> {
         const { id } = req.params;
+        const { name, location } = req.body;
+        // Note: sequence is not stored in database, only used for validation
+        
         const data = {
-            ...req.body,
-            location: req.body.location as any
+            name,
+            location: location as any
         };
 
         const stoppoint = await prisma.stopPoint.update({
