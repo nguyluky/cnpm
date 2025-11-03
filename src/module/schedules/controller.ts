@@ -3,7 +3,7 @@ import * as updateType from "./types/update.type";
 import * as createType from "./types/create.type";
 import * as getByIdType from "./types/getById.type";
 import * as getAllType from "./types/getAll.type";
-import { Get, Post, Put, Delete, useAuth } from "@lib/httpMethod";
+import { Get, Post, Put, Delete, useAuth, Summary } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
 import { AnyObject, BusData, GeoLocation, RouteData } from "@src/types/share.type";
@@ -14,6 +14,7 @@ import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
 
 export default class SchedulesController {
 
+    @Summary("Get all schedules")
     @Get("/")
     @Validate(getAllType.schema)
     @useAuth(JWT_AUTH)
@@ -76,7 +77,7 @@ export default class SchedulesController {
         });
     }
 
-
+    @Summary("Get schedule by ID")
     @Get("/:id")
     @Validate(getByIdType.schema)
     @useAuth(JWT_AUTH)
@@ -123,6 +124,7 @@ export default class SchedulesController {
     }
 
 
+    @Summary("Create a new schedule")
     @Post("/")
     @Validate(createType.schema)
     @useAuth(JWT_AUTH)
@@ -177,6 +179,7 @@ export default class SchedulesController {
     }
 
 
+    @Summary("Update a schedule")
     @Put("/:id")
     @Validate(updateType.schema)
     @useAuth(JWT_AUTH)
@@ -239,6 +242,7 @@ export default class SchedulesController {
         });
     }
 
+    @Summary("Delete a schedule")
     @Delete("/:id")
     @Validate(deleteType.schema)
     @useAuth(JWT_AUTH)

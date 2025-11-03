@@ -2,7 +2,7 @@ import * as profileType from "./types/profile.type";
 import * as refreshType from "./types/refresh.type";
 import * as loginType from "./types/login.type";
 import * as registerType from "./types/register.type";
-import { Get, Post, Put, Delete } from "@lib/httpMethod";
+import { Get, Post, Put, Delete, Summary } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
 import { BadRequestError, ConflictError } from "@lib/exception";
@@ -11,6 +11,7 @@ import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "@
 
 export default class AuthController {
 
+    @Summary("Register")
     @Post("/register")
     @Validate(registerType.schema)
     async register(req: registerType.Req): Promise<registerType.RerturnType> {
@@ -53,6 +54,7 @@ export default class AuthController {
         })
     }
 
+    @Summary("Login")
     @Post("/login")
     @Validate(loginType.schema)
     async login(req: loginType.Req): Promise<loginType.RerturnType> {
@@ -109,6 +111,7 @@ export default class AuthController {
         });
     }
 
+    @Summary("Refresh Token")
     @Post("/refresh")
     @Validate(refreshType.schema)
     async refresh(req: refreshType.Req): Promise<refreshType.RerturnType> {
@@ -156,6 +159,7 @@ export default class AuthController {
     }
 
 
+    @Summary("Get User Profile")
     @Get("/profile")
     @Validate(profileType.schema)
     async profile(req: profileType.Req): Promise<profileType.RerturnType> {

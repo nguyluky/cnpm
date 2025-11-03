@@ -3,7 +3,7 @@ import * as updateStoppointsType from "./types/updateStoppoints.type";
 import * as getAllType from "./types/getAll.type";
 import * as createStoppointsType from "./types/createStoppoints.type";
 import * as getStoppointsType from "./types/getStoppoints.type";
-import { Get, Post, Put, Delete, useAuth } from "@lib/httpMethod";
+import { Get, Post, Put, Delete, useAuth, Summary } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
 import { GeoLocation, StopPointsData } from "@src/types/share.type";
@@ -13,6 +13,7 @@ import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
 
 export default class StoppointsController {
 
+    @Summary("Get all stoppoints")
     @Get("/stoppoints")
     @Validate(getAllType.schema)
     @useAuth(JWT_AUTH)
@@ -33,6 +34,7 @@ export default class StoppointsController {
         })
     }
 
+    @Summary("Get stoppoint by ID")
     @Get("/stoppoints/:id")
     @Validate(getStoppointsType.schema)
     @useAuth(JWT_AUTH)
@@ -56,6 +58,7 @@ export default class StoppointsController {
         });
     }
 
+    @Summary("Create a new stoppoint")
     @Post("/stoppoints")
     @Validate(createStoppointsType.schema)
     @useAuth(JWT_AUTH)
@@ -79,6 +82,7 @@ export default class StoppointsController {
         })
     }
 
+    @Summary("Update a stoppoint")
     @Put("/stoppoints/:id")
     @Validate(updateStoppointsType.schema)
     @useAuth(JWT_AUTH)
@@ -112,6 +116,7 @@ export default class StoppointsController {
         })
     }
 
+    @Summary("Delete a stoppoint")
     @Delete("/stoppoints/:id")
     @Validate(deleteStoppointsType.schema)
     @useAuth(JWT_AUTH)

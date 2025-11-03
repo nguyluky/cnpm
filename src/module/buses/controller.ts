@@ -2,7 +2,7 @@ import * as deleteBusType from "./types/deleteBus.type";
 import * as createBusType from "./types/createBus.type";
 import * as getByIdType from "./types/getById.type";
 import * as getAllType from "./types/getAll.type";
-import { Get, Post, Put, Delete, useAuth } from "@lib/httpMethod";
+import { Get, Post, Put, Delete, useAuth, Summary } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
 import { AnyObject, BusData } from "@src/types/share.type";
@@ -12,6 +12,7 @@ import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
 
 export default class BusesController {
 
+    @Summary("Get all buses")
     @Get("/")
     @Validate(getAllType.schema)
     @useAuth(JWT_AUTH)
@@ -54,6 +55,7 @@ export default class BusesController {
     }
 
 
+    @Summary("Get bus by ID")
     @Get("/:id")
     @Validate(getByIdType.schema)
     @useAuth(JWT_AUTH)
@@ -78,6 +80,7 @@ export default class BusesController {
     }
 
 
+    @Summary("Create a new bus")
     @Post("/")
     @Validate(createBusType.schema)
     @useAuth(JWT_AUTH)
@@ -101,6 +104,7 @@ export default class BusesController {
         });
     }
 
+    @Summary("Delete a bus")
     @Delete("/:id")
     @Validate(deleteBusType.schema)
     @useAuth(JWT_AUTH)

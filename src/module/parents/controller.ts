@@ -1,5 +1,5 @@
 import * as getStudentsType from "./types/getStudents.type";
-import { Get, Post, Put, Delete, useAuth } from "@lib/httpMethod";
+import { Get, Post, Put, Delete, useAuth, Summary } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
 import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
@@ -10,6 +10,7 @@ import { NotFoundError } from "@lib/exception";
 
 export default class ParentController {
 
+    @Summary("Get students for parent")
     @Get("/getStudents")
     @Validate(getStudentsType.schema)
     @useAuth(JWT_AUTH)

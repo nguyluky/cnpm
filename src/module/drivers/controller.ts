@@ -1,5 +1,5 @@
 import * as getToDaySchedulesType from "./types/getToDaySchedules.type";
-import { Get, Post, Put, Delete, useAuth } from "@lib/httpMethod";
+import { Get, Post, Put, Delete, useAuth, Summary } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
 import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
@@ -8,6 +8,7 @@ import { StopPoints } from "../routes/types/create.type";
 
 export default class DriverController {
 
+    @Summary("Get today's schedules")
     @Get("/schedules/today")
     @Validate(getToDaySchedulesType.schema)
     @useAuth(JWT_AUTH)
