@@ -1,9 +1,14 @@
 version: "3.8"
 
 services:
+  # Dịch vụ API của bạn
   api:
-    build: .
+    # THAY ĐỔI: Bỏ 'build: .' và thay bằng 'image:'
+    # Tên image và tag sẽ được cung cấp qua biến môi trường
+    image: ${API_IMAGE_NAME}:${API_IMAGE_TAG}
     ports:
+      # Mở cổng 3000 trên MÁY CHỦ để bạn có thể truy cập nội bộ (tùy chọn)
+      # Cloudflare Tunnel không CẦN MỞ cổng này
       - "3000:3000"
     environment:
       - NODE_ENV=production
@@ -19,37 +24,36 @@ services:
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
     restart: unless-stopped
     depends_on:
-      - db
+      - db  # Đảm bảo 'db' khởi động trước 'api'
+
+  # Dịch vụ Cơ sở dữ liệu
   db:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
       MYSQL_DATABASE: software_engineering
     ports:
+      # Mở cổng 3306 trên MÁY CHỦ để debug (tùy chọn)
       - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - mysql_data:/var/lib/mysql # Lưu dữ liệu vĩnh viễn
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql # Tự động chạy file schema
     restart: unless-stopped
 
+  # Dịch vụ Cloudflare Tunnel
   cloudflared:
-    # Tên image
     image: cloudflare/cloudflared:latest
-
-    # Luôn tự động khởi động lại nếu tunnel bị ngắt
     restart: always
-
-    # Tên container để dễ quản lý
     container_name: cloudflared-tunnel
-
-    # Lệnh (command) được lấy từ lệnh 'docker run' của bạn
-    # Nó sẽ tự động lấy giá trị từ tệp .env
     command:
       - "tunnel"
       - "--no-autoupdate"
       - "run"
       - "--token"
       - "${CLOUDFLARED_TOKEN}"
+    # KHÔNG cần 'ports' hoặc 'expose'
+    # Tunnel này sẽ tự động kết nối với các service khác trong cùng mạng
 
 volumes:
   mysql_data:
+    # Định nghĩa volume để Docker quản lý
