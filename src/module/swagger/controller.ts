@@ -29,7 +29,7 @@ export default class SwaggerController {
         });
 
         this.layout = "responsive"
-        if (!env.NODE_ENV === "production") {
+        if (env.NODE_ENV !== "production") {
 
             fs.writeFile('./docs/swagger.json', JSON.stringify(this.swagger, null, 2), (err) => {
                 if (err) {

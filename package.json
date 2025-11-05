@@ -24,14 +24,13 @@
     "@types/winston": "^2.4.4",
     "@typescript-eslint/parser": "^8.35.1",
     "@typescript-eslint/types": "^8.35.1",
-    "concurrently": "^9.2.0",
-    "express": "^5.1.0",
-    "prisma": "^6.10.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
   "dependencies": {
     "@prisma/client": "^6.10.1",
+    "prisma": "^6.10.0",
+    "express": "^5.1.0",
     "bcryptjs": "^3.0.2",
     "chalk": "^5.4.1",
     "cloudinary": "^1.41.3",
