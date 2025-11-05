@@ -16,7 +16,7 @@ const httpServer = createServer(app);
 // ✅ Cấu hình CORS chính xác cho socket.io
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3001", // chỉ cho phép frontend này
+    origin: "*", // chỉ cho phép frontend này
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true, // cho phép cookie và header Auth
   },
@@ -26,7 +26,7 @@ setupSocketServer(io);
 // ✅ Cấu hình CORS chính xác cho Express API
 app.use(
   cors({
-    origin: "http://localhost:3001",
+    origin: "*", // chỉ cho phép frontend này
     credentials: true, // quan trọng nếu bạn gửi cookie hoặc token qua header
   })
 );

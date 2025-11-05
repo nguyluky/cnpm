@@ -1,6 +1,7 @@
 import { Description, Get, Summary } from "@lib/httpMethod";
 import { swagger } from "@lib/swagget";
 import { RouterSchema, toSwaggerSchema } from "@lib/toRouter";
+import env from "@src/env";
 import { Logger } from "@src/utils/logger";
 import * as fs from "fs";
 import z from "zod/v4";
@@ -28,13 +29,16 @@ export default class SwaggerController {
         });
 
         this.layout = "responsive"
-        fs.writeFile('./docs/swagger.json', JSON.stringify(this.swagger, null, 2), (err) => {
-            if (err) {
-                Logger.error("Error writing swagger.json:", err);
-            } else {
-                Logger.info("Swagger JSON saved to ./docs/swagger.json");
-            }
-        })
+        if (!env.NODE_ENV === "production") {
+
+            fs.writeFile('./docs/swagger.json', JSON.stringify(this.swagger, null, 2), (err) => {
+                if (err) {
+                    Logger.error("Error writing swagger.json:", err);
+                } else {
+                    Logger.info("Swagger JSON saved to ./docs/swagger.json");
+                }
+            })
+        }
     }
 
     @Get("/swagger.json")

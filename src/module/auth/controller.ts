@@ -5,7 +5,7 @@ import * as registerType from "./types/register.type";
 import { Get, Post, Put, Delete, Summary } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
-import { BadRequestError, ConflictError } from "@lib/exception";
+import { BadRequestError, ConflictError, NotFoundError } from "@lib/exception";
 import bcrypt from "bcryptjs";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "@src/utils/jwt";
 
@@ -86,7 +86,7 @@ export default class AuthController {
         });
 
         if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
-            throw new BadRequestError("Invalid username or password");
+            throw new NotFoundError("Invalid username or password");
         }
 
 

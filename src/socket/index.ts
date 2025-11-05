@@ -2,6 +2,7 @@ import { generateSocketDocs } from "@lib/socket_docs_generator";
 import { toSocketRouterSchema, toSocketServer } from "@lib/toSocketRouter";
 import { writeFile } from "fs";
 import { SocketNotificationController } from "../socket/notifications/controller";
+import env from "@src/env";
 
 const socketControllers = [
     SocketNotificationController
@@ -21,11 +22,13 @@ export function setupSocketServer(io: any) {
             description: "Local Socket Server",
         }
     ]
-    writeFile('./docs/socket.json', JSON.stringify(docs, null, 2), (err) => {
-        if (err) {
-            console.error("Error writing socket.json:", err);
-        }
-    })
+    if (env.NODE_ENV !== "production") {
+        writeFile('./docs/socket.json', JSON.stringify(docs, null, 2), (err) => {
+            if (err) {
+                console.error("Error writing socket.json:", err);
+            }
+        })
+    }
 
     // Log available namespaces and events
     console.log(`Generated ${socketSchemas.length} socket namespaces`);

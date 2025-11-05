@@ -1,30 +1,55 @@
-version: '3.8'
+version: "3.8"
 
 services:
   api:
     build: .
     ports:
       - "3000:3000"
-    env_file: .env
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=mysql://user:password@db:3306/software_engineering
+      - DATABASE_URL=mysql://root:${MYSQL_ROOT_PASSWORD}@db:3306/software_engineering
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
+      - TWO_FACTOR_SECRET=${TWO_FACTOR_SECRET}
+      - TWO_FACTOR_EXPIRATION=${TWO_FACTOR_EXPIRATION}
+      - EMAIL_SECRET=${EMAIL_SECRET}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
     restart: unless-stopped
     depends_on:
       - db
   db:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
       MYSQL_DATABASE: software_engineering
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     restart: unless-stopped
+
+  cloudflared:
+    # Tên image
+    image: cloudflare/cloudflared:latest
+
+    # Luôn tự động khởi động lại nếu tunnel bị ngắt
+    restart: always
+
+    # Tên container để dễ quản lý
+    container_name: cloudflared-tunnel
+
+    # Lệnh (command) được lấy từ lệnh 'docker run' của bạn
+    # Nó sẽ tự động lấy giá trị từ tệp .env
+    command:
+      - "tunnel"
+      - "--no-autoupdate"
+      - "run"
+      - "--token"
+      - "${CLOUDFLARED_TOKEN}"
 
 volumes:
   mysql_data:
