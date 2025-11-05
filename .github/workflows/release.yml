@@ -77,7 +77,7 @@ jobs:
           CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
           CLOUDFLARED_TOKEN: ${{ secrets.CLOUDFLARED_TOKEN }}
         run: |
-          docker-compose up -d --remove-orphans
+          docker compose up -d --remove-orphans
           echo "Deployment successful!"
 
       - name: Prune old images
