@@ -54,28 +54,30 @@ jobs:
       - name: Log in to GitHub Container Registry (on self-host)
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+      - name: Create .env file
+        run: |
+          echo "--- Creating .env file ---"
+          # Ghi các biến cho docker-compose.yml
+          echo "API_IMAGE_NAME=${{ env.IMAGE_NAME }}" > .env
+          echo "API_IMAGE_TAG=${{ env.IMAGE_TAG }}" >> .env
+          
+          # Ghi các secret vào tệp .env
+          echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}" >> .env
+          echo "TWO_FACTOR_SECRET=${{ secrets.TWO_FACTOR_SECRET }}" >> .env
+          echo "TWO_FACTOR_EXPIRATION=${{ secrets.TWO_FACTOR_EXPIRATION }}" >> .env
+          echo "EMAIL_SECRET=${{ secrets.EMAIL_SECRET }}" >> .env
+          echo "CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}" >> .env
+          echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> .env
+          echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
+          echo "CLOUDFLARED_TOKEN=${{ secrets.CLOUDFLARED_TOKEN }}" >> .env
+          echo "--- .env file created ---"
+
       - name: Pull the new image
         run: docker pull ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
       - name: Run Docker Compose
-        # Bơm tất cả các secret vào biến môi trường
-        # và truyền tên image cho docker-compose
-        env:
-          # Truyền các biến cho docker-compose.yml
-          API_IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          API_IMAGE_TAG: ${{ env.IMAGE_TAG }}
-
-          # Lấy các secret từ GitHub Secrets và bơm vào môi trường
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
-          TWO_FACTOR_SECRET: ${{ secrets.TWO_FACTOR_SECRET }}
-          TWO_FACTOR_EXPIRATION: ${{ secrets.TWO_FACTOR_EXPIRATION }}
-          EMAIL_SECRET: ${{ secrets.EMAIL_SECRET }}
-          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
-          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
-          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
-          CLOUDFLARED_TOKEN: ${{ secrets.CLOUDFLARED_TOKEN }}
         run: |
           docker compose up -d --remove-orphans
           echo "Deployment successful!"
