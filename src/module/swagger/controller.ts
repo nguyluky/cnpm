@@ -28,6 +28,13 @@ export default class SwaggerController {
             description: "Local development server"
         });
 
+        if (env.NODE_ENV === "production") {
+            this.swagger.servers.push({
+                url: "https://api.nguyluky.site",
+                description: "Production server"
+            });
+        }
+
         this.layout = "responsive"
         if (env.NODE_ENV !== "production") {
 
