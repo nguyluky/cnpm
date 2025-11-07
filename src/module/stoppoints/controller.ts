@@ -64,7 +64,7 @@ export default class StoppointsController {
     @useAuth(JWT_AUTH)
     @usePremisstion(["create:stoppoints"])
     async createStoppoints(req: createStoppointsType.Req): Promise<createStoppointsType.RerturnType> {
-        const { name, location } = req.body;
+        const { name, location, meta } = req.body;
         // Note: sequence is not stored in database, only used for validation
         
         const stoppoint = await prisma.stopPoint.create({
@@ -72,6 +72,7 @@ export default class StoppointsController {
                 id: uuidv4(),
                 name,
                 location: location as any,
+                meta: meta as any
             }
         })
 

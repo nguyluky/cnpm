@@ -81,6 +81,15 @@ export class BusData extends ObjectType {
   metadata: AnyObject;
 }
 
+export class RouteMeta extends ObjectType {
+    @IsNumber({ optional: true })
+    distanceInKm?: number;
+
+    // min estimatedTimeInMin
+    @IsNumber({ optional: true })
+    estimatedTimeInMin?: number;
+}
+
 export class RouteData extends ObjectType {
   @IsString({
     format: Formats.uuid,
@@ -96,19 +105,10 @@ export class RouteData extends ObjectType {
   @IsObject(GeoLocation)
   endLocation: GeoLocation;
 
-  @IsObject(Object)
-  metadata: Object;
+  @IsObject(RouteMeta)
+  metadata: RouteMeta;
 }
 
-
-// #     "meta": {
-// #         "zone": "string",
-// #         "ward": "string",
-// #         "addressNo": "string",
-// #         "street": "string",
-// #         "supportDisability": "string",
-// #         "status": "string",
-// #         "search": "string"
 export class StopPointsMeta extends ObjectType {
     @IsString({ optional: true })
     zone?: string;
