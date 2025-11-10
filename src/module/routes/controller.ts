@@ -23,8 +23,8 @@ export default class routescontroller {
         const where = search
             ? {
                 OR: [
-                    { name: { contains: search, mode: "insensitive" } },
-                    { id: { contains: search, mode: "insensitive" } },
+                    { name: { contains: search} },
+                    { id: { contains: search} },
                 ],
             }
             : {};

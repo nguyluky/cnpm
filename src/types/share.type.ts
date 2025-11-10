@@ -1,4 +1,4 @@
-import { Formats, IsNumber, IsObject, IsString } from "@lib/type_declaration";
+import { Formats, IsArray, IsNumber, IsObject, IsString } from "@lib/type_declaration";
 import { ObjectType } from "@lib/validate";
 
 export class PaginationMetaData extends ObjectType {
@@ -82,12 +82,20 @@ export class BusData extends ObjectType {
 }
 
 export class RouteMeta extends ObjectType {
-    @IsNumber({ optional: true })
-    distanceInKm?: number;
+    @IsString({ optional: true })
+    Color?: string;
 
-    // min estimatedTimeInMin
+    @IsString({ optional: true })
+    Headway ?: string;
+
     @IsNumber({ optional: true })
-    estimatedTimeInMin?: number;
+    Distance ?: number;
+
+    @IsObject(Object)
+    encodedPath?: Object;
+
+    @IsString({ optional: true })
+    OperationTime?: string;
 }
 
 export class RouteData extends ObjectType {

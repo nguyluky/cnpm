@@ -6,9 +6,6 @@ import { IsNumber, IsObject, IsString } from "@lib/type_declaration";
 import { GeoLocation, StopPointsMeta } from "@src/types/share.type";
 
 export class createStoppointsReqBody {
-    @IsNumber()
-    sequence: number;
-
     @IsString()
     name: string;
 
@@ -24,7 +21,19 @@ export class createStoppointsReqParams {}
 export @ApiRequestStatus({
     statusCode: 200,
     statusMess: "Success"
-}) class createStoppointsRes extends ObjectType {}
+}) class createStoppointsRes extends ObjectType {
+    @IsString()
+    id: string;
+
+    @IsString()
+    name: string;
+
+    @IsObject(GeoLocation)
+    location: GeoLocation;
+
+    @IsObject(StopPointsMeta)
+    meta: StopPointsMeta;
+}
 
 export const schema = {
     res: [createStoppointsRes],

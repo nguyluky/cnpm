@@ -3,17 +3,17 @@ import { ApiRequestStatus } from "@lib/httpMethod";
 import { Request } from "express";
 import { ObjectType } from "@lib/validate";
 import { IsNumber, IsObject, IsString } from "@lib/type_declaration";
-import { GeoLocation } from "@src/types/share.type";
+import { GeoLocation, StopPointsMeta } from "@src/types/share.type";
 
 export class updateStoppointsReqBody {
     @IsString()
     name: string
 
-    @IsNumber()
-    sequence: number
-
     @IsObject(GeoLocation)
     location: GeoLocation
+
+    @IsObject(StopPointsMeta)
+    meta: StopPointsMeta
 }
 export class updateStoppointsReqQuery {}
 export class updateStoppointsReqParams {

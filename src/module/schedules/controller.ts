@@ -6,7 +6,7 @@ import * as getAllType from "./types/getAll.type";
 import { Get, Post, Put, Delete, useAuth, Summary } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
-import { AnyObject, BusData, GeoLocation, RouteData } from "@src/types/share.type";
+import { AnyObject, BusData, GeoLocation, RouteData, RouteMeta, StopPointsMeta } from "@src/types/share.type";
 import { NotFoundError } from "@lib/exception";
 import { ScheduleInfo, TimeTable } from "./types/share.type";
 import { v4 as uuid } from "uuid";
@@ -65,7 +65,7 @@ export default class SchedulesController {
                     name: item.Route?.name || "",
                     startLocation: GeoLocation.parse(item.Route?.startLocation || {}),
                     endLocation: GeoLocation.parse(item.Route?.endLocation || {}),
-                    metadata: new AnyObject
+                    metadata: StopPointsMeta.parse(item.Route?.meta as any),
                 }),
                 meta: item.meta,
                 startDate: item.startDate.toISOString(),
@@ -113,7 +113,7 @@ export default class SchedulesController {
                 name: schedule.Route.name,
                 startLocation: GeoLocation.parse(schedule.Route.startLocation),
                 endLocation: GeoLocation.parse(schedule.Route.endLocation),
-                metadata: new AnyObject
+                metadata: RouteMeta.parse(schedule.Route.meta as any),
             }),
             meta: schedule.meta,
             startDate: schedule.startDate.toISOString(),
@@ -168,7 +168,7 @@ export default class SchedulesController {
                 name: newSchedule.Route.name,
                 startLocation: GeoLocation.parse(newSchedule.Route.startLocation),
                 endLocation: GeoLocation.parse(newSchedule.Route.endLocation),
-                metadata: new AnyObject
+                metadata: RouteMeta.parse(newSchedule.Route.meta as any),
             }),
             meta: newSchedule.meta,
             startDate: newSchedule.startDate.toISOString(),
@@ -232,7 +232,7 @@ export default class SchedulesController {
                 name: updatedSchedule.Route.name,
                 startLocation: GeoLocation.parse(updatedSchedule.Route.startLocation),
                 endLocation: GeoLocation.parse(updatedSchedule.Route.endLocation),
-                metadata: new AnyObject
+                metadata: RouteMeta.parse(updatedSchedule.Route.meta as any),
             }),
             meta: updatedSchedule.meta,
             startDate: updatedSchedule.startDate.toISOString(),

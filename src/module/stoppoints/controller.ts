@@ -79,7 +79,8 @@ export default class StoppointsController {
         return createStoppointsType.createStoppointsRes.parse({
             id: stoppoint.id,
             name: stoppoint.name,
-            location: GeoLocation.parse(stoppoint.location)
+            location: GeoLocation.parse(stoppoint.location),
+            meta: stoppoint.meta as any,
         })
     }
 
