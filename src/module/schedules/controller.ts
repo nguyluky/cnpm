@@ -11,6 +11,7 @@ import { NotFoundError } from "@lib/exception";
 import { ScheduleInfo, TimeTable } from "./types/share.type";
 import { v4 as uuid } from "uuid";
 import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
+import { sendNotification } from "@src/utils/notification";
 
 export default class SchedulesController {
 
@@ -131,10 +132,11 @@ export default class SchedulesController {
     @usePremisstion(["create:schedule"])
     async create(req: createType.Req): Promise<createType.RerturnType> {
         const { busId, routeId, driverId, times, meta, type} = req.body;
+        const new_id = uuid();
 
         const newSchedule = await prisma.schedule.create({
             data: {
-                id: uuid(),
+                id: new_id,
                 busId,
                 routeId,
                 driverId,
@@ -150,6 +152,16 @@ export default class SchedulesController {
                 Route: true
             }
         });
+
+        // After update/delete
+        // 1. Notify driver
+        if (driverId) {
+          sendNotification(driverId, {
+            type: 'SCHEDULE_ADDED',
+            message: 'Your new schedule has been added',
+            data: { new_id }
+          });
+        }
 
         return createType.createRes.parse({
             id: newSchedule.id,
@@ -215,6 +227,39 @@ export default class SchedulesController {
             }
         });
 
+        // 1. Notify driver
+        if (driverId) {
+          sendNotification(driverId, {
+            type: 'SCHEDULE_UPDATED',
+            message: 'Your schedule has been updated',
+            data: { id } // id: scheduleId
+          });
+        }
+        
+        // 2. Find all students on this schedule and notify their parents
+        // because a route can only appear on 1 schedule only, so we will use route instead of scheduleId because of the database table design
+        const studentsAssignments = await prisma.studentAssignment.findMany({
+          where: { routeId: routeId },
+        });
+
+        const studentIds = studentsAssignments.map(sa => sa.studentId).filter(Boolean);
+
+        const students = studentIds.length
+          ? await prisma.student.findMany({
+              where: { id: { in: studentIds } }
+            })
+          : [];
+
+        students.forEach(student => {
+          if (student?.id) {
+            sendNotification(student.id, {
+              type: 'SCHEDULE_UPDATED',
+              message: `Schedule for ${student.name} has been updated`,
+              data: { routeId, studentName: student.name }
+            });
+          }
+        });
+
         return updateType.updateRes.parse({
             id: updatedSchedule.id,
             bus: BusData.parse({
@@ -261,6 +306,40 @@ export default class SchedulesController {
         await prisma.schedule.delete({
             where: { id }
         });
+
+        // 1. Notify driver
+        if (existingSchedule.driverId) {
+          sendNotification(existingSchedule.driverId, {
+            type: 'SCHEDULE_DELETED',
+            message: 'Your schedule has been deleted',
+            data: { id } // id: scheduleId
+          });
+        }
+        
+        // 2. Find all students on this schedule and notify their parents
+        // because a route can only appear on 1 schedule only, so we will use route instead of scheduleId because of the database table design
+        const studentsAssignments = await prisma.studentAssignment.findMany({
+          where: { routeId: existingSchedule.routeId },
+        });
+
+        const studentIds = studentsAssignments.map(sa => sa.studentId).filter(Boolean);
+
+        const students = studentIds.length
+          ? await prisma.student.findMany({
+              where: { id: { in: studentIds } }
+            })
+          : [];
+
+        students.forEach(student => {
+          if (student?.id) {
+            sendNotification(student.id, {
+              type: 'SCHEDULE_DELETED',
+              message: `Schedule for ${student.name} has been deleted`,
+              data: { routeId: existingSchedule.routeId, studentName: student.name }
+            });
+          }
+        });
+
 
         return deleteType.deleteRes.parse({});
     }

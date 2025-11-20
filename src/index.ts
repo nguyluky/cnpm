@@ -8,6 +8,7 @@ import { requestLogger } from "./middleware/requestLogger";
 import { apiRouter, swaggerRouter } from "./module";
 import { setupSocketServer } from "./socket";
 import { Logger } from "./utils/logger";
+import { setSocketIO } from "./utils/notification";
 
 const logger = new Logger("MAIN");
 const app = express();
@@ -22,6 +23,7 @@ const io = new Server(httpServer, {
   },
 });
 setupSocketServer(io);
+setSocketIO(io);
 
 // ✅ Cấu hình CORS chính xác cho Express API
 app.use(

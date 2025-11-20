@@ -5,6 +5,7 @@ import prisma from "@src/config/prisma.config";
 import { AnyObject, GeoLocation, RouteData } from "@src/types/share.type";
 import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
 import { v4 as uuidv4 } from "uuid";
+import { sendNotification } from "@src/utils/notification";
 import * as createType from "./types/create.type";
 import * as deleteByIdType from "./types/deleteById.type";
 import * as getAllType from "./types/getAll.type";
@@ -186,6 +187,22 @@ export default class routescontroller {
                     include: { StopPoint: true },
                 },
             },
+        });
+
+        // Find all drivers with schedules using this route
+        const schedulesUsingRoute = await prisma.schedule.findMany({
+          where: { routeId: id },
+          select: { driverId: true }
+        });
+        
+        schedulesUsingRoute.forEach(schedule => {
+          if (schedule.driverId) {
+            sendNotification(schedule.driverId, {
+              type: 'ROUTE_UPDATED',
+              message: `Route "${name}" has been updated`,
+              data: { id, name }
+            });
+          }
         });
 
         return updateType.updateRes.parse({
