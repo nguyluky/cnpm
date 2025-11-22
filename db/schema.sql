@@ -138,6 +138,7 @@ CREATE TABLE `Schedule` (
 -- 🚍 TRIP (actual daily instance)
 CREATE TABLE `Trip` (
   `id` VARCHAR(191) NOT NULL PRIMARY KEY,
+  `type` ENUM("DISPATCH", "RETURN") NOT NULL,
   `scheduleId` VARCHAR(191) NOT NULL,
   `date` DATE NOT NULL,
   `actualStartTime` DATETIME(3) DEFAULT NULL,

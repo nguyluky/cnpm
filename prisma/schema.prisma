@@ -206,6 +206,7 @@ model Trip {
   location           Json?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @default(now())
+  type               Trip_type
   Report             Report[]
   StudentAttendance  StudentAttendance[]
   TrackingBusHistory TrackingBusHistory[]
@@ -280,4 +281,9 @@ enum TripStop_status {
 enum Schedule_status {
   ACTIVE
   INACTIVE
+}
+
+enum Trip_type {
+  DISPATCH
+  RETURN
 }

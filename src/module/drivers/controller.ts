@@ -1,10 +1,22 @@
+import * as trip_locationType from "./types/trip_location.type";
+import * as trip_students_dropoffType from "./types/trip_students_dropoff.type";
+import * as trip_students_pickupType from "./types/trip_students_pickup.type";
+import * as trip_stoppoint_endType from "./types/trip_stoppoint_end.type";
+import * as trip_stoppoint_departType from "./types/trip_stoppoint_depart.type";
+import * as trip_stoppoint_arriveType from "./types/trip_stoppoint_arrive.type";
+import * as trip_startType from "./types/trip_start.type";
+import * as get_tripType from "./types/get_trip.type";
+import * as get_schedulesType from "./types/get_schedules.type";
 import * as getToDaySchedulesType from "./types/getToDaySchedules.type";
+import crypto from "crypto";
 import { Get, Post, Put, Delete, useAuth, Summary } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
 import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
 import { BusData, GeoLocation, RouteData, StudentData } from "@src/types/share.type";
 import { StopPoints } from "../routes/types/create.type";
+import { NotFoundError } from "@lib/exception";
+import { BusInfo, RouteInfo } from "./types/shared.type";
 
 export default class DriverController {
 
@@ -18,68 +30,414 @@ export default class DriverController {
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const end = new Date(today);
+        end.setHours(23, 59, 59, 999);
+
+        const dayOfWeek = today.getDay() + 1;
+
+        console.log("today", today, "dayOfWeek", dayOfWeek);
 
         const schedules = await prisma.schedule.findMany({
             where: {
                 driverId: userId,
+                // startDate >= today <= endDate
                 startDate: {
-                    lte: tomorrow
+                    lte: today
                 },
                 endDate: {
                     gte: today
+                },
+                // check if the schedule is active on the current day of the week
+                daysOfWeek: {
+                    array_contains: dayOfWeek
                 }
             },
             include: {
-                Route: {
-                    include: {
-                        StudentAssignment: {
-                            select: {
-                                Student: true
-                            },
-                            include: {
-                                StopPoint: true
-                            }
+                Trip: {
+                    where: {
+                        date: {
+                            gte: today,
+                            lte: end
                         }
-                    }
-                },
+                    },
+                }
+            }
+        });
+
+        const scheduleData = schedules.flatMap(schedule =>
+            schedule.Trip.map(trip => getToDaySchedulesType.ToDaySchedules.parse({
+                scheduleId: schedule.id,
+                type: schedule.type as 'DISPATH' | "RETURN",
+                tripId: trip.id,
+                date: trip.date.toISOString().split('T')[0],
+                static: trip.status as 'PLANNED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED',
+                startTime: schedule.startTime.toISOString(),
+            }))
+        );
+
+        return getToDaySchedulesType.getToDaySchedulesRes.parse({
+            data: scheduleData,
+            total: scheduleData.length
+        });
+    }
+
+    @Get("/schedules")
+    @Summary("get driver schedules")
+    @Validate(get_schedulesType.schema)
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["read:driver_schedule"])
+    async get_schedules(req: get_schedulesType.Req): Promise<get_schedulesType.RerturnType> {
+        const userId = req.user.id;
+
+        const schedules = await prisma.schedule.findMany({
+            where: {
+                driverId: userId
+            },
+            include: {
+                Route: true,
                 Bus: true,
             }
         });
 
-        const formattedSchedules = schedules.map(schedule => getToDaySchedulesType.SchedulessToDay.parse({
+        const formattedSchedules = schedules.map(schedule => get_schedulesType.Scheduless.parse({
             id: schedule.id,
-            route: RouteData.parse({
+            route: RouteInfo.parse({
                 id: schedule.Route.id,
-                name: schedule.Route.name,
-                startLocation: GeoLocation.parse(schedule.Route.startLocation),
-                endLocation: GeoLocation.parse(schedule.Route.endLocation),
-                metadata: schedule.Route.meta as any
+                name: schedule.Route.name
             }),
-            bus: BusData.parse({
+            bus: BusInfo.parse({
                 id: schedule.Bus.id,
-                licensePlate: schedule.Bus.licensePlate,
-                capacity: schedule.Bus.capacity,
-                metadata: schedule.Bus.meta as any
+                licensePlate: schedule.Bus.licensePlate
             }),
-            students: schedule.Route.StudentAssignment.map(sa => StudentData.parse({
-                id: sa.Student.id,
-                name: "",
-                stopPoint: sa.StopPoint ? StopPoints.parse({
-                    id: sa.StopPoint.id,
-                    name: sa.StopPoint.name,
-                    location: GeoLocation.parse(sa.StopPoint.location),
-                    sequence: -1,
-                    meta: sa.StopPoint.meta as any
-                }) : undefined,
-            }))
+            type: schedule.type as 'MORNING' | 'AFTERNOON',
+            startDate: schedule.startDate.toISOString(),
+            daysOfWeek: schedule.daysOfWeek as number[],
         }));
 
-        return getToDaySchedulesType.getToDaySchedulesRes.parse({
-            data: formattedSchedules,
-            total: formattedSchedules.length
+        return get_schedulesType.get_schedulesRes.parse({
+            data: formattedSchedules
         });
+    }
+
+
+
+
+    @Get("/trip/:id")
+    @Summary("Get trip by ID")
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["read:driver_schedule"])
+    @Validate(get_tripType.schema)
+    async get_trip(req: get_tripType.Req): Promise<get_tripType.RerturnType> {
+        const { id } = req.params;
+
+        const trip = await prisma.trip.findUnique({
+            where: { id },
+            include: {
+                Schedule: {
+                    include: {
+                        Route: {
+                            include: {
+                                RouteStopPoint: {
+                                    orderBy: {
+                                        sequence: 'asc'
+                                    },
+                                    include: {
+                                        StopPoint: true
+                                    }
+                                }
+                            }
+                        },
+                        Bus: true,
+                    }
+                },
+                TripStop: true,
+            }
+        });
+
+        if (!trip) {
+            throw new NotFoundError("Trip not found");
+        }
+
+
+
+        const routePath = JSON.parse((trip.Schedule.Route.meta as any)?.encodedPath) as number[][][] | undefined;
+        const dispathPath = routePath ? routePath[0] || [] : [];
+        const returnPath = routePath ? routePath[1] || routePath[0] || [] : [];
+        // console.log("routePath", dispathPath, returnPath);
+        const routeInfo = get_tripType.RouteInfoWithPath.parse({
+            id: trip.Schedule.Route.id,
+            name: trip.Schedule.Route.name,
+            path: trip.type == 'DISPATCH' ? dispathPath : returnPath,
+        });
+
+        const busInfo = BusInfo.parse({
+            id: trip.Schedule.Bus.id,
+            licensePlate: trip.Schedule.Bus.licensePlate
+        });
+
+        const stops = trip.Schedule.Route.RouteStopPoint.map(rsp => {
+            const stopPoint = rsp.StopPoint;
+            const tripStop = trip.TripStop.find(ts => ts.stopId === stopPoint.id);
+
+            return get_tripType.StopPointTrip.parse({
+                id: stopPoint.id,
+                name: stopPoint.name,
+                location: [
+                    (stopPoint.location as any).longitude,
+                    (stopPoint.location as any).latitude,
+                ],
+                sequence: rsp.sequence,
+                status: tripStop ? (tripStop.status || 'PENDING') as 'PENDING' | 'ARRIVED' | 'DONE' | 'SKIPPED' : 'PENDING',
+            });
+        });
+
+
+
+        return get_tripType.get_tripRes.parse({
+            id: trip.id,
+            status: trip.status as 'PLANNED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED',
+            rotute: get_tripType.RouteInfoWithPath.parse({
+                id: routeInfo.id,
+                name: routeInfo.name,
+                path: routeInfo.path,
+            }),
+            bus: busInfo,
+            stops,
+        });
+    }
+
+    @Post("/trip/:id/start")
+    @Summary("Start trip")
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["update:driver_trip"])
+    @Validate(trip_startType.schema)
+    async trip_start(req: trip_startType.Req): Promise<trip_startType.RerturnType> {
+        const { id } = req.params;
+
+        const trip = await prisma.trip.update({
+            where: { id },
+            data: {
+                status: 'ONGOING',
+                actualStartTime: new Date(),
+            }
+        });
+
+        return trip_startType.trip_startRes.parse({
+            tripId: trip.id,
+            status: trip.status || 'ONGOING',
+            startedAt: trip.actualStartTime!.toISOString(),
+        });
+    }
+
+
+    @Post("/trip/:tripId/stoppoint/:spId/arrive")
+    @Summary("Mark stoppoint as arrived")
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["update:driver_trip"])
+    @Validate(trip_stoppoint_arriveType.schema)
+    async trip_stoppoint_arrive(req: trip_stoppoint_arriveType.Req): Promise<trip_stoppoint_arriveType.RerturnType> {
+        const { tripId, spId } = req.params;
+
+        const tropStopId = crypto
+            .createHash("sha256")
+            .update(tripId + ":" + spId)
+            .digest("base64url");
+
+        const tropStop = await prisma.tripStop.upsert({
+            where: {
+                id: tropStopId
+            },
+            create: {
+                id: tropStopId,
+                tripId: tripId,
+                stopId: spId,
+                status: 'ARRIVED',
+                actualArrival: new Date(),
+            },
+            update: {
+                status: 'ARRIVED',
+                actualArrival: new Date(),
+            }
+        });
+
+        return trip_stoppoint_arriveType.trip_stoppoint_arriveRes.parse({
+            stopId: tropStop.stopId,
+            status: tropStop.status as 'PENDING' | 'ARRIVED' | 'DONE' | 'SKIPPED',
+            arrivedAt: tropStop.actualArrival!.toISOString(),
+        });
+    }
+
+
+    @Post("/trip/:tripId/stoppoint/:spId/depart")
+    @Summary("Mark stoppoint as departed")
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["update:driver_trip"])
+    @Validate(trip_stoppoint_departType.schema)
+    async trip_stoppoint_depart(req: trip_stoppoint_departType.Req): Promise<trip_stoppoint_departType.RerturnType> {
+        const { tripId, spId } = req.params;
+
+        const tropStopId = crypto
+            .createHash("sha256")
+            .update(tripId + ":" + spId)
+            .digest("base64url");
+
+        const tropStop = await prisma.tripStop.upsert({
+            where: {
+                id: tropStopId
+            },
+            create: {
+                id: tropStopId,
+                tripId: tripId,
+                stopId: spId,
+                status: 'DONE',
+                actualDeparture: new Date(),
+            },
+            update: {
+                status: 'DONE',
+                actualDeparture: new Date(),
+            }
+        });
+
+        return trip_stoppoint_departType.trip_stoppoint_departRes.parse({
+            stopId: tropStop.stopId,
+            status: tropStop.status as 'PENDING' | 'ARRIVED' | 'DONE' | 'SKIPPED',
+            departedAt: tropStop.actualDeparture!.toISOString(),
+        });
+    }
+
+
+    @Get("/trip/:tripId/end")
+    @Summary("End stoppoint")
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["update:driver_trip"])
+    @Validate(trip_stoppoint_endType.schema)
+    async trip_stoppoint_end(req: trip_stoppoint_endType.Req): Promise<trip_stoppoint_endType.RerturnType> {
+
+        const { tripId } = req.params;
+
+        const trip = await prisma.trip.update({
+            where: { id: tripId },
+            data: {
+                status: 'COMPLETED',
+                actualEndTime: new Date(),
+            }
+        });
+
+        return trip_stoppoint_endType.trip_stoppoint_endRes.parse({
+            tripId: trip.id,
+            status: trip.status || 'COMPLETED',
+            startAt: trip.actualStartTime!.toISOString(),
+            endAt: trip.actualEndTime!.toISOString(),
+        });
+
+    }
+
+
+    @Post("/trip/:tripId/students/:studentId/pickup")
+    @Summary("Pickup student")
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["update:driver_trip"])
+    @Validate(trip_students_pickupType.schema)
+    async trip_students_pickup(req: trip_students_pickupType.Req): Promise<trip_students_pickupType.RerturnType> {
+        const { tripId, studentId } = req.params;
+
+        const tropStudentId = crypto
+            .createHash("sha256")
+            .update(tripId + ":" + studentId)
+            .digest("base64url");
+
+        const studentAttendance = await prisma.studentAttendance.upsert({
+            where: {
+                id: tropStudentId
+            },
+            create: {
+                id: tropStudentId,
+                tripId: tripId,
+                studentId: studentId,
+                status: 'PICKED_UP',
+                pickupTime: new Date(),
+            },
+            update: {
+                status: 'PICKED_UP',
+                pickupTime: new Date(),
+            }
+        });
+
+        return trip_students_pickupType.trip_students_pickupRes.parse({
+            studentId: studentAttendance.studentId,
+            status: studentAttendance.status as 'PENDING' | 'PICKED_UP' | 'DROPPED_OFF',
+            pickedAt: studentAttendance.pickupTime!.toISOString(),
+        });
+    }
+
+
+    @Post("/")
+    @Summary("Dropoff student")
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["update:driver_trip"])
+    @Validate(trip_students_dropoffType.schema)
+    async trip_students_dropoff(req: trip_students_dropoffType.Req): Promise<trip_students_dropoffType.RerturnType> {
+        const { tripId, studentId } = req.params;
+
+        const tropStudentId = crypto
+            .createHash("sha256")
+            .update(tripId + ":" + studentId)
+            .digest("base64url");
+
+        const studentAttendance = await prisma.studentAttendance.upsert({
+            where: {
+                id: tropStudentId
+            },
+            create: {
+                id: tropStudentId,
+                tripId: tripId,
+                studentId: studentId,
+                status: 'DROPPED_OFF',
+                dropoffTime: new Date(),
+            },
+            update: {
+                status: 'DROPPED_OFF',
+                dropoffTime: new Date(),
+            }
+        });
+
+        return trip_students_dropoffType.trip_students_dropoffRes.parse({
+            studentId: studentAttendance.studentId,
+            status: studentAttendance.status as 'PENDING' | 'PICKED_UP' | 'DROPPED_OFF',
+            droppedAt: studentAttendance.dropoffTime!.toISOString(),
+        });
+    }
+
+
+    @Post("/trip/:tripId/location")
+    @Summary("Update trip location")
+    @useAuth(JWT_AUTH)
+    @usePremisstion(["update:driver_location"])
+    @Validate(trip_locationType.schema)
+    async trip_location(req: trip_locationType.Req): Promise<trip_locationType.RerturnType> {
+        const { tripId } = req.params;
+
+        const { latitude, longitude } = req.body;
+
+        const currentDate = new Date();
+
+        const locationRecord = await prisma.trackingBusHistory.create({
+            data: {
+                id: currentDate.getTime().toString() + "-" + tripId,
+                tripId: tripId,
+                location: GeoLocation.parse({
+                    latitude,
+                    longitude
+                }) as any,
+                timestamp: currentDate,
+            }
+        });
+
+        return trip_locationType.trip_locationRes.parse({
+            ok: true
+        });
+
     }
 
 }

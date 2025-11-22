@@ -6,7 +6,7 @@ import env from "./env";
 import { errorHandler } from "./middleware/error";
 import { requestLogger } from "./middleware/requestLogger";
 import { apiRouter, swaggerRouter } from "./module";
-import { setupSocketServer } from "./socket";
+// import { setupSocketServer } from "./socket";
 import { Logger } from "./utils/logger";
 import { setSocketIO } from "./utils/notification";
 
@@ -22,7 +22,7 @@ const io = new Server(httpServer, {
     credentials: true, // cho phép cookie và header Auth
   },
 });
-setupSocketServer(io);
+// setupSocketServer(io);
 setSocketIO(io);
 
 // ✅ Cấu hình CORS chính xác cho Express API

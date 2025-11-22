@@ -31,7 +31,8 @@ Insert into Permission (id, name) values
 (29, 'read:stoppoints_detail'),
 (30, 'create:stoppoints'),
 (31, 'update:stoppoints'),
-(32, 'delete:stoppoints');
+(32, 'delete:stoppoints'),
+(33, 'update:driver_location');
 
 
 -- Roles: 'admin' | 'driver' | 'parent'
@@ -42,4 +43,30 @@ Insert into RolePermission (roleId, permissionId)
 Select r.id, p.id
 From Roles r, Permission p
 Where r.name = 'admin';
+
+-- Assign specific permissions to driver role
+INSERT INTO RolePermissions (roleId, permissionId)
+SELECT r.id, p.id
+FROM Roles r
+JOIN Permission p
+WHERE r.name = 'driver'
+  AND p.name IN (
+    'read:profile',
+    'read:public_profile',
+    'read:driver_schedule',
+    'update:driver_location'
+  );
+
+
+-- Assign specific permissions to parent role
+INSERT INTO RolePermissions (roleId, permissionId)
+SELECT r.id, p.id
+FROM Roles r
+JOIN Permission p
+WHERE r.name = 'parent'
+  AND p.name IN (
+    'read:profile',
+    'read:public_profile',
+    'read:parent_students'
+  );
 

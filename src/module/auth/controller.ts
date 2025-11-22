@@ -1,3 +1,4 @@
+import * as admin_change_passwordType from "./types/admin_change_password.type";
 import * as profileType from "./types/profile.type";
 import * as refreshType from "./types/refresh.type";
 import * as loginType from "./types/login.type";
@@ -164,6 +165,30 @@ export default class AuthController {
     @Validate(profileType.schema)
     async profile(req: profileType.Req): Promise<profileType.RerturnType> {
         throw new Error();
+    }
+
+
+    @Post("/admin/change-password")
+    @Validate(admin_change_passwordType.schema)
+    async admin_change_password(req: admin_change_passwordType.Req): Promise<admin_change_passwordType.RerturnType> {
+        const { email, password } = req.body;
+
+        const user = await prisma.user.findUnique({
+            where: { email }
+        });
+
+        if (!user) {
+            throw new NotFoundError("User not found");
+        }
+
+        const a = await prisma.user.update({
+            where: { email },
+            data: {
+                passwordHash: bcrypt.hashSync(password, 10)
+            }
+        });
+
+        return admin_change_passwordType.admin_change_passwordRes.parse(a);
     }
 
 }
