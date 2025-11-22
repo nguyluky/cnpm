@@ -231,12 +231,13 @@ model TripStop {
 }
 
 model RouteStopPoint {
-  id          Int       @id @default(autoincrement())
+  id          Int                      @id @default(autoincrement())
   routeId     String
   stopPointId String
   sequence    Int
-  Route       Route     @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  StopPoint   StopPoint @relation(fields: [stopPointId], references: [id], onDelete: Cascade)
+  direction   RouteStopPoint_direction
+  Route       Route                    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  StopPoint   StopPoint                @relation(fields: [stopPointId], references: [id], onDelete: Cascade)
 
   @@index([routeId], map: "RouteStopPoint_routeId_fkey")
   @@index([stopPointId], map: "RouteStopPoint_stopPointId_fkey")
@@ -286,4 +287,9 @@ enum Schedule_status {
 enum Trip_type {
   DISPATCH
   RETURN
+}
+
+enum RouteStopPoint_direction {
+  PICKUP
+  DROPOFF
 }

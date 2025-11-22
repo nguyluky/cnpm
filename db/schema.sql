@@ -110,6 +110,7 @@ CREATE TABLE `RouteStopPoint` (
   `routeId` VARCHAR(191) NOT NULL,
   `stopPointId` VARCHAR(191) NOT NULL,
   `sequence` INT NOT NULL, -- Thứ tự điểm dừng trong tuyến
+  `direction` ENUM('PICKUP', 'DROPOFF') NOT NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `RouteStopPoint_routeId_fkey` FOREIGN KEY (`routeId`) REFERENCES `Route` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `RouteStopPoint_stopPointId_fkey` FOREIGN KEY (`stopPointId`) REFERENCES `StopPoint` (`id`) ON DELETE CASCADE ON UPDATE CASCADE

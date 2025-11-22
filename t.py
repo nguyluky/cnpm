@@ -1,7 +1,7 @@
 import enum
 import requests
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional
 import uuid, json
 
 
@@ -145,9 +145,12 @@ def get_all_stop_points():
     set_stop_ids = set()
     all_route_details = []
     map_id = {}
+    with open("./db/id_map.json", "r", encoding="utf-8") as f:
+        map_id = json.load(f)
 
     for route in routes:
-        route_stops = get_route_stops(route.RouteId)
+        route_stops = get_route_stops(route.RouteId, Direction.OUTBOUND)
+        route_stops += get_route_stops(route.RouteId, Direction.INBOUND)
         for stop in route_stops:
             if stop.StopId not in set_stop_ids:
                 set_stop_ids.add(stop.StopId)
@@ -160,13 +163,28 @@ def get_all_stop_points():
 
     with open("./db/all_stop_points.sql", "w", encoding="utf-8") as f:
         # Insert into StopPoint (id, name, location, meta) values ('a827467d-8fd8-4bc0-b8c2-da8e652ae162', 'Cao Thắng', '{"latitude": 10.773362, "longitude": 106.67836}', '{"zone": "Quận 10", "ward": "None", "addressNo": "156", "street": "Cao Thắng", "supportDisability": "", "status": "Đang khai thác", "search": "CT 156 CT"}');
-        for stop in all_stop_points:
+        # for stop in all_stop_points:
+        #     location = f'{{"latitude": {stop.Lat}, "longitude": {stop.Lng}}}'
+        #     meta = f'{{"zone": "{stop.Zone}", "ward": "{stop.Ward or "None"}", "addressNo": "{stop.AddressNo}", "street": "{stop.Street}", "supportDisability": "{stop.SupportDisability}", "status": "{stop.Status}", "search": "{stop.Search}"}}'
+        #
+        #     line = f"Insert into StopPoint (id, name, location, meta) values ('{
+        #         map_id[stop.StopId]
+        #     }', '{stop.Name}', '{location}', '{meta}');\n"
+        #     f.write(line)
+
+        f.write("INSERT INTO `StopPoint` (`id`, `name`, `location`, `meta`) VALUES\n")
+
+        for i, stop in enumerate(all_stop_points):
             location = f'{{"latitude": {stop.Lat}, "longitude": {stop.Lng}}}'
             meta = f'{{"zone": "{stop.Zone}", "ward": "{stop.Ward or "None"}", "addressNo": "{stop.AddressNo}", "street": "{stop.Street}", "supportDisability": "{stop.SupportDisability}", "status": "{stop.Status}", "search": "{stop.Search}"}}'
-            line = f"Insert into StopPoint (id, name, location, meta) values ('{
-                map_id[stop.StopId]
-            }', '{stop.Name}', '{location}', '{meta}');\n"
+
+            line = f"('{map_id[stop.StopId]}', '{stop.Name.replace('\'', '\'\'')}', '{location}', '{meta.replace('\'', '\'\'')}')"
+            if i < len(all_stop_points) - 1:
+                line += ",\n"
             f.write(line)
+
+        f.write("ON DUPLICATE KEY UPDATE name = VALUES(name), location = VALUES(location), meta = VALUES(meta); ")
+
 
     with open("./db/id_map.json", "w", encoding="utf-8") as f:
         json.dump(map_id, f, ensure_ascii=False, indent=4)
@@ -211,8 +229,15 @@ def get_stop_by_route():
     route_stops_map = {}
 
     for route in routes:
-        stops = get_route_stops(route.RouteId, Direction.OUTBOUND)
-        route_stops_map[route.RouteId] = [stop.StopId for stop in stops]
+        stops1 = get_route_stops(route.RouteId, Direction.OUTBOUND)
+        stops2 = get_route_stops(route.RouteId, Direction.INBOUND)
+
+
+        route_stops_map[route.RouteId] = [
+            [stop.StopId for stop in stops1],
+            [stop.StopId for stop in stops2]
+        ]
+
         print(f"Fetched stops for route {route.RouteNo}")
 
     with open("./db/route_stops.json", "w", encoding="utf-8") as f:
@@ -290,8 +315,8 @@ def convert_routes_to_sql():
             sql_insert = generate_sql_insert(detail)
             f.write(sql_insert + "\n")
 
-    with open("./db/route_id_map.json", "w", encoding="utf-8") as f:
-        json.dump(map_id, f, ensure_ascii=False, indent=4)
+    # with open("./db/route_id_map.json", "w", encoding="utf-8") as f:
+    #     json.dump(map_id, f, ensure_ascii=False, indent=4)
 
 
 """CREATE TABLE `RouteStopPoint` (
@@ -299,6 +324,7 @@ def convert_routes_to_sql():
   `routeId` VARCHAR(191) NOT NULL,
   `stopPointId` VARCHAR(191) NOT NULL,
   `sequence` INT NOT NULL, -- Thứ tự điểm dừng trong tuyến
+` direction` ENUM('PICKUP', 'DROPOFF') ,
   PRIMARY KEY (`id`),
   CONSTRAINT `RouteStopPoint_routeId_fkey` FOREIGN KEY (`routeId`) REFERENCES `Route` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `RouteStopPoint_stopPointId_fkey` FOREIGN KEY (`stopPointId`) REFERENCES `StopPoint` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
@@ -317,23 +343,48 @@ def map_route_stops_to_sql():
         route_stops = json.load(f)
 
     with open("./db/route_stop_mappings.sql", "w", encoding="utf-8") as f:
-        for route_no, stop_ids in route_stops.items():
+        value_lines = []
+        f.write("INSERT INTO `RouteStopPoint` (`routeId`, `stopPointId`, `sequence`, `direction`) VALUES\n")
+        for route_no, [stop_id_lists1, stop_id_lists2] in route_stops.items():
+            # print(stop_id_lists1, stop_id_lists2)
             route_uuid = route_id_map.get(str(route_no))
             if not route_uuid:
                 print(f"RouteNo {route_no} not found in route_id_map.")
                 continue
 
-            for sequence, stop_id in enumerate(stop_ids, start=1):
+            for sequence, stop_id in enumerate(stop_id_lists1, start=1):
                 stop_uuid = stop_id_map.get(str(stop_id))
                 if not stop_uuid:
                     print(f"StopId {stop_id} not found in stop_id_map.")
                     continue
 
-                sql = f"""
-    INSERT INTO `RouteStopPoint` (`routeId`, `stopPointId`, `sequence`)
-    VALUES ('{route_uuid}', '{stop_uuid}', {sequence});
-    """
-                f.write(sql.strip() + "\n")
+#                 sql = f"""
+# INSERT INTO `RouteStopPoint` (`routeId`, `stopPointId`, `sequence`, `direction`)
+# VALUES ('{route_uuid}', '{stop_uuid}', {sequence}, "PICKUP");
+# """
+#                 f.write(sql.strip() + "\n")
+                
+                value_line = f"('{route_uuid}', '{stop_uuid}', {sequence}, 'PICKUP')"
+                value_lines.append(value_line)
+
+            for sequence, stop_id in enumerate(stop_id_lists2, start=1):
+                stop_uuid = stop_id_map.get(str(stop_id))
+                if not stop_uuid:
+                    print(f"StopId {stop_id} not found in stop_id_map.")
+                    continue
+
+#                 sql = f"""
+# INSERT INTO `RouteStopPoint` (`routeId`, `stopPointId`, `sequence`, `direction`)
+# VALUES ('{route_uuid}', '{stop_uuid}', {sequence}, "DROPOFF");
+# """
+#                 f.write(sql.strip() + "\n")
+                value_line = f"('{route_uuid}', '{stop_uuid}', {sequence}, 'DROPOFF')"
+                value_lines.append(value_line)
+        f.write(",\n".join(value_lines))
+        f.write(";\n")
+
+
+
 
 def escape_sql_string(s: str) -> str:
     """Hàm phụ trợ để thoát các ký tự đặc biệt trong chuỗi SQL."""
@@ -366,7 +417,7 @@ def update_route_add_path_to_meta():
 
 if __name__ == "__main__":
     # get_all_stop_points()
-    get_all_route_paths()
+    # get_all_route_paths()
     # get_all_route_details()
     # get_stop_by_route()
     # convert_routes_to_sql()

@@ -34,7 +34,7 @@ export default class DriverController {
         const end = new Date(today);
         end.setHours(23, 59, 59, 999);
 
-        const dayOfWeek = today.getDay() + 1;
+        const dayOfWeek = today.getDay();
 
         console.log("today", today, "dayOfWeek", dayOfWeek);
 
@@ -159,8 +159,6 @@ export default class DriverController {
             throw new NotFoundError("Trip not found");
         }
 
-
-
         const routePath = JSON.parse((trip.Schedule.Route.meta as any)?.encodedPath) as number[][][] | undefined;
         const dispathPath = routePath ? routePath[0] || [] : [];
         const returnPath = routePath ? routePath[1] || routePath[0] || [] : [];
@@ -169,6 +167,7 @@ export default class DriverController {
             id: trip.Schedule.Route.id,
             name: trip.Schedule.Route.name,
             path: trip.type == 'DISPATCH' ? dispathPath : returnPath,
+            startTime: trip.Schedule.startTime.toISOString(),
         });
 
         const busInfo = BusInfo.parse({
@@ -176,7 +175,7 @@ export default class DriverController {
             licensePlate: trip.Schedule.Bus.licensePlate
         });
 
-        const stops = trip.Schedule.Route.RouteStopPoint.map(rsp => {
+        const stops = trip.Schedule.Route.RouteStopPoint.filter(e => (trip.type == "RETURN" && e.direction == "PICKUP") || (trip.type == "DISPATCH" && e.direction == "DROPOFF")).map(rsp => {
             const stopPoint = rsp.StopPoint;
             const tripStop = trip.TripStop.find(ts => ts.stopId === stopPoint.id);
 
@@ -197,11 +196,7 @@ export default class DriverController {
         return get_tripType.get_tripRes.parse({
             id: trip.id,
             status: trip.status as 'PLANNED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED',
-            rotute: get_tripType.RouteInfoWithPath.parse({
-                id: routeInfo.id,
-                name: routeInfo.name,
-                path: routeInfo.path,
-            }),
+            rotute: routeInfo,
             bus: busInfo,
             stops,
         });
@@ -308,7 +303,7 @@ export default class DriverController {
 
 
     @Get("/trip/:tripId/end")
-    @Summary("End stoppoint")
+    @Summary("End trip")
     @useAuth(JWT_AUTH)
     @usePremisstion(["update:driver_trip"])
     @Validate(trip_stoppoint_endType.schema)
@@ -426,10 +421,10 @@ export default class DriverController {
             data: {
                 id: currentDate.getTime().toString() + "-" + tripId,
                 tripId: tripId,
-                location: GeoLocation.parse({
+                location: [
                     latitude,
                     longitude
-                }) as any,
+                ] as any,
                 timestamp: currentDate,
             }
         });
