@@ -17,6 +17,9 @@ export class RouteInfoWithPath extends RouteInfo {
     @IsArray(Object)
     path: number[][];
 
+    @IsString()
+    startTime: string;
+
 }
 
 

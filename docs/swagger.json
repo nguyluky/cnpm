@@ -3578,12 +3578,16 @@
                             "path": {
                               "type": "array",
                               "items": {}
+                            },
+                            "startTime": {
+                              "type": "string"
                             }
                           },
                           "required": [
                             "id",
                             "name",
-                            "path"
+                            "path",
+                            "startTime"
                           ],
                           "additionalProperties": false
                         },
@@ -4133,7 +4137,7 @@
         "tags": [
           "DriverController"
         ],
-        "summary": "End stoppoint",
+        "summary": "End trip",
         "parameters": [
           {
             "name": "tripId",

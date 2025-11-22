@@ -88,7 +88,7 @@ export const TripScalarFieldEnumSchema = z.enum(['id','scheduleId','date','actua
 
 export const TripStopScalarFieldEnumSchema = z.enum(['id','tripId','stopId','actualArrival','actualDeparture','status']);
 
-export const RouteStopPointScalarFieldEnumSchema = z.enum(['id','routeId','stopPointId','sequence']);
+export const RouteStopPointScalarFieldEnumSchema = z.enum(['id','routeId','stopPointId','sequence','direction']);
 
 export const SortOrderSchema = z.enum(['asc','desc']);
 
@@ -165,6 +165,10 @@ export type Schedule_statusType = `${z.infer<typeof Schedule_statusSchema>}`
 export const Trip_typeSchema = z.enum(['DISPATCH','RETURN']);
 
 export type Trip_typeType = `${z.infer<typeof Trip_typeSchema>}`
+
+export const RouteStopPoint_directionSchema = z.enum(['PICKUP','DROPOFF']);
+
+export type RouteStopPoint_directionType = `${z.infer<typeof RouteStopPoint_directionSchema>}`
 
 /////////////////////////////////////////
 // MODELS
@@ -423,6 +427,7 @@ export type TripStop = z.infer<typeof TripStopSchema>
 /////////////////////////////////////////
 
 export const RouteStopPointSchema = z.object({
+  direction: RouteStopPoint_directionSchema,
   id: z.number().int(),
   routeId: z.string(),
   stopPointId: z.string(),
@@ -962,6 +967,7 @@ export const RouteStopPointSelectSchema: z.ZodType<Prisma.RouteStopPointSelect> 
   routeId: z.boolean().optional(),
   stopPointId: z.boolean().optional(),
   sequence: z.boolean().optional(),
+  direction: z.boolean().optional(),
   Route: z.union([z.boolean(),z.lazy(() => RouteArgsSchema)]).optional(),
   StopPoint: z.union([z.boolean(),z.lazy(() => StopPointArgsSchema)]).optional(),
 }).strict()
@@ -2189,6 +2195,7 @@ export const RouteStopPointWhereInputSchema: z.ZodType<Prisma.RouteStopPointWher
   routeId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   stopPointId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   sequence: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  direction: z.union([ z.lazy(() => EnumRouteStopPoint_directionFilterSchema),z.lazy(() => RouteStopPoint_directionSchema) ]).optional(),
   Route: z.union([ z.lazy(() => RouteScalarRelationFilterSchema),z.lazy(() => RouteWhereInputSchema) ]).optional(),
   StopPoint: z.union([ z.lazy(() => StopPointScalarRelationFilterSchema),z.lazy(() => StopPointWhereInputSchema) ]).optional(),
 }).strict();
@@ -2198,6 +2205,7 @@ export const RouteStopPointOrderByWithRelationInputSchema: z.ZodType<Prisma.Rout
   routeId: z.lazy(() => SortOrderSchema).optional(),
   stopPointId: z.lazy(() => SortOrderSchema).optional(),
   sequence: z.lazy(() => SortOrderSchema).optional(),
+  direction: z.lazy(() => SortOrderSchema).optional(),
   Route: z.lazy(() => RouteOrderByWithRelationInputSchema).optional(),
   StopPoint: z.lazy(() => StopPointOrderByWithRelationInputSchema).optional(),
   _relevance: z.lazy(() => RouteStopPointOrderByRelevanceInputSchema).optional()
@@ -2214,6 +2222,7 @@ export const RouteStopPointWhereUniqueInputSchema: z.ZodType<Prisma.RouteStopPoi
   routeId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   stopPointId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   sequence: z.union([ z.lazy(() => IntFilterSchema),z.number().int() ]).optional(),
+  direction: z.union([ z.lazy(() => EnumRouteStopPoint_directionFilterSchema),z.lazy(() => RouteStopPoint_directionSchema) ]).optional(),
   Route: z.union([ z.lazy(() => RouteScalarRelationFilterSchema),z.lazy(() => RouteWhereInputSchema) ]).optional(),
   StopPoint: z.union([ z.lazy(() => StopPointScalarRelationFilterSchema),z.lazy(() => StopPointWhereInputSchema) ]).optional(),
 }).strict());
@@ -2223,6 +2232,7 @@ export const RouteStopPointOrderByWithAggregationInputSchema: z.ZodType<Prisma.R
   routeId: z.lazy(() => SortOrderSchema).optional(),
   stopPointId: z.lazy(() => SortOrderSchema).optional(),
   sequence: z.lazy(() => SortOrderSchema).optional(),
+  direction: z.lazy(() => SortOrderSchema).optional(),
   _count: z.lazy(() => RouteStopPointCountOrderByAggregateInputSchema).optional(),
   _avg: z.lazy(() => RouteStopPointAvgOrderByAggregateInputSchema).optional(),
   _max: z.lazy(() => RouteStopPointMaxOrderByAggregateInputSchema).optional(),
@@ -2238,6 +2248,7 @@ export const RouteStopPointScalarWhereWithAggregatesInputSchema: z.ZodType<Prism
   routeId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   stopPointId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   sequence: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
+  direction: z.union([ z.lazy(() => EnumRouteStopPoint_directionWithAggregatesFilterSchema),z.lazy(() => RouteStopPoint_directionSchema) ]).optional(),
 }).strict();
 
 export const UserCreateInputSchema: z.ZodType<Prisma.UserCreateInput> = z.object({
@@ -3365,6 +3376,7 @@ export const TripStopUncheckedUpdateManyInputSchema: z.ZodType<Prisma.TripStopUn
 
 export const RouteStopPointCreateInputSchema: z.ZodType<Prisma.RouteStopPointCreateInput> = z.object({
   sequence: z.number().int(),
+  direction: z.lazy(() => RouteStopPoint_directionSchema),
   Route: z.lazy(() => RouteCreateNestedOneWithoutRouteStopPointInputSchema),
   StopPoint: z.lazy(() => StopPointCreateNestedOneWithoutRouteStopPointInputSchema)
 }).strict();
@@ -3373,11 +3385,13 @@ export const RouteStopPointUncheckedCreateInputSchema: z.ZodType<Prisma.RouteSto
   id: z.number().int().optional(),
   routeId: z.string(),
   stopPointId: z.string(),
-  sequence: z.number().int()
+  sequence: z.number().int(),
+  direction: z.lazy(() => RouteStopPoint_directionSchema)
 }).strict();
 
 export const RouteStopPointUpdateInputSchema: z.ZodType<Prisma.RouteStopPointUpdateInput> = z.object({
   sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  direction: z.union([ z.lazy(() => RouteStopPoint_directionSchema),z.lazy(() => EnumRouteStopPoint_directionFieldUpdateOperationsInputSchema) ]).optional(),
   Route: z.lazy(() => RouteUpdateOneRequiredWithoutRouteStopPointNestedInputSchema).optional(),
   StopPoint: z.lazy(() => StopPointUpdateOneRequiredWithoutRouteStopPointNestedInputSchema).optional()
 }).strict();
@@ -3387,17 +3401,20 @@ export const RouteStopPointUncheckedUpdateInputSchema: z.ZodType<Prisma.RouteSto
   routeId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   stopPointId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  direction: z.union([ z.lazy(() => RouteStopPoint_directionSchema),z.lazy(() => EnumRouteStopPoint_directionFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const RouteStopPointCreateManyInputSchema: z.ZodType<Prisma.RouteStopPointCreateManyInput> = z.object({
   id: z.number().int().optional(),
   routeId: z.string(),
   stopPointId: z.string(),
-  sequence: z.number().int()
+  sequence: z.number().int(),
+  direction: z.lazy(() => RouteStopPoint_directionSchema)
 }).strict();
 
 export const RouteStopPointUpdateManyMutationInputSchema: z.ZodType<Prisma.RouteStopPointUpdateManyMutationInput> = z.object({
   sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  direction: z.union([ z.lazy(() => RouteStopPoint_directionSchema),z.lazy(() => EnumRouteStopPoint_directionFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const RouteStopPointUncheckedUpdateManyInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedUpdateManyInput> = z.object({
@@ -3405,6 +3422,7 @@ export const RouteStopPointUncheckedUpdateManyInputSchema: z.ZodType<Prisma.Rout
   routeId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   stopPointId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  direction: z.union([ z.lazy(() => RouteStopPoint_directionSchema),z.lazy(() => EnumRouteStopPoint_directionFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const StringFilterSchema: z.ZodType<Prisma.StringFilter> = z.object({
@@ -4542,6 +4560,13 @@ export const EnumTripStop_statusNullableWithAggregatesFilterSchema: z.ZodType<Pr
   _max: z.lazy(() => NestedEnumTripStop_statusNullableFilterSchema).optional()
 }).strict();
 
+export const EnumRouteStopPoint_directionFilterSchema: z.ZodType<Prisma.EnumRouteStopPoint_directionFilter> = z.object({
+  equals: z.lazy(() => RouteStopPoint_directionSchema).optional(),
+  in: z.lazy(() => RouteStopPoint_directionSchema).array().optional(),
+  notIn: z.lazy(() => RouteStopPoint_directionSchema).array().optional(),
+  not: z.union([ z.lazy(() => RouteStopPoint_directionSchema),z.lazy(() => NestedEnumRouteStopPoint_directionFilterSchema) ]).optional(),
+}).strict();
+
 export const RouteStopPointOrderByRelevanceInputSchema: z.ZodType<Prisma.RouteStopPointOrderByRelevanceInput> = z.object({
   fields: z.union([ z.lazy(() => RouteStopPointOrderByRelevanceFieldEnumSchema),z.lazy(() => RouteStopPointOrderByRelevanceFieldEnumSchema).array() ]),
   sort: z.lazy(() => SortOrderSchema),
@@ -4552,7 +4577,8 @@ export const RouteStopPointCountOrderByAggregateInputSchema: z.ZodType<Prisma.Ro
   id: z.lazy(() => SortOrderSchema).optional(),
   routeId: z.lazy(() => SortOrderSchema).optional(),
   stopPointId: z.lazy(() => SortOrderSchema).optional(),
-  sequence: z.lazy(() => SortOrderSchema).optional()
+  sequence: z.lazy(() => SortOrderSchema).optional(),
+  direction: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const RouteStopPointAvgOrderByAggregateInputSchema: z.ZodType<Prisma.RouteStopPointAvgOrderByAggregateInput> = z.object({
@@ -4564,19 +4590,31 @@ export const RouteStopPointMaxOrderByAggregateInputSchema: z.ZodType<Prisma.Rout
   id: z.lazy(() => SortOrderSchema).optional(),
   routeId: z.lazy(() => SortOrderSchema).optional(),
   stopPointId: z.lazy(() => SortOrderSchema).optional(),
-  sequence: z.lazy(() => SortOrderSchema).optional()
+  sequence: z.lazy(() => SortOrderSchema).optional(),
+  direction: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const RouteStopPointMinOrderByAggregateInputSchema: z.ZodType<Prisma.RouteStopPointMinOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   routeId: z.lazy(() => SortOrderSchema).optional(),
   stopPointId: z.lazy(() => SortOrderSchema).optional(),
-  sequence: z.lazy(() => SortOrderSchema).optional()
+  sequence: z.lazy(() => SortOrderSchema).optional(),
+  direction: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const RouteStopPointSumOrderByAggregateInputSchema: z.ZodType<Prisma.RouteStopPointSumOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   sequence: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const EnumRouteStopPoint_directionWithAggregatesFilterSchema: z.ZodType<Prisma.EnumRouteStopPoint_directionWithAggregatesFilter> = z.object({
+  equals: z.lazy(() => RouteStopPoint_directionSchema).optional(),
+  in: z.lazy(() => RouteStopPoint_directionSchema).array().optional(),
+  notIn: z.lazy(() => RouteStopPoint_directionSchema).array().optional(),
+  not: z.union([ z.lazy(() => RouteStopPoint_directionSchema),z.lazy(() => NestedEnumRouteStopPoint_directionWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumRouteStopPoint_directionFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumRouteStopPoint_directionFilterSchema).optional()
 }).strict();
 
 export const ReportCreateNestedManyWithoutUserInputSchema: z.ZodType<Prisma.ReportCreateNestedManyWithoutUserInput> = z.object({
@@ -5799,6 +5837,10 @@ export const StopPointCreateNestedOneWithoutRouteStopPointInputSchema: z.ZodType
   connect: z.lazy(() => StopPointWhereUniqueInputSchema).optional()
 }).strict();
 
+export const EnumRouteStopPoint_directionFieldUpdateOperationsInputSchema: z.ZodType<Prisma.EnumRouteStopPoint_directionFieldUpdateOperationsInput> = z.object({
+  set: z.lazy(() => RouteStopPoint_directionSchema).optional()
+}).strict();
+
 export const RouteUpdateOneRequiredWithoutRouteStopPointNestedInputSchema: z.ZodType<Prisma.RouteUpdateOneRequiredWithoutRouteStopPointNestedInput> = z.object({
   create: z.union([ z.lazy(() => RouteCreateWithoutRouteStopPointInputSchema),z.lazy(() => RouteUncheckedCreateWithoutRouteStopPointInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => RouteCreateOrConnectWithoutRouteStopPointInputSchema).optional(),
@@ -6188,6 +6230,23 @@ export const NestedEnumTripStop_statusNullableWithAggregatesFilterSchema: z.ZodT
   _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
   _min: z.lazy(() => NestedEnumTripStop_statusNullableFilterSchema).optional(),
   _max: z.lazy(() => NestedEnumTripStop_statusNullableFilterSchema).optional()
+}).strict();
+
+export const NestedEnumRouteStopPoint_directionFilterSchema: z.ZodType<Prisma.NestedEnumRouteStopPoint_directionFilter> = z.object({
+  equals: z.lazy(() => RouteStopPoint_directionSchema).optional(),
+  in: z.lazy(() => RouteStopPoint_directionSchema).array().optional(),
+  notIn: z.lazy(() => RouteStopPoint_directionSchema).array().optional(),
+  not: z.union([ z.lazy(() => RouteStopPoint_directionSchema),z.lazy(() => NestedEnumRouteStopPoint_directionFilterSchema) ]).optional(),
+}).strict();
+
+export const NestedEnumRouteStopPoint_directionWithAggregatesFilterSchema: z.ZodType<Prisma.NestedEnumRouteStopPoint_directionWithAggregatesFilter> = z.object({
+  equals: z.lazy(() => RouteStopPoint_directionSchema).optional(),
+  in: z.lazy(() => RouteStopPoint_directionSchema).array().optional(),
+  notIn: z.lazy(() => RouteStopPoint_directionSchema).array().optional(),
+  not: z.union([ z.lazy(() => RouteStopPoint_directionSchema),z.lazy(() => NestedEnumRouteStopPoint_directionWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumRouteStopPoint_directionFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumRouteStopPoint_directionFilterSchema).optional()
 }).strict();
 
 export const ReportCreateWithoutUserInputSchema: z.ZodType<Prisma.ReportCreateWithoutUserInput> = z.object({
@@ -6944,13 +7003,15 @@ export const TripUncheckedUpdateWithoutReportInputSchema: z.ZodType<Prisma.TripU
 
 export const RouteStopPointCreateWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointCreateWithoutRouteInput> = z.object({
   sequence: z.number().int(),
+  direction: z.lazy(() => RouteStopPoint_directionSchema),
   StopPoint: z.lazy(() => StopPointCreateNestedOneWithoutRouteStopPointInputSchema)
 }).strict();
 
 export const RouteStopPointUncheckedCreateWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedCreateWithoutRouteInput> = z.object({
   id: z.number().int().optional(),
   stopPointId: z.string(),
-  sequence: z.number().int()
+  sequence: z.number().int(),
+  direction: z.lazy(() => RouteStopPoint_directionSchema)
 }).strict();
 
 export const RouteStopPointCreateOrConnectWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointCreateOrConnectWithoutRouteInput> = z.object({
@@ -7061,6 +7122,7 @@ export const RouteStopPointScalarWhereInputSchema: z.ZodType<Prisma.RouteStopPoi
   routeId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   stopPointId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   sequence: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  direction: z.union([ z.lazy(() => EnumRouteStopPoint_directionFilterSchema),z.lazy(() => RouteStopPoint_directionSchema) ]).optional(),
 }).strict();
 
 export const ScheduleUpsertWithWhereUniqueWithoutRouteInputSchema: z.ZodType<Prisma.ScheduleUpsertWithWhereUniqueWithoutRouteInput> = z.object({
@@ -7381,13 +7443,15 @@ export const TripScalarWhereInputSchema: z.ZodType<Prisma.TripScalarWhereInput> 
 
 export const RouteStopPointCreateWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointCreateWithoutStopPointInput> = z.object({
   sequence: z.number().int(),
+  direction: z.lazy(() => RouteStopPoint_directionSchema),
   Route: z.lazy(() => RouteCreateNestedOneWithoutRouteStopPointInputSchema)
 }).strict();
 
 export const RouteStopPointUncheckedCreateWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedCreateWithoutStopPointInput> = z.object({
   id: z.number().int().optional(),
   routeId: z.string(),
-  sequence: z.number().int()
+  sequence: z.number().int(),
+  direction: z.lazy(() => RouteStopPoint_directionSchema)
 }).strict();
 
 export const RouteStopPointCreateOrConnectWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointCreateOrConnectWithoutStopPointInput> = z.object({
@@ -8867,7 +8931,8 @@ export const ScheduleUncheckedUpdateManyWithoutBusInputSchema: z.ZodType<Prisma.
 export const RouteStopPointCreateManyRouteInputSchema: z.ZodType<Prisma.RouteStopPointCreateManyRouteInput> = z.object({
   id: z.number().int().optional(),
   stopPointId: z.string(),
-  sequence: z.number().int()
+  sequence: z.number().int(),
+  direction: z.lazy(() => RouteStopPoint_directionSchema)
 }).strict();
 
 export const ScheduleCreateManyRouteInputSchema: z.ZodType<Prisma.ScheduleCreateManyRouteInput> = z.object({
@@ -8898,6 +8963,7 @@ export const StudentAssignmentCreateManyRouteInputSchema: z.ZodType<Prisma.Stude
 
 export const RouteStopPointUpdateWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointUpdateWithoutRouteInput> = z.object({
   sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  direction: z.union([ z.lazy(() => RouteStopPoint_directionSchema),z.lazy(() => EnumRouteStopPoint_directionFieldUpdateOperationsInputSchema) ]).optional(),
   StopPoint: z.lazy(() => StopPointUpdateOneRequiredWithoutRouteStopPointNestedInputSchema).optional()
 }).strict();
 
@@ -8905,12 +8971,14 @@ export const RouteStopPointUncheckedUpdateWithoutRouteInputSchema: z.ZodType<Pri
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   stopPointId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  direction: z.union([ z.lazy(() => RouteStopPoint_directionSchema),z.lazy(() => EnumRouteStopPoint_directionFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const RouteStopPointUncheckedUpdateManyWithoutRouteInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedUpdateManyWithoutRouteInput> = z.object({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   stopPointId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  direction: z.union([ z.lazy(() => RouteStopPoint_directionSchema),z.lazy(() => EnumRouteStopPoint_directionFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const ScheduleUpdateWithoutRouteInputSchema: z.ZodType<Prisma.ScheduleUpdateWithoutRouteInput> = z.object({
@@ -9056,7 +9124,8 @@ export const TripUncheckedUpdateManyWithoutScheduleInputSchema: z.ZodType<Prisma
 export const RouteStopPointCreateManyStopPointInputSchema: z.ZodType<Prisma.RouteStopPointCreateManyStopPointInput> = z.object({
   id: z.number().int().optional(),
   routeId: z.string(),
-  sequence: z.number().int()
+  sequence: z.number().int(),
+  direction: z.lazy(() => RouteStopPoint_directionSchema)
 }).strict();
 
 export const StudentAssignmentCreateManyStopPointInputSchema: z.ZodType<Prisma.StudentAssignmentCreateManyStopPointInput> = z.object({
@@ -9080,6 +9149,7 @@ export const TripStopCreateManyStopPointInputSchema: z.ZodType<Prisma.TripStopCr
 
 export const RouteStopPointUpdateWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointUpdateWithoutStopPointInput> = z.object({
   sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  direction: z.union([ z.lazy(() => RouteStopPoint_directionSchema),z.lazy(() => EnumRouteStopPoint_directionFieldUpdateOperationsInputSchema) ]).optional(),
   Route: z.lazy(() => RouteUpdateOneRequiredWithoutRouteStopPointNestedInputSchema).optional()
 }).strict();
 
@@ -9087,12 +9157,14 @@ export const RouteStopPointUncheckedUpdateWithoutStopPointInputSchema: z.ZodType
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   routeId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  direction: z.union([ z.lazy(() => RouteStopPoint_directionSchema),z.lazy(() => EnumRouteStopPoint_directionFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const RouteStopPointUncheckedUpdateManyWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointUncheckedUpdateManyWithoutStopPointInput> = z.object({
   id: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   routeId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   sequence: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  direction: z.union([ z.lazy(() => RouteStopPoint_directionSchema),z.lazy(() => EnumRouteStopPoint_directionFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const StudentAssignmentUpdateWithoutStopPointInputSchema: z.ZodType<Prisma.StudentAssignmentUpdateWithoutStopPointInput> = z.object({

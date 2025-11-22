@@ -113,6 +113,7 @@ export default class routescontroller {
                     create: stopPointIds.map((spId, index) => ({
                         stopPointId: spId,
                         sequence: index + 1,
+                        direction: "PICKUP",
                     })),
                 },
             },
@@ -172,6 +173,7 @@ export default class routescontroller {
                 routeId: id,
                 stopPointId: spId,
                 sequence: index + 1,
+                direction: "PICKUP",
             })),
         });
 
