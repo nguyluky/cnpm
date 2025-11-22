@@ -84,7 +84,7 @@ export const TrackingBusHistoryScalarFieldEnumSchema = z.enum(['id','tripId','ti
 
 export const StudentAssignmentScalarFieldEnumSchema = z.enum(['id','studentId','routeId','stopId','direction','effectiveFrom','effectiveTo','createdAt','updatedAt']);
 
-export const TripScalarFieldEnumSchema = z.enum(['id','scheduleId','date','actualStartTime','actualEndTime','status','currentStopId','location','createdAt','updatedAt']);
+export const TripScalarFieldEnumSchema = z.enum(['id','scheduleId','date','actualStartTime','actualEndTime','status','currentStopId','location','createdAt','updatedAt','type']);
 
 export const TripStopScalarFieldEnumSchema = z.enum(['id','tripId','stopId','actualArrival','actualDeparture','status']);
 
@@ -161,6 +161,10 @@ export type TripStop_statusType = `${z.infer<typeof TripStop_statusSchema>}`
 export const Schedule_statusSchema = z.enum(['ACTIVE','INACTIVE']);
 
 export type Schedule_statusType = `${z.infer<typeof Schedule_statusSchema>}`
+
+export const Trip_typeSchema = z.enum(['DISPATCH','RETURN']);
+
+export type Trip_typeType = `${z.infer<typeof Trip_typeSchema>}`
 
 /////////////////////////////////////////
 // MODELS
@@ -385,6 +389,7 @@ export type StudentAssignment = z.infer<typeof StudentAssignmentSchema>
 
 export const TripSchema = z.object({
   status: Trip_statusSchema.nullable(),
+  type: Trip_typeSchema,
   id: z.string(),
   scheduleId: z.string(),
   date: z.coerce.date(),
@@ -906,6 +911,7 @@ export const TripSelectSchema: z.ZodType<Prisma.TripSelect> = z.object({
   location: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
+  type: z.boolean().optional(),
   Report: z.union([z.boolean(),z.lazy(() => ReportFindManyArgsSchema)]).optional(),
   StudentAttendance: z.union([z.boolean(),z.lazy(() => StudentAttendanceFindManyArgsSchema)]).optional(),
   TrackingBusHistory: z.union([z.boolean(),z.lazy(() => TrackingBusHistoryFindManyArgsSchema)]).optional(),
@@ -2021,6 +2027,7 @@ export const TripWhereInputSchema: z.ZodType<Prisma.TripWhereInput> = z.object({
   location: z.lazy(() => JsonNullableFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  type: z.union([ z.lazy(() => EnumTrip_typeFilterSchema),z.lazy(() => Trip_typeSchema) ]).optional(),
   Report: z.lazy(() => ReportListRelationFilterSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceListRelationFilterSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryListRelationFilterSchema).optional(),
@@ -2039,6 +2046,7 @@ export const TripOrderByWithRelationInputSchema: z.ZodType<Prisma.TripOrderByWit
   location: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  type: z.lazy(() => SortOrderSchema).optional(),
   Report: z.lazy(() => ReportOrderByRelationAggregateInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceOrderByRelationAggregateInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryOrderByRelationAggregateInputSchema).optional(),
@@ -2064,6 +2072,7 @@ export const TripWhereUniqueInputSchema: z.ZodType<Prisma.TripWhereUniqueInput> 
   location: z.lazy(() => JsonNullableFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  type: z.union([ z.lazy(() => EnumTrip_typeFilterSchema),z.lazy(() => Trip_typeSchema) ]).optional(),
   Report: z.lazy(() => ReportListRelationFilterSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceListRelationFilterSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryListRelationFilterSchema).optional(),
@@ -2082,6 +2091,7 @@ export const TripOrderByWithAggregationInputSchema: z.ZodType<Prisma.TripOrderBy
   location: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  type: z.lazy(() => SortOrderSchema).optional(),
   _count: z.lazy(() => TripCountOrderByAggregateInputSchema).optional(),
   _max: z.lazy(() => TripMaxOrderByAggregateInputSchema).optional(),
   _min: z.lazy(() => TripMinOrderByAggregateInputSchema).optional()
@@ -2101,6 +2111,7 @@ export const TripScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.TripScal
   location: z.lazy(() => JsonNullableWithAggregatesFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
+  type: z.union([ z.lazy(() => EnumTrip_typeWithAggregatesFilterSchema),z.lazy(() => Trip_typeSchema) ]).optional(),
 }).strict();
 
 export const TripStopWhereInputSchema: z.ZodType<Prisma.TripStopWhereInput> = z.object({
@@ -3188,6 +3199,7 @@ export const TripCreateInputSchema: z.ZodType<Prisma.TripCreateInput> = z.object
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  type: z.lazy(() => Trip_typeSchema),
   Report: z.lazy(() => ReportCreateNestedManyWithoutTripInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceCreateNestedManyWithoutTripInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryCreateNestedManyWithoutTripInputSchema).optional(),
@@ -3206,6 +3218,7 @@ export const TripUncheckedCreateInputSchema: z.ZodType<Prisma.TripUncheckedCreat
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  type: z.lazy(() => Trip_typeSchema),
   Report: z.lazy(() => ReportUncheckedCreateNestedManyWithoutTripInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceUncheckedCreateNestedManyWithoutTripInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUncheckedCreateNestedManyWithoutTripInputSchema).optional(),
@@ -3222,6 +3235,7 @@ export const TripUpdateInputSchema: z.ZodType<Prisma.TripUpdateInput> = z.object
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => EnumTrip_typeFieldUpdateOperationsInputSchema) ]).optional(),
   Report: z.lazy(() => ReportUpdateManyWithoutTripNestedInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceUpdateManyWithoutTripNestedInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUpdateManyWithoutTripNestedInputSchema).optional(),
@@ -3240,6 +3254,7 @@ export const TripUncheckedUpdateInputSchema: z.ZodType<Prisma.TripUncheckedUpdat
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => EnumTrip_typeFieldUpdateOperationsInputSchema) ]).optional(),
   Report: z.lazy(() => ReportUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
@@ -3256,7 +3271,8 @@ export const TripCreateManyInputSchema: z.ZodType<Prisma.TripCreateManyInput> = 
   currentStopId: z.string().optional().nullable(),
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
-  updatedAt: z.coerce.date().optional()
+  updatedAt: z.coerce.date().optional(),
+  type: z.lazy(() => Trip_typeSchema)
 }).strict();
 
 export const TripUpdateManyMutationInputSchema: z.ZodType<Prisma.TripUpdateManyMutationInput> = z.object({
@@ -3269,6 +3285,7 @@ export const TripUpdateManyMutationInputSchema: z.ZodType<Prisma.TripUpdateManyM
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => EnumTrip_typeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const TripUncheckedUpdateManyInputSchema: z.ZodType<Prisma.TripUncheckedUpdateManyInput> = z.object({
@@ -3282,6 +3299,7 @@ export const TripUncheckedUpdateManyInputSchema: z.ZodType<Prisma.TripUncheckedU
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => EnumTrip_typeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const TripStopCreateInputSchema: z.ZodType<Prisma.TripStopCreateInput> = z.object({
@@ -4386,6 +4404,13 @@ export const EnumTrip_statusNullableFilterSchema: z.ZodType<Prisma.EnumTrip_stat
   not: z.union([ z.lazy(() => Trip_statusSchema),z.lazy(() => NestedEnumTrip_statusNullableFilterSchema) ]).optional().nullable(),
 }).strict();
 
+export const EnumTrip_typeFilterSchema: z.ZodType<Prisma.EnumTrip_typeFilter> = z.object({
+  equals: z.lazy(() => Trip_typeSchema).optional(),
+  in: z.lazy(() => Trip_typeSchema).array().optional(),
+  notIn: z.lazy(() => Trip_typeSchema).array().optional(),
+  not: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => NestedEnumTrip_typeFilterSchema) ]).optional(),
+}).strict();
+
 export const TrackingBusHistoryListRelationFilterSchema: z.ZodType<Prisma.TrackingBusHistoryListRelationFilter> = z.object({
   every: z.lazy(() => TrackingBusHistoryWhereInputSchema).optional(),
   some: z.lazy(() => TrackingBusHistoryWhereInputSchema).optional(),
@@ -4417,7 +4442,8 @@ export const TripCountOrderByAggregateInputSchema: z.ZodType<Prisma.TripCountOrd
   currentStopId: z.lazy(() => SortOrderSchema).optional(),
   location: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
-  updatedAt: z.lazy(() => SortOrderSchema).optional()
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  type: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const TripMaxOrderByAggregateInputSchema: z.ZodType<Prisma.TripMaxOrderByAggregateInput> = z.object({
@@ -4429,7 +4455,8 @@ export const TripMaxOrderByAggregateInputSchema: z.ZodType<Prisma.TripMaxOrderBy
   status: z.lazy(() => SortOrderSchema).optional(),
   currentStopId: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
-  updatedAt: z.lazy(() => SortOrderSchema).optional()
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  type: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const TripMinOrderByAggregateInputSchema: z.ZodType<Prisma.TripMinOrderByAggregateInput> = z.object({
@@ -4441,7 +4468,8 @@ export const TripMinOrderByAggregateInputSchema: z.ZodType<Prisma.TripMinOrderBy
   status: z.lazy(() => SortOrderSchema).optional(),
   currentStopId: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
-  updatedAt: z.lazy(() => SortOrderSchema).optional()
+  updatedAt: z.lazy(() => SortOrderSchema).optional(),
+  type: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const EnumTrip_statusNullableWithAggregatesFilterSchema: z.ZodType<Prisma.EnumTrip_statusNullableWithAggregatesFilter> = z.object({
@@ -4452,6 +4480,16 @@ export const EnumTrip_statusNullableWithAggregatesFilterSchema: z.ZodType<Prisma
   _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
   _min: z.lazy(() => NestedEnumTrip_statusNullableFilterSchema).optional(),
   _max: z.lazy(() => NestedEnumTrip_statusNullableFilterSchema).optional()
+}).strict();
+
+export const EnumTrip_typeWithAggregatesFilterSchema: z.ZodType<Prisma.EnumTrip_typeWithAggregatesFilter> = z.object({
+  equals: z.lazy(() => Trip_typeSchema).optional(),
+  in: z.lazy(() => Trip_typeSchema).array().optional(),
+  notIn: z.lazy(() => Trip_typeSchema).array().optional(),
+  not: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => NestedEnumTrip_typeWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumTrip_typeFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumTrip_typeFilterSchema).optional()
 }).strict();
 
 export const EnumTripStop_statusNullableFilterSchema: z.ZodType<Prisma.EnumTripStop_statusNullableFilter> = z.object({
@@ -5593,6 +5631,10 @@ export const NullableEnumTrip_statusFieldUpdateOperationsInputSchema: z.ZodType<
   set: z.lazy(() => Trip_statusSchema).optional().nullable()
 }).strict();
 
+export const EnumTrip_typeFieldUpdateOperationsInputSchema: z.ZodType<Prisma.EnumTrip_typeFieldUpdateOperationsInput> = z.object({
+  set: z.lazy(() => Trip_typeSchema).optional()
+}).strict();
+
 export const ReportUpdateManyWithoutTripNestedInputSchema: z.ZodType<Prisma.ReportUpdateManyWithoutTripNestedInput> = z.object({
   create: z.union([ z.lazy(() => ReportCreateWithoutTripInputSchema),z.lazy(() => ReportCreateWithoutTripInputSchema).array(),z.lazy(() => ReportUncheckedCreateWithoutTripInputSchema),z.lazy(() => ReportUncheckedCreateWithoutTripInputSchema).array() ]).optional(),
   connectOrCreate: z.union([ z.lazy(() => ReportCreateOrConnectWithoutTripInputSchema),z.lazy(() => ReportCreateOrConnectWithoutTripInputSchema).array() ]).optional(),
@@ -6104,6 +6146,13 @@ export const NestedEnumTrip_statusNullableFilterSchema: z.ZodType<Prisma.NestedE
   not: z.union([ z.lazy(() => Trip_statusSchema),z.lazy(() => NestedEnumTrip_statusNullableFilterSchema) ]).optional().nullable(),
 }).strict();
 
+export const NestedEnumTrip_typeFilterSchema: z.ZodType<Prisma.NestedEnumTrip_typeFilter> = z.object({
+  equals: z.lazy(() => Trip_typeSchema).optional(),
+  in: z.lazy(() => Trip_typeSchema).array().optional(),
+  notIn: z.lazy(() => Trip_typeSchema).array().optional(),
+  not: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => NestedEnumTrip_typeFilterSchema) ]).optional(),
+}).strict();
+
 export const NestedEnumTrip_statusNullableWithAggregatesFilterSchema: z.ZodType<Prisma.NestedEnumTrip_statusNullableWithAggregatesFilter> = z.object({
   equals: z.lazy(() => Trip_statusSchema).optional().nullable(),
   in: z.lazy(() => Trip_statusSchema).array().optional().nullable(),
@@ -6112,6 +6161,16 @@ export const NestedEnumTrip_statusNullableWithAggregatesFilterSchema: z.ZodType<
   _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
   _min: z.lazy(() => NestedEnumTrip_statusNullableFilterSchema).optional(),
   _max: z.lazy(() => NestedEnumTrip_statusNullableFilterSchema).optional()
+}).strict();
+
+export const NestedEnumTrip_typeWithAggregatesFilterSchema: z.ZodType<Prisma.NestedEnumTrip_typeWithAggregatesFilter> = z.object({
+  equals: z.lazy(() => Trip_typeSchema).optional(),
+  in: z.lazy(() => Trip_typeSchema).array().optional(),
+  notIn: z.lazy(() => Trip_typeSchema).array().optional(),
+  not: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => NestedEnumTrip_typeWithAggregatesFilterSchema) ]).optional(),
+  _count: z.lazy(() => NestedIntFilterSchema).optional(),
+  _min: z.lazy(() => NestedEnumTrip_typeFilterSchema).optional(),
+  _max: z.lazy(() => NestedEnumTrip_typeFilterSchema).optional()
 }).strict();
 
 export const NestedEnumTripStop_statusNullableFilterSchema: z.ZodType<Prisma.NestedEnumTripStop_statusNullableFilter> = z.object({
@@ -6774,6 +6833,7 @@ export const TripCreateWithoutReportInputSchema: z.ZodType<Prisma.TripCreateWith
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  type: z.lazy(() => Trip_typeSchema),
   StudentAttendance: z.lazy(() => StudentAttendanceCreateNestedManyWithoutTripInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryCreateNestedManyWithoutTripInputSchema).optional(),
   Schedule: z.lazy(() => ScheduleCreateNestedOneWithoutTripInputSchema),
@@ -6791,6 +6851,7 @@ export const TripUncheckedCreateWithoutReportInputSchema: z.ZodType<Prisma.TripU
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  type: z.lazy(() => Trip_typeSchema),
   StudentAttendance: z.lazy(() => StudentAttendanceUncheckedCreateNestedManyWithoutTripInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUncheckedCreateNestedManyWithoutTripInputSchema).optional(),
   TripStop: z.lazy(() => TripStopUncheckedCreateNestedManyWithoutTripInputSchema).optional()
@@ -6857,6 +6918,7 @@ export const TripUpdateWithoutReportInputSchema: z.ZodType<Prisma.TripUpdateWith
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => EnumTrip_typeFieldUpdateOperationsInputSchema) ]).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceUpdateManyWithoutTripNestedInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUpdateManyWithoutTripNestedInputSchema).optional(),
   Schedule: z.lazy(() => ScheduleUpdateOneRequiredWithoutTripNestedInputSchema).optional(),
@@ -6874,6 +6936,7 @@ export const TripUncheckedUpdateWithoutReportInputSchema: z.ZodType<Prisma.TripU
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => EnumTrip_typeFieldUpdateOperationsInputSchema) ]).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
   TripStop: z.lazy(() => TripStopUncheckedUpdateManyWithoutTripNestedInputSchema).optional()
@@ -7144,6 +7207,7 @@ export const TripCreateWithoutScheduleInputSchema: z.ZodType<Prisma.TripCreateWi
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  type: z.lazy(() => Trip_typeSchema),
   Report: z.lazy(() => ReportCreateNestedManyWithoutTripInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceCreateNestedManyWithoutTripInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryCreateNestedManyWithoutTripInputSchema).optional(),
@@ -7160,6 +7224,7 @@ export const TripUncheckedCreateWithoutScheduleInputSchema: z.ZodType<Prisma.Tri
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  type: z.lazy(() => Trip_typeSchema),
   Report: z.lazy(() => ReportUncheckedCreateNestedManyWithoutTripInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceUncheckedCreateNestedManyWithoutTripInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUncheckedCreateNestedManyWithoutTripInputSchema).optional(),
@@ -7311,6 +7376,7 @@ export const TripScalarWhereInputSchema: z.ZodType<Prisma.TripScalarWhereInput> 
   location: z.lazy(() => JsonNullableFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  type: z.union([ z.lazy(() => EnumTrip_typeFilterSchema),z.lazy(() => Trip_typeSchema) ]).optional(),
 }).strict();
 
 export const RouteStopPointCreateWithoutStopPointInputSchema: z.ZodType<Prisma.RouteStopPointCreateWithoutStopPointInput> = z.object({
@@ -7653,6 +7719,7 @@ export const TripCreateWithoutStudentAttendanceInputSchema: z.ZodType<Prisma.Tri
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  type: z.lazy(() => Trip_typeSchema),
   Report: z.lazy(() => ReportCreateNestedManyWithoutTripInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryCreateNestedManyWithoutTripInputSchema).optional(),
   Schedule: z.lazy(() => ScheduleCreateNestedOneWithoutTripInputSchema),
@@ -7670,6 +7737,7 @@ export const TripUncheckedCreateWithoutStudentAttendanceInputSchema: z.ZodType<P
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  type: z.lazy(() => Trip_typeSchema),
   Report: z.lazy(() => ReportUncheckedCreateNestedManyWithoutTripInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUncheckedCreateNestedManyWithoutTripInputSchema).optional(),
   TripStop: z.lazy(() => TripStopUncheckedCreateNestedManyWithoutTripInputSchema).optional()
@@ -7732,6 +7800,7 @@ export const TripUpdateWithoutStudentAttendanceInputSchema: z.ZodType<Prisma.Tri
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => EnumTrip_typeFieldUpdateOperationsInputSchema) ]).optional(),
   Report: z.lazy(() => ReportUpdateManyWithoutTripNestedInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUpdateManyWithoutTripNestedInputSchema).optional(),
   Schedule: z.lazy(() => ScheduleUpdateOneRequiredWithoutTripNestedInputSchema).optional(),
@@ -7749,6 +7818,7 @@ export const TripUncheckedUpdateWithoutStudentAttendanceInputSchema: z.ZodType<P
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => EnumTrip_typeFieldUpdateOperationsInputSchema) ]).optional(),
   Report: z.lazy(() => ReportUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
   TripStop: z.lazy(() => TripStopUncheckedUpdateManyWithoutTripNestedInputSchema).optional()
@@ -7764,6 +7834,7 @@ export const TripCreateWithoutTrackingBusHistoryInputSchema: z.ZodType<Prisma.Tr
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  type: z.lazy(() => Trip_typeSchema),
   Report: z.lazy(() => ReportCreateNestedManyWithoutTripInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceCreateNestedManyWithoutTripInputSchema).optional(),
   Schedule: z.lazy(() => ScheduleCreateNestedOneWithoutTripInputSchema),
@@ -7781,6 +7852,7 @@ export const TripUncheckedCreateWithoutTrackingBusHistoryInputSchema: z.ZodType<
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  type: z.lazy(() => Trip_typeSchema),
   Report: z.lazy(() => ReportUncheckedCreateNestedManyWithoutTripInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceUncheckedCreateNestedManyWithoutTripInputSchema).optional(),
   TripStop: z.lazy(() => TripStopUncheckedCreateNestedManyWithoutTripInputSchema).optional()
@@ -7812,6 +7884,7 @@ export const TripUpdateWithoutTrackingBusHistoryInputSchema: z.ZodType<Prisma.Tr
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => EnumTrip_typeFieldUpdateOperationsInputSchema) ]).optional(),
   Report: z.lazy(() => ReportUpdateManyWithoutTripNestedInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceUpdateManyWithoutTripNestedInputSchema).optional(),
   Schedule: z.lazy(() => ScheduleUpdateOneRequiredWithoutTripNestedInputSchema).optional(),
@@ -7829,6 +7902,7 @@ export const TripUncheckedUpdateWithoutTrackingBusHistoryInputSchema: z.ZodType<
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => EnumTrip_typeFieldUpdateOperationsInputSchema) ]).optional(),
   Report: z.lazy(() => ReportUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
   TripStop: z.lazy(() => TripStopUncheckedUpdateManyWithoutTripNestedInputSchema).optional()
@@ -8319,6 +8393,7 @@ export const TripCreateWithoutTripStopInputSchema: z.ZodType<Prisma.TripCreateWi
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  type: z.lazy(() => Trip_typeSchema),
   Report: z.lazy(() => ReportCreateNestedManyWithoutTripInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceCreateNestedManyWithoutTripInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryCreateNestedManyWithoutTripInputSchema).optional(),
@@ -8336,6 +8411,7 @@ export const TripUncheckedCreateWithoutTripStopInputSchema: z.ZodType<Prisma.Tri
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
+  type: z.lazy(() => Trip_typeSchema),
   Report: z.lazy(() => ReportUncheckedCreateNestedManyWithoutTripInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceUncheckedCreateNestedManyWithoutTripInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUncheckedCreateNestedManyWithoutTripInputSchema).optional()
@@ -8400,6 +8476,7 @@ export const TripUpdateWithoutTripStopInputSchema: z.ZodType<Prisma.TripUpdateWi
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => EnumTrip_typeFieldUpdateOperationsInputSchema) ]).optional(),
   Report: z.lazy(() => ReportUpdateManyWithoutTripNestedInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceUpdateManyWithoutTripNestedInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUpdateManyWithoutTripNestedInputSchema).optional(),
@@ -8417,6 +8494,7 @@ export const TripUncheckedUpdateWithoutTripStopInputSchema: z.ZodType<Prisma.Tri
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => EnumTrip_typeFieldUpdateOperationsInputSchema) ]).optional(),
   Report: z.lazy(() => ReportUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUncheckedUpdateManyWithoutTripNestedInputSchema).optional()
@@ -8924,7 +9002,8 @@ export const TripCreateManyScheduleInputSchema: z.ZodType<Prisma.TripCreateManyS
   currentStopId: z.string().optional().nullable(),
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.coerce.date().optional(),
-  updatedAt: z.coerce.date().optional()
+  updatedAt: z.coerce.date().optional(),
+  type: z.lazy(() => Trip_typeSchema)
 }).strict();
 
 export const TripUpdateWithoutScheduleInputSchema: z.ZodType<Prisma.TripUpdateWithoutScheduleInput> = z.object({
@@ -8937,6 +9016,7 @@ export const TripUpdateWithoutScheduleInputSchema: z.ZodType<Prisma.TripUpdateWi
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => EnumTrip_typeFieldUpdateOperationsInputSchema) ]).optional(),
   Report: z.lazy(() => ReportUpdateManyWithoutTripNestedInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceUpdateManyWithoutTripNestedInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUpdateManyWithoutTripNestedInputSchema).optional(),
@@ -8953,6 +9033,7 @@ export const TripUncheckedUpdateWithoutScheduleInputSchema: z.ZodType<Prisma.Tri
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => EnumTrip_typeFieldUpdateOperationsInputSchema) ]).optional(),
   Report: z.lazy(() => ReportUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
   StudentAttendance: z.lazy(() => StudentAttendanceUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
   TrackingBusHistory: z.lazy(() => TrackingBusHistoryUncheckedUpdateManyWithoutTripNestedInputSchema).optional(),
@@ -8969,6 +9050,7 @@ export const TripUncheckedUpdateManyWithoutScheduleInputSchema: z.ZodType<Prisma
   location: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValueSchema ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  type: z.union([ z.lazy(() => Trip_typeSchema),z.lazy(() => EnumTrip_typeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
 export const RouteStopPointCreateManyStopPointInputSchema: z.ZodType<Prisma.RouteStopPointCreateManyStopPointInput> = z.object({

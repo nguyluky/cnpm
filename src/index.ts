@@ -6,22 +6,22 @@ import env from "./env";
 import { errorHandler } from "./middleware/error";
 import { requestLogger } from "./middleware/requestLogger";
 import { apiRouter, swaggerRouter } from "./module";
-import { setupSocketServer } from "./socket";
+// import { setupSocketServer } from "./socket";
 import { Logger } from "./utils/logger";
 
 const logger = new Logger("MAIN");
 const app = express();
 const httpServer = createServer(app);
 
-// ✅ Cấu hình CORS chính xác cho socket.io
-const io = new Server(httpServer, {
-  cors: {
-    origin: "*", // chỉ cho phép frontend này
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true, // cho phép cookie và header Auth
-  },
-});
-setupSocketServer(io);
+// // ✅ Cấu hình CORS chính xác cho socket.io
+// const io = new Server(httpServer, {
+//   cors: {
+//     origin: "*", // chỉ cho phép frontend này
+//     methods: ["GET", "POST", "PUT", "DELETE"],
+//     credentials: true, // cho phép cookie và header Auth
+//   },
+// });
+// setupSocketServer(io);
 
 // ✅ Cấu hình CORS chính xác cho Express API
 app.use(

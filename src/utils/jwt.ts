@@ -57,9 +57,24 @@ type Premisstion = 'update:user' |
     'read:stoppoints_detail' |
     'create:stoppoints' |
     'update:stoppoints' |
-    'delete:stoppoints';
+    'delete:stoppoints' |
+    'update:driver_trip' |
+    'update:driver_location';
 
 
+const parentPermissions: Premisstion[] = [
+    'read:profile',
+    'read:public_profile',
+    'read:parent_students',
+];
+
+const driverPermissions: Premisstion[] = [
+    'read:profile',
+    'read:public_profile',
+    'read:driver_schedule',
+    'update:driver_trip',
+    'update:driver_location',
+];
 
 // kiểm tra quyền hạng
 export const usePremisstion = (
@@ -113,7 +128,7 @@ type UserWithoutSensitiveData = {
 }
 
 export const generateAccessToken = (user: UserWithoutSensitiveData) => {
-    const {...userWithoutSensitiveData } = user;
+    const { ...userWithoutSensitiveData } = user;
     const token = jwt.sign({ user: userWithoutSensitiveData }, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRATION as StringValue });
     return token;
 }
