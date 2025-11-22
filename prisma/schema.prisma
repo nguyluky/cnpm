@@ -11,68 +11,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id           String      @id @default(uuid())
-  username     String      @unique
-  email        String      @unique
-  passwordHash String
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @default(now()) @updatedAt
-  Report       Report[]
-  Schedule     Schedule[]
-  Student      Student?
-  UserRoles    UserRoles[]
-}
-
-model Permission {
-  id              Int               @id @default(autoincrement())
-  name            String            @unique
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @default(now())
-  RolePermissions RolePermissions[]
-}
-
-model RolePermissions {
-  roleId       Int
-  permissionId Int
-  Permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  Roles        Roles      @relation(fields: [roleId], references: [id], onDelete: Cascade)
-
-  @@id([roleId, permissionId])
-  @@index([permissionId], map: "RolePermissions_permissionId_fkey")
-}
-
-model Roles {
-  id              Int               @id @default(autoincrement())
-  name            String            @unique
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @default(now())
-  RolePermissions RolePermissions[]
-  UserRoles       UserRoles[]
-}
-
-model UserRoles {
-  userId String
-  roleId Int
-  Roles  Roles  @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  User   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([userId, roleId])
-  @@index([roleId], map: "UserRoles_roleId_fkey")
-}
-
-model Bus {
+model bus {
   id           String      @id
   licensePlate String      @unique(map: "licensePlate")
   capacity     Int
-  status       Bus_status? @default(ACTIVE)
+  status       bus_status? @default(ACTIVE)
   meta         Json?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @default(now())
-  Schedule     Schedule[]
+  schedule     schedule[]
 }
 
-model Report {
+model permission {
+  id              Int               @id @default(autoincrement())
+  name            String            @unique(map: "Permission_name_key")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @default(now())
+  rolepermissions rolepermissions[]
+}
+
+model report {
   id          String   @id
   reportType  String   @db.VarChar(100)
   description String   @db.Text
@@ -82,14 +40,33 @@ model Report {
   meta        Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now())
-  User        User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
-  Trip        Trip?    @relation(fields: [tripId], references: [id])
+  user        user     @relation(fields: [reporterId], references: [id], onDelete: Cascade, map: "Report_reporterId_fkey")
+  trip        trip?    @relation(fields: [tripId], references: [id], map: "Report_tripId_fkey")
 
   @@index([reporterId], map: "Report_reporterId_fkey")
   @@index([tripId], map: "Report_tripId_fkey")
 }
 
-model Route {
+model rolepermissions {
+  roleId       Int
+  permissionId Int
+  permission   permission @relation(fields: [permissionId], references: [id], onDelete: Cascade, map: "RolePermissions_permissionId_fkey")
+  roles        roles      @relation(fields: [roleId], references: [id], onDelete: Cascade, map: "RolePermissions_roleId_fkey")
+
+  @@id([roleId, permissionId])
+  @@index([permissionId], map: "RolePermissions_permissionId_fkey")
+}
+
+model roles {
+  id              Int               @id @default(autoincrement())
+  name            String            @unique(map: "Roles_name_key")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @default(now())
+  rolepermissions rolepermissions[]
+  userroles       userroles[]
+}
+
+model route {
   id                String              @id
   name              String
   estimatedDuration Int?                @default(0)
@@ -99,197 +76,220 @@ model Route {
   meta              Json?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @default(now())
-  RouteStopPoint    RouteStopPoint[]
-  Schedule          Schedule[]
-  StudentAssignment StudentAssignment[]
+  routestoppoint    routestoppoint[]
+  schedule          schedule[]
+  studentassignment studentassignment[]
 }
 
-model Schedule {
+model routestoppoint {
+  id          Int                      @id @default(autoincrement())
+  routeId     String
+  stopPointId String
+  sequence    Int
+  direction   routestoppoint_direction
+  route       route                    @relation(fields: [routeId], references: [id], onDelete: Cascade, map: "RouteStopPoint_routeId_fkey")
+  stoppoint   stoppoint                @relation(fields: [stopPointId], references: [id], onDelete: Cascade, map: "RouteStopPoint_stopPointId_fkey")
+
+  @@index([routeId], map: "RouteStopPoint_routeId_fkey")
+  @@index([stopPointId], map: "RouteStopPoint_stopPointId_fkey")
+}
+
+model schedule {
   id         String           @id
   routeId    String
   busId      String
   driverId   String
-  type       Schedule_type
+  type       schedule_type
   daysOfWeek Json
   startTime  DateTime         @db.Time(0)
   startDate  DateTime         @db.Date
   endDate    DateTime         @db.Date
-  status     Schedule_status? @default(ACTIVE)
+  status     schedule_status? @default(ACTIVE)
   meta       Json?
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @default(now())
-  Bus        Bus              @relation(fields: [busId], references: [id], onDelete: Cascade)
-  User       User             @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  Route      Route            @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  Trip       Trip[]
+  bus        bus              @relation(fields: [busId], references: [id], onDelete: Cascade, map: "Schedule_busId_fkey")
+  user       user             @relation(fields: [driverId], references: [id], onDelete: Cascade, map: "Schedule_driverId_fkey")
+  route      route            @relation(fields: [routeId], references: [id], onDelete: Cascade, map: "Schedule_routeId_fkey")
+  trip       trip[]
 
   @@index([busId], map: "Schedule_busId_fkey")
   @@index([driverId], map: "Schedule_driverId_fkey")
   @@index([routeId], map: "Schedule_routeId_fkey")
 }
 
-model StopPoint {
+model stoppoint {
   id                String              @id
   name              String
   location          Json
   meta              Json?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @default(now())
-  RouteStopPoint    RouteStopPoint[]
-  StudentAssignment StudentAssignment[]
-  TripStop          TripStop[]
+  routestoppoint    routestoppoint[]
+  studentassignment studentassignment[]
+  tripstop          tripstop[]
 }
 
-model Student {
+model student {
   id                String              @id
   name              String
   meta              Json?
   userId            String              @unique(map: "userId")
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @default(now())
-  User              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  StudentAssignment StudentAssignment[]
-  StudentAttendance StudentAttendance[]
+  user              user                @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Student_userId_fkey")
+  studentassignment studentassignment[]
+  studentattendance studentattendance[]
 }
 
-model StudentAttendance {
-  id          String                    @id
-  tripId      String
-  studentId   String
-  pickupTime  DateTime?
-  dropoffTime DateTime?
-  status      StudentAttendance_status? @default(PENDING)
-  Student     Student                   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  Trip        Trip                      @relation(fields: [tripId], references: [id], onDelete: Cascade)
-
-  @@index([studentId], map: "StudentAttendance_studentId_fkey")
-  @@index([tripId], map: "StudentAttendance_tripId_fkey")
-}
-
-model TrackingBusHistory {
-  id        String   @id
-  tripId    String
-  timestamp DateTime
-  location  Json
-  Trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
-
-  @@index([tripId], map: "TrackingBusHistory_tripId_fkey")
-}
-
-model StudentAssignment {
+model studentassignment {
   id            String                      @id
   studentId     String
   routeId       String
   stopId        String
-  direction     StudentAssignment_direction
+  direction     studentassignment_direction
   effectiveFrom DateTime                    @db.Date
   effectiveTo   DateTime?                   @db.Date
   createdAt     DateTime                    @default(now())
   updatedAt     DateTime                    @default(now())
-  Route         Route                       @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  StopPoint     StopPoint                   @relation(fields: [stopId], references: [id], onDelete: Cascade)
-  Student       Student                     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  route         route                       @relation(fields: [routeId], references: [id], onDelete: Cascade, map: "StudentAssignment_routeId_fkey")
+  stoppoint     stoppoint                   @relation(fields: [stopId], references: [id], onDelete: Cascade, map: "StudentAssignment_stopId_fkey")
+  student       student                     @relation(fields: [studentId], references: [id], onDelete: Cascade, map: "StudentAssignment_studentId_fkey")
 
   @@index([routeId], map: "StudentAssignment_routeId_fkey")
   @@index([stopId], map: "StudentAssignment_stopId_fkey")
   @@index([studentId], map: "StudentAssignment_studentId_fkey")
 }
 
-model Trip {
+model studentattendance {
+  id          String                    @id
+  tripId      String
+  studentId   String
+  pickupTime  DateTime?
+  dropoffTime DateTime?
+  status      studentattendance_status? @default(PENDING)
+  student     student                   @relation(fields: [studentId], references: [id], onDelete: Cascade, map: "StudentAttendance_studentId_fkey")
+  trip        trip                      @relation(fields: [tripId], references: [id], onDelete: Cascade, map: "StudentAttendance_tripId_fkey")
+
+  @@index([studentId], map: "StudentAttendance_studentId_fkey")
+  @@index([tripId], map: "StudentAttendance_tripId_fkey")
+}
+
+model trackingbushistory {
+  id        String   @id
+  tripId    String
+  timestamp DateTime
+  location  Json
+  trip      trip     @relation(fields: [tripId], references: [id], onDelete: Cascade, map: "TrackingBusHistory_tripId_fkey")
+
+  @@index([tripId], map: "TrackingBusHistory_tripId_fkey")
+}
+
+model trip {
   id                 String               @id
   scheduleId         String
   date               DateTime             @db.Date
   actualStartTime    DateTime?
   actualEndTime      DateTime?
-  status             Trip_status?         @default(PLANNED)
+  status             trip_status?         @default(PLANNED)
   currentStopId      String?
   location           Json?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @default(now())
-  type               Trip_type
-  Report             Report[]
-  StudentAttendance  StudentAttendance[]
-  TrackingBusHistory TrackingBusHistory[]
-  Schedule           Schedule             @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-  TripStop           TripStop[]
+  type               trip_type
+  report             report[]
+  studentattendance  studentattendance[]
+  trackingbushistory trackingbushistory[]
+  schedule           schedule             @relation(fields: [scheduleId], references: [id], onDelete: Cascade, map: "Trip_scheduleId_fkey")
+  tripstop           tripstop[]
 
   @@index([scheduleId], map: "Trip_scheduleId_fkey")
 }
 
-model TripStop {
+model tripstop {
   id              String           @id
   tripId          String
   stopId          String
   actualArrival   DateTime?
   actualDeparture DateTime?
-  status          TripStop_status? @default(PENDING)
-  StopPoint       StopPoint        @relation(fields: [stopId], references: [id], onDelete: Cascade)
-  Trip            Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  status          tripstop_status? @default(PENDING)
+  stoppoint       stoppoint        @relation(fields: [stopId], references: [id], onDelete: Cascade, map: "TripStop_stopId_fkey")
+  trip            trip             @relation(fields: [tripId], references: [id], onDelete: Cascade, map: "TripStop_tripId_fkey")
 
   @@index([stopId], map: "TripStop_stopId_fkey")
   @@index([tripId], map: "TripStop_tripId_fkey")
 }
 
-model RouteStopPoint {
-  id          Int                      @id @default(autoincrement())
-  routeId     String
-  stopPointId String
-  sequence    Int
-  direction   RouteStopPoint_direction
-  Route       Route                    @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  StopPoint   StopPoint                @relation(fields: [stopPointId], references: [id], onDelete: Cascade)
-
-  @@index([routeId], map: "RouteStopPoint_routeId_fkey")
-  @@index([stopPointId], map: "RouteStopPoint_stopPointId_fkey")
+model user {
+  id           String      @id
+  username     String      @unique(map: "User_username_key")
+  email        String      @unique(map: "User_email_key")
+  passwordHash String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @default(now())
+  report       report[]
+  schedule     schedule[]
+  student      student?
+  userroles    userroles[]
 }
 
-enum Bus_status {
+model userroles {
+  userId String
+  roleId Int
+  roles  roles  @relation(fields: [roleId], references: [id], onDelete: Cascade, map: "UserRoles_roleId_fkey")
+  user   user   @relation(fields: [userId], references: [id], onDelete: Cascade, map: "UserRoles_userId_fkey")
+
+  @@id([userId, roleId])
+  @@index([roleId], map: "UserRoles_roleId_fkey")
+}
+
+enum bus_status {
   ACTIVE
   MAINTENANCE
 }
 
-enum Schedule_type {
-  MORNING
-  AFTERNOON
-}
-
-enum StudentAssignment_direction {
+enum routestoppoint_direction {
   PICKUP
   DROPOFF
 }
 
-enum StudentAttendance_status {
+enum schedule_type {
+  MORNING
+  AFTERNOON
+}
+
+enum studentassignment_direction {
+  PICKUP
+  DROPOFF
+}
+
+enum studentattendance_status {
   PENDING
   PICKED_UP
   DROPPED_OFF
   MISSED
 }
 
-enum Trip_status {
+enum trip_status {
   PLANNED
   ONGOING
   COMPLETED
   CANCELLED
 }
 
-enum TripStop_status {
+enum tripstop_status {
   PENDING
   ARRIVED
   DONE
   SKIPPED
 }
 
-enum Schedule_status {
+enum schedule_status {
   ACTIVE
   INACTIVE
 }
 
-enum Trip_type {
+enum trip_type {
   DISPATCH
   RETURN
-}
-
-enum RouteStopPoint_direction {
-  PICKUP
-  DROPOFF
 }

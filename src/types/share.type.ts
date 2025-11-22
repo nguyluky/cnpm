@@ -182,6 +182,43 @@ export class StopPointsData extends ObjectType {
   meta: StopPointsMeta;
 }
 
+export class EmergencyContact extends ObjectType {
+  @IsString()
+  name: string;
+
+  @IsString()
+  phone: string;
+
+  @IsString()
+  relation: string;
+
+  static parse<T extends ObjectType>(this: new () => T, data: any): T {
+    const ins = new this();
+    Object.assign(ins, data || {});
+    return ins;
+  }
+}
+
+export class StudentMetadata extends ObjectType {
+  @IsString({ optional: true })
+  gender?: string;
+
+  @IsString({ optional: true })
+  birthday?: string;
+
+  @IsString({ optional: true })
+  school?: string;
+
+  @IsObject(EmergencyContact, { optional: true })
+  emergencyContact?: EmergencyContact;
+
+  static parse<T extends ObjectType>(this: new () => T, data: any): T {
+    const ins = new this();
+    Object.assign(ins, data || {});
+    return ins;
+  }
+}
+
 export class StudentData extends ObjectType {
   @IsString({
     format: Formats.uuid,
@@ -191,8 +228,22 @@ export class StudentData extends ObjectType {
   @IsString()
   name: string;
 
-  @IsObject(StopPointsData, {
-    optional: true,
+  @IsString({
+    format: Formats["iso.datetime"],
   })
-  stopPoint?: StopPointsData;
+  createdAt: string;
+
+  @IsString({
+    format: Formats["iso.datetime"],
+  })
+  updatedAt: string;
+
+  @IsObject(StudentMetadata)
+  metadata: StudentMetadata;
+
+  static parse<T extends ObjectType>(this: new () => T, data: any): T {
+    const ins = new this();
+    Object.assign(ins, data);
+    return ins;
+  }
 }

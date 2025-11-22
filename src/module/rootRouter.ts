@@ -1,44 +1,45 @@
-
-
 import { Get, Use } from "@lib/httpMethod";
 import AuthController from "./auth/controller";
 import BusesController from "./buses/controller";
-import RoutesController from "./routes/controller";
-import SchedulesController from "./schedules/controller";
 import DriversController from "./drivers/controller";
 import ParentsController from "./parents/controller";
+import RoutesController from "./routes/controller";
+import SchedulesController from "./schedules/controller";
 import StoppointsController from "./stoppoints/controller";
+import StudentsController from "./students/controller";
 
 class RootRouter {
-    @Use()
-    auth = AuthController
+  @Use()
+  auth = AuthController;
 
-    @Use()
-    buses = BusesController
+  @Use()
+  buses = BusesController;
 
-    @Use()
-    routes = RoutesController
+  @Use()
+  routes = RoutesController;
 
-    @Use()
-    schedules = SchedulesController 
+  @Use()
+  schedules = SchedulesController;
 
-    @Use()
-    drivers = DriversController
+  @Use()
+  drivers = DriversController;
 
-    @Use()
-    parents = ParentsController
-  
-    @Use()
-    stoppoints = StoppointsController
+  @Use()
+  parents = ParentsController;
+
+  @Use()
+  stoppoints = StoppointsController;
+
+  @Use()
+  students = StudentsController;
 }
 
-
 export class ApiRouter {
-    @Use()
-    api = RootRouter
+  @Use()
+  api = RootRouter;
 
-    @Get("/health")
-    health() {
-        return { status: "ok" };
-    }
+  @Get("/health")
+  health() {
+    return { status: "ok" };
+  }
 }
