@@ -40,6 +40,26 @@
         "additionalProperties": false,
         "id": "GeoLocation"
       },
+      "BusMetadata": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "color": {
+            "type": "string"
+          },
+          "brand": {
+            "type": "string"
+          },
+          "madeYear": {
+            "type": "number"
+          },
+          "camera": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "id": "BusMetadata"
+      },
       "AnyObject": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -93,7 +113,7 @@
             "type": "number"
           },
           "metadata": {
-            "$ref": "#/components/schemas/AnyObject"
+            "$ref": "#/components/schemas/BusMetadata"
           }
         },
         "required": [
@@ -979,7 +999,7 @@
                     "type": "number"
                   },
                   "metadata": {
-                    "$ref": "#/components/schemas/AnyObject"
+                    "$ref": "#/components/schemas/BusMetadata"
                   }
                 },
                 "required": [
@@ -1028,7 +1048,7 @@
                           "type": "number"
                         },
                         "metadata": {
-                          "$ref": "#/components/schemas/AnyObject"
+                          "$ref": "#/components/schemas/BusMetadata"
                         }
                       },
                       "required": [
@@ -1160,18 +1180,201 @@
                           "type": "number"
                         },
                         "metadata": {
-                          "$ref": "#/components/schemas/AnyObject"
-                        },
-                        "test": {
-                          "type": "string"
+                          "$ref": "#/components/schemas/BusMetadata"
                         }
                       },
                       "required": [
                         "id",
                         "licensePlate",
                         "capacity",
-                        "metadata",
-                        "test"
+                        "metadata"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "HTTP status code of the error",
+                      "minimum": 400,
+                      "maximum": 599
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "title": "ApiErrorResponse",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "HTTP status code of the error",
+                      "minimum": 400,
+                      "maximum": 599
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Error class name"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "title": "ApiErrorResponse",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "HTTP status code of the error",
+                      "minimum": 400,
+                      "maximum": 599
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Error class name"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWTAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "BusesController"
+        ],
+        "summary": "Update a bus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "licensePlate": {
+                    "type": "string"
+                  },
+                  "capacity": {
+                    "type": "number"
+                  },
+                  "metadata": {
+                    "$ref": "#/components/schemas/BusMetadata"
+                  }
+                },
+                "required": [
+                  "licensePlate",
+                  "capacity",
+                  "metadata"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "HTTP status code of the error",
+                      "minimum": 200,
+                      "maximum": 300
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "data": {
+                      "$schema": "https://json-schema.org/draft/2020-12/schema",
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$"
+                        },
+                        "licensePlate": {
+                          "type": "string"
+                        },
+                        "capacity": {
+                          "type": "number"
+                        },
+                        "metadata": {
+                          "$ref": "#/components/schemas/BusMetadata"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "licensePlate",
+                        "capacity",
+                        "metadata"
                       ],
                       "additionalProperties": false
                     }

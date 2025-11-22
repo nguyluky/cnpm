@@ -1,4 +1,10 @@
-import { Formats, IsArray, IsNumber, IsObject, IsString } from "@lib/type_declaration";
+import {
+  Formats,
+  IsBoolean,
+  IsNumber,
+  IsObject,
+  IsString,
+} from "@lib/type_declaration";
 import { ObjectType } from "@lib/validate";
 
 export class PaginationMetaData extends ObjectType {
@@ -65,6 +71,26 @@ export class AnyObject extends ObjectType {
   }
 }
 
+export class BusMetadata extends ObjectType {
+  @IsString({ optional: true })
+  color?: string;
+
+  @IsString({ optional: true })
+  brand?: string;
+
+  @IsNumber({ optional: true })
+  madeYear?: number;
+
+  @IsBoolean({ optional: true })
+  camera?: boolean;
+
+  static parse<T extends ObjectType>(this: new () => T, data: any): T {
+    const ins = new this();
+    Object.assign(ins, data || {});
+    return ins;
+  }
+}
+
 export class BusData extends ObjectType {
   @IsString({
     format: Formats.uuid,
@@ -77,25 +103,25 @@ export class BusData extends ObjectType {
   @IsNumber()
   capacity: number;
 
-  @IsObject(AnyObject)
-  metadata: AnyObject;
+  @IsObject(BusMetadata)
+  metadata: BusMetadata;
 }
 
 export class RouteMeta extends ObjectType {
-    @IsString({ optional: true })
-    Color?: string;
+  @IsString({ optional: true })
+  Color?: string;
 
-    @IsString({ optional: true })
-    Headway ?: string;
+  @IsString({ optional: true })
+  Headway?: string;
 
-    @IsNumber({ optional: true })
-    Distance ?: number;
+  @IsNumber({ optional: true })
+  Distance?: number;
 
-    @IsObject(Object)
-    encodedPath?: Object;
+  @IsObject(Object)
+  encodedPath?: Object;
 
-    @IsString({ optional: true })
-    OperationTime?: string;
+  @IsString({ optional: true })
+  OperationTime?: string;
 }
 
 export class RouteData extends ObjectType {
@@ -118,26 +144,26 @@ export class RouteData extends ObjectType {
 }
 
 export class StopPointsMeta extends ObjectType {
-    @IsString({ optional: true })
-    zone?: string;
-    
-    @IsString({ optional: true })
-    ward?: string;
+  @IsString({ optional: true })
+  zone?: string;
 
-    @IsString({ optional: true })
-    addressNo?: string;
+  @IsString({ optional: true })
+  ward?: string;
 
-    @IsString({ optional: true })
-    street?: string;
+  @IsString({ optional: true })
+  addressNo?: string;
 
-    @IsString({ optional: true })
-    supportDisability?: string;
+  @IsString({ optional: true })
+  street?: string;
 
-    @IsString({ optional: true })
-    status?: string;
+  @IsString({ optional: true })
+  supportDisability?: string;
 
-    @IsString({ optional: true })
-    search?: string;
+  @IsString({ optional: true })
+  status?: string;
+
+  @IsString({ optional: true })
+  search?: string;
 }
 
 export class StopPointsData extends ObjectType {
