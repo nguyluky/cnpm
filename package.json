@@ -6,7 +6,7 @@
   "scripts": {
     "build": "ts-node scripts/build.ts --production && tsc-alias && cp -r prisma dist && cp package.json dist",
     "watch": "ts-node scripts/watch.ts",
-    "dev": "concurrently \"ts-node scripts/watch.ts\" \"tsc-alias -w\" \"nodemon dist/index.js\"",
+    "dev": "concurrently \"ts-node scripts/watch.ts\" \"tsc-alias -w\" \"nodemon dist/src/index.js\"",
     "add_endpoint": "ts-node ./scripts/add_endpoint.ts",
     "add_module": "ts-node ./scripts/generate_module.ts"
   },

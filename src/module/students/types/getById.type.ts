@@ -1,6 +1,6 @@
 import { ApiRequestStatus } from "@lib/httpMethod";
 import { Formats, IsString } from "@lib/type_declaration";
-import { BusData } from "@src/types/share.type";
+import { StudentData } from "@src/types/share.type";
 import { Request } from "express";
 import "reflect-metadata";
 
@@ -13,12 +13,11 @@ export class getByIdReqParams {
   id: string;
 }
 
-export
-@ApiRequestStatus({
+export @ApiRequestStatus({
   statusCode: 200,
   statusMess: "Success",
 })
-class getByIdRes extends BusData {}
+class getByIdRes extends StudentData {}
 
 export const schema = {
   res: [getByIdRes],
@@ -39,3 +38,4 @@ export type Req = Request<
   getByIdReqBody,
   getByIdReqQuery
 >;
+
