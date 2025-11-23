@@ -92,7 +92,7 @@ A comprehensive bus management system built with Node.js, TypeScript, Express.js
    npx prisma generate
    
    # Run database migrations
-   npx prisma db push
+   npx prisma db pull
    
    # Seed the database (optional)
    npx prisma db seed
@@ -100,7 +100,7 @@ A comprehensive bus management system built with Node.js, TypeScript, Express.js
 
 5. **Start the development server**
    ```bash
-   npm run dev
+   npm run watch
    ```
 
    The application will be available at `http://localhost:3000`
