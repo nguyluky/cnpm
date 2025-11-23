@@ -9,7 +9,7 @@ export class createReqBody {
   name: string;
 
   @IsString({
-    format: "uuid",
+    // format: "uuid",
   })
   userId: string;
 
