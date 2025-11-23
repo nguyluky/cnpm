@@ -78,6 +78,58 @@
         "additionalProperties": false,
         "id": "BusInfo"
       },
+      "student_infoReqAssignmet_Stop": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "routeId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "routeId"
+        ],
+        "additionalProperties": false,
+        "id": "student_infoReqAssignmet_Stop"
+      },
+      "StudentAssignment": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "busId": {
+            "type": "string"
+          },
+          "stopPointId": {
+            "type": "string"
+          },
+          "effectiveFrom": {
+            "type": "string"
+          },
+          "effectiveTo": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "busId",
+          "stopPointId",
+          "effectiveFrom",
+          "effectiveTo"
+        ],
+        "additionalProperties": false,
+        "id": "StudentAssignment"
+      },
       "AnyObject": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -245,32 +297,6 @@
         },
         "additionalProperties": false,
         "id": "StopPointsMeta"
-      },
-      "StopPointsData": {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "busId": {
-            "type": "string"
-          },
-          "location": {
-            "$ref": "#/components/schemas/GeoLocation"
-          },
-          "meta": {
-            "$ref": "#/components/schemas/StopPointsMeta"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "location",
-          "meta"
-        ],
-        "additionalProperties": false,
-        "id": "StopPointsData"
       },
       "StudentMetadata": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -5350,7 +5376,30 @@
                         "data": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/StopPointsData"
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000)$"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "location": {
+                                "$ref": "#/components/schemas/GeoLocation"
+                              },
+                              "meta": {
+                                "$ref": "#/components/schemas/StopPointsMeta"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name",
+                              "location",
+                              "meta"
+                            ],
+                            "additionalProperties": false
                           }
                         },
                         "total": {

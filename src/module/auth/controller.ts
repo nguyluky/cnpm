@@ -30,8 +30,10 @@ export default class AuthController {
     }
 
     // Create new user
+    const newId = crypto.randomUUID();
     const user = await prisma.user.create({
       data: {
+        id: newId,
         username,
         // TODO:
         passwordHash: bcrypt.hashSync(password, 10), // In a real application, hash the password
@@ -41,9 +43,9 @@ export default class AuthController {
         id: true,
         username: true,
         email: true,
-        userroles: {
+        UserRoles: {
           select: {
-            roles: true,
+            Roles: true,
           },
         },
       },
@@ -53,7 +55,7 @@ export default class AuthController {
       id: user.id,
       username: user.username,
       email: user.email,
-      roles: user.userroles.map((ur) => ur.roles.name),
+      roles: user.UserRoles.map((ur) => ur.Roles.name),
     });
   }
 
@@ -71,13 +73,13 @@ export default class AuthController {
         username: true,
         email: true,
         passwordHash: true,
-        userroles: {
+        UserRoles: {
           include: {
-            roles: {
+           Roles: {
               include: {
-                rolepermissions: {
+                RolePermissions: {
                   include: {
-                    permission: true,
+                    Permission: true,
                   },
                 },
               },
@@ -94,10 +96,10 @@ export default class AuthController {
     const accessToken = generateAccessToken({
       id: user.id,
       username: user.username,
-      roles: user.userroles.map((ur) => ur.roles.name),
+      roles: user.UserRoles.map((ur) => ur.Roles.name),
       email: user.email,
-      permissions: user.userroles.flatMap((ur) =>
-        ur.roles.rolepermissions.map((rp) => rp.permission.name)
+      permissions: user.UserRoles.flatMap((ur) =>
+        ur.Roles.RolePermissions.map((rp) => rp.Permission.name)
       ),
     });
 
@@ -107,11 +109,11 @@ export default class AuthController {
       id: user.id,
       username: user.username,
       email: user.email,
-      roles: user.userroles.map((ur) => ur.roles.name),
+      roles: user.UserRoles.map((ur) => ur.Roles.name),
       accessToken: accessToken,
       refreshToken: refreshToken,
-      permissions: user.userroles.flatMap((ur) =>
-        ur.roles.rolepermissions.map((rp) => rp.permission.name)
+      permissions: user.UserRoles.flatMap((ur) =>
+        ur.Roles.RolePermissions.map((rp) => rp.Permission.name)
       ),
     });
   }
@@ -153,10 +155,10 @@ export default class AuthController {
     const accessToken = generateAccessToken({
       id: user.id,
       username: user.username,
-      roles: user.userroles.map((ur) => ur.roles.name),
+      roles: user.UserRoles.map((ur) => ur.Roles.name),
       email: user.email,
-      permissions: user.userroles.flatMap((ur) =>
-        ur.roles.rolepermissions.map((rp) => rp.permission.name)
+      permissions: user.UserRoles.flatMap((ur) =>
+        ur.Roles.RolePermissions.map((rp) => rp.Permission.name)
       ),
     });
 
