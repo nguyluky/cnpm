@@ -11,20 +11,43 @@ export class getStudentsReqBody {}
 export class getStudentsReqQuery {}
 export class getStudentsReqParams {}
 
+export class StudentAssignment extends ObjectType {
+    @IsString()
+    id: string;
+
+    @IsString()
+    busId: string;
+
+    @IsString()
+    stopPointId: string;
+
+    @IsString()
+    effectiveFrom: string;
+
+    @IsString()
+    effectiveTo: string | null;
+}
+
+export class CurrentAssignment extends ObjectType {
+    @IsObject(StudentAssignment)
+    pickup: StudentAssignment | null;
+
+    @IsObject(StudentAssignment)
+    dropoff: StudentAssignment | null;
+}
+
 export class Students extends ObjectType {
     @IsString()
     id: string;
 
     @IsString()
     name: string;
-    
-    @IsObject(StopPointsData)
-    stopPoint: StopPointsData;
 
-    @IsEnum({
-      value: [ 'PENDING', 'PICKED_UP', 'DROPPED_OFF', 'MISSED']
-    })
-    status: 'PENDING'| 'PICKED_UP'| 'DROPPED_OFF'| 'MISSED';
+    @IsObject(Object)
+    meta: Object;
+
+    // @IsObject(CurrentAssignment)
+    // currentAssignment: CurrentAssignment;
 }
 
 export @ApiRequestStatus({
