@@ -3,7 +3,7 @@ import * as profileType from "./types/profile.type";
 import * as refreshType from "./types/refresh.type";
 import * as loginType from "./types/login.type";
 import * as registerType from "./types/register.type";
-import { Get, Post, Put, Delete, Summary } from "@lib/httpMethod";
+import { Get, Post, Put, Delete, Summary, useAuth } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
 import { BadRequestError, ConflictError, NotFoundError } from "@lib/exception";
@@ -11,6 +11,7 @@ import bcrypt from "bcryptjs";
 import {
     generateAccessToken,
     generateRefreshToken,
+    JWT_AUTH,
     verifyRefreshToken,
 } from "@src/utils/jwt";
 
@@ -169,9 +170,35 @@ export default class AuthController {
 
     @Summary("Get User Profile")
     @Get("/profile")
+    @useAuth(JWT_AUTH)
     @Validate(profileType.schema)
     async profile(req: profileType.Req): Promise<profileType.RerturnType> {
-        throw new Error();
+        const userId = req.user.id;
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                UserRoles: {
+                    select: {
+                        Roles: true,
+                    },
+                },
+            },
+        });
+
+        if (!user) {
+            throw new NotFoundError("User not found");
+        }
+
+        return profileType.profileRes.parse({
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            roles: user.UserRoles.map((ur) => ur.Roles.name),
+        });
     }
 
     @Post("/admin/change-password")

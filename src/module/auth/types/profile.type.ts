@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { ApiRequestStatus } from "@lib/httpMethod";
 import { Request } from "express";
 import { ObjectType } from "@lib/validate";
+import { RequestWithUser } from "@src/utils/jwt";
 
 export class profileReqBody {}
 export class profileReqQuery {}
@@ -25,4 +26,4 @@ export type RerturnType = typeof schema['res'] extends (infer R)[]
     : never
   : never;
 
-export type Req = Request<profileReqParams, any, profileReqBody, profileReqQuery>;
+export type Req = Request<profileReqParams, any, profileReqBody, profileReqQuery> & RequestWithUser;
