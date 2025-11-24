@@ -11,7 +11,7 @@ import { NotFoundError } from "@lib/exception";
 import { ScheduleInfo, TimeTable } from "./types/share.type";
 import { v4 as uuid } from "uuid";
 import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
-import { sendNotification } from "@src/utils/notification";
+import { sendNotification } from "@src/utils/socketio";
 
 export default class SchedulesController {
 

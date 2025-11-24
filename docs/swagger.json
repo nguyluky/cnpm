@@ -4657,7 +4657,7 @@
         ]
       }
     },
-    "/api/drivers/": {
+    "/api/drivers/trip/{tripId}/students/{studentId}/dropoff": {
       "post": {
         "tags": [
           "DriverController"
@@ -5225,6 +5225,7 @@
         "tags": [
           "ParentController"
         ],
+        "summary": "Get todays trip for student",
         "parameters": [
           {
             "name": "studentId",
@@ -5269,11 +5270,63 @@
                             "COMPLETED",
                             "PENDING"
                           ]
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "DISPATCH",
+                            "RETURN"
+                          ]
+                        },
+                        "route": {
+                          "type": "object",
+                          "properties": {
+                            "routeId": {
+                              "type": "string"
+                            },
+                            "routeName": {
+                              "type": "string"
+                            },
+                            "path": {
+                              "type": "array",
+                              "items": {}
+                            }
+                          },
+                          "required": [
+                            "routeId",
+                            "routeName",
+                            "path"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "stopPoint": {
+                          "type": "object",
+                          "properties": {
+                            "stopId": {
+                              "type": "string"
+                            },
+                            "stopName": {
+                              "type": "string"
+                            },
+                            "pos": {
+                              "type": "array",
+                              "items": {}
+                            }
+                          },
+                          "required": [
+                            "stopId",
+                            "stopName",
+                            "pos"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
                         "tripId",
-                        "status"
+                        "status",
+                        "type",
+                        "route",
+                        "stopPoint"
                       ],
                       "additionalProperties": false
                     }
@@ -5311,9 +5364,202 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/parents/student/{studentId}/attendance/today": {
+      "get": {
+        "tags": [
+          "ParentController"
+        ],
+        "summary": "Get student attendance for today",
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "HTTP status code of the error",
+                      "minimum": 200,
+                      "maximum": 300
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "data": {
+                      "$schema": "https://json-schema.org/draft/2020-12/schema",
+                      "type": "object",
+                      "properties": {
+                        "studentId": {
+                          "type": "string"
+                        },
+                        "tripId": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "PENDING",
+                            "PICKED_UP",
+                            "DROPPED_OFF",
+                            "MISSED"
+                          ]
+                        },
+                        "pickupTime": {
+                          "type": "string"
+                        },
+                        "dropoffTime": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "studentId"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parents/student/{studentId}/assignment": {
+      "post": {
+        "tags": [
+          "ParentController"
+        ],
+        "summary": "Update student assignment for parent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "routeId": {
+                    "type": "string"
+                  },
+                  "stopId": {
+                    "type": "string"
+                  },
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "PICKUP",
+                      "DROPOFF"
+                    ]
+                  }
+                },
+                "required": [
+                  "routeId",
+                  "stopId",
+                  "direction"
+                ],
+                "additionalProperties": false
+              }
+            }
           },
-          "500": {
-            "description": "Internal Server Error",
+          "required": true
+        },
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "HTTP status code of the error",
+                      "minimum": 200,
+                      "maximum": 300
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "data": {
+                      "$schema": "https://json-schema.org/draft/2020-12/schema",
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "studentId": {
+                          "type": "string"
+                        },
+                        "routeId": {
+                          "type": "string"
+                        },
+                        "stopId": {
+                          "type": "string"
+                        },
+                        "direction": {
+                          "type": "string",
+                          "enum": [
+                            "PICKUP",
+                            "DROPOFF"
+                          ]
+                        },
+                        "effectiveFrom": {
+                          "type": "string"
+                        },
+                        "effectiveTo": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "studentId",
+                        "routeId",
+                        "stopId",
+                        "direction",
+                        "effectiveFrom"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
             "content": {
               "application/json": {
                 "schema": {

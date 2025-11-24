@@ -8,7 +8,7 @@ import { requestLogger } from "./middleware/requestLogger";
 import { apiRouter, swaggerRouter } from "./module";
 // import { setupSocketServer } from "./socket";
 import { Logger } from "./utils/logger";
-import { setSocketIO } from "./utils/notification";
+import { setSocketIO } from "./utils/socketio";
 
 const logger = new Logger("MAIN");
 const app = express();
@@ -16,20 +16,16 @@ const httpServer = createServer(app);
 
 // ✅ Cấu hình CORS chính xác cho socket.io
 const io = new Server(httpServer, {
-  cors: {
-    origin: "*", // chỉ cho phép frontend này
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true, // cho phép cookie và header Auth
-  },
+    cors: {
+        origin: "*", // chỉ cho phép frontend này
+    },
 });
-// setupSocketServer(io);
 setSocketIO(io);
 
 // ✅ Cấu hình CORS chính xác cho Express API
 app.use(
   cors({
     origin: "*", // chỉ cho phép frontend này
-    credentials: true, // quan trọng nếu bạn gửi cookie hoặc token qua header
   })
 );
 

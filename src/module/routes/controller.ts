@@ -5,7 +5,7 @@ import prisma from "@src/config/prisma.config";
 import { AnyObject, GeoLocation, RouteData } from "@src/types/share.type";
 import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
 import { v4 as uuidv4 } from "uuid";
-import { sendNotification } from "@src/utils/notification";
+import { sendNotification } from "@src/utils/socketio";
 import * as createType from "./types/create.type";
 import * as deleteByIdType from "./types/deleteById.type";
 import * as getAllType from "./types/getAll.type";

@@ -17,6 +17,7 @@ import { BusData, GeoLocation, RouteData, StudentData } from "@src/types/share.t
 import { StopPoints } from "../routes/types/create.type";
 import { NotFoundError } from "@lib/exception";
 import { BusInfo, RouteInfo } from "./types/shared.type";
+import { sendLiveLocationUpdate } from "@src/utils/socketio";
 
 export default class DriverController {
 
@@ -367,7 +368,7 @@ export default class DriverController {
     }
 
 
-    @Post("/")
+    @Post("/trip/:tripId/students/:studentId/dropoff")
     @Summary("Dropoff student")
     @useAuth(JWT_AUTH)
     @usePremisstion(["update:driver_trip"])
@@ -427,6 +428,12 @@ export default class DriverController {
                 ] as any,
                 timestamp: currentDate,
             }
+        });
+
+
+        sendLiveLocationUpdate(tripId, {
+            lat: latitude,
+            lng: longitude
         });
 
         return trip_locationType.trip_locationRes.parse({
