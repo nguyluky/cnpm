@@ -18,6 +18,7 @@ import { StopPoints } from "../routes/types/create.type";
 import { NotFoundError } from "@lib/exception";
 import { BusInfo, RouteInfo } from "./types/shared.type";
 import { sendLiveLocationUpdate } from "@src/utils/socketio";
+import { SocketNotificationController } from "@src/socket/notifications/controller";
 
 export default class DriverController {
 
@@ -227,7 +228,7 @@ export default class DriverController {
     }
 
 
-    @Post("/trip/:tripId/stoppoint/:spId/arrive")
+    @Post("/trip/:tripId/stoppoint/:spId/arrive") 
     @Summary("Mark stoppoint as arrived")
     @useAuth(JWT_AUTH)
     @usePremisstion(["update:driver_trip"])
@@ -257,6 +258,25 @@ export default class DriverController {
             }
         });
 
+        const notificationController = new SocketNotificationController();
+  
+        // Get all students waiting at this stop
+        const studentsAssignments = await prisma.studentAssignment.findMany({
+            where: { stopId: spId }
+        });
+        const studentIds = studentsAssignments.map(ob => ob.studentId);
+        const studentsAtStop = studentIds.length ? await prisma.student.findMany({
+            where: { id: { in: studentIds } }
+        }) : [];
+        
+        // Send notification to each parent
+        for (const student of studentsAtStop) {
+            notificationController.sendNotification(student.id, {
+                type: 'BusArriving',
+                message: 'Xe bus sẽ đến trong 5 phút',
+            });
+        }
+
         return trip_stoppoint_arriveType.trip_stoppoint_arriveRes.parse({
             stopId: tropStop.stopId,
             status: tropStop.status as 'PENDING' | 'ARRIVED' | 'DONE' | 'SKIPPED',
@@ -265,7 +285,7 @@ export default class DriverController {
     }
 
 
-    @Post("/trip/:tripId/stoppoint/:spId/depart")
+    @Post("/trip/:tripId/stoppoint/:spId/depart")  
     @Summary("Mark stoppoint as departed")
     @useAuth(JWT_AUTH)
     @usePremisstion(["update:driver_trip"])
@@ -294,6 +314,26 @@ export default class DriverController {
                 actualDeparture: new Date(),
             }
         });
+
+        const notificationController = new SocketNotificationController();
+  
+        // Get all students waiting at this stop
+        const studentsAssignments = await prisma.studentAssignment.findMany({
+            where: { stopId: spId }
+        });
+        const studentIds = studentsAssignments.map(ob => ob.studentId);
+        const studentsAtStop = studentIds.length ? await prisma.student.findMany({
+            where: { id: { in: studentIds } }
+        }) : [];
+        
+        // Send notification to each parent
+        for (const student of studentsAtStop) {
+            notificationController.sendNotification(student.id, {
+                type: 'BusDeparting',
+                message: 'Xe bus đã rời điểm đón con em',
+            });
+        }
+
 
         return trip_stoppoint_departType.trip_stoppoint_departRes.parse({
             stopId: tropStop.stopId,
@@ -330,7 +370,7 @@ export default class DriverController {
     }
 
 
-    @Post("/trip/:tripId/students/:studentId/pickup")
+    @Post("/trip/:tripId/students/:studentId/pickup") 
     @Summary("Pickup student")
     @useAuth(JWT_AUTH)
     @usePremisstion(["update:driver_trip"])
@@ -360,6 +400,22 @@ export default class DriverController {
             }
         });
 
+        // Tìm HS dựa trên mã HS
+        const student = await prisma.student.findUnique({
+            where: { id: studentId }
+        });
+
+        if (!student) {
+            throw new NotFoundError("Student not found");
+        }
+
+        // thông báo HS đã lên xe
+        const notificationController = new SocketNotificationController();
+        notificationController.sendNotification(studentId, {
+            type: 'StudentPickedUp',
+            message: `${student.name} đã lên xe an toàn`,
+        });
+
         return trip_students_pickupType.trip_students_pickupRes.parse({
             studentId: studentAttendance.studentId,
             status: studentAttendance.status as 'PENDING' | 'PICKED_UP' | 'DROPPED_OFF',
@@ -368,7 +424,7 @@ export default class DriverController {
     }
 
 
-    @Post("/trip/:tripId/students/:studentId/dropoff")
+    @Post("/trip/:tripId/students/:studentId/dropoff") 
     @Summary("Dropoff student")
     @useAuth(JWT_AUTH)
     @usePremisstion(["update:driver_trip"])
@@ -396,6 +452,20 @@ export default class DriverController {
                 status: 'DROPPED_OFF',
                 dropoffTime: new Date(),
             }
+        });
+
+                const notificationController = new SocketNotificationController();
+  
+        // Get all students waiting at this stop
+
+        const student =  await prisma.student.findUnique({
+            where: { id: studentId }
+        });
+        
+        // Send notification to each parent
+        notificationController.sendNotification(studentId, {
+            type: 'StudentDroppedUp',
+            message: `${student?.name} đã xuống xe an toàn`,
         });
 
         return trip_students_dropoffType.trip_students_dropoffRes.parse({

@@ -778,6 +778,59 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "HTTP status code of the error",
+                      "minimum": 400,
+                      "maximum": 599
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "title": "ApiErrorResponse",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "HTTP status code of the error",
+                      "minimum": 400,
+                      "maximum": 599
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Error class name"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error",
             "content": {
@@ -807,7 +860,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "JWTAuth": []
+          }
+        ]
       }
     },
     "/api/auth/admin/change-password": {
@@ -4613,6 +4671,35 @@
                     "message": {
                       "type": "string",
                       "description": "Human-readable error message"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "title": "ApiErrorResponse",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "description": "HTTP status code of the error",
+                      "minimum": 400,
+                      "maximum": 599
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Error class name"
                     }
                   },
                   "required": []
