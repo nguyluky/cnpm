@@ -266,12 +266,19 @@ export default class DriverController {
         });
         const studentIds = studentsAssignments.map(ob => ob.studentId);
         const studentsAtStop = studentIds.length ? await prisma.student.findMany({
-            where: { id: { in: studentIds } }
+            where: { id: { in: studentIds } },
+            include: {
+                User: true  // This gets the parent/user info
+            }
         }) : [];
+
+        if (!studentsAtStop) {
+            throw new NotFoundError("Student not found");
+        }
         
         // Send notification to each parent
         for (const student of studentsAtStop) {
-            notificationController.sendNotification(student.id, {
+            notificationController.sendNotification(student.User.id, {
                 type: 'BusArriving',
                 message: 'Xe bus sẽ đến trong 5 phút',
             });
@@ -323,12 +330,18 @@ export default class DriverController {
         });
         const studentIds = studentsAssignments.map(ob => ob.studentId);
         const studentsAtStop = studentIds.length ? await prisma.student.findMany({
-            where: { id: { in: studentIds } }
+            where: { id: { in: studentIds } },
+            include: {
+                User: true  // This gets the parent/user info
+            }
         }) : [];
+        if (!studentsAtStop) {
+            throw new NotFoundError("Student not found");
+        }
         
         // Send notification to each parent
         for (const student of studentsAtStop) {
-            notificationController.sendNotification(student.id, {
+            notificationController.sendNotification(student.User.id, {
                 type: 'BusDeparting',
                 message: 'Xe bus đã rời điểm đón con em',
             });
@@ -402,7 +415,10 @@ export default class DriverController {
 
         // Tìm HS dựa trên mã HS
         const student = await prisma.student.findUnique({
-            where: { id: studentId }
+            where: { id: studentId },
+            include: {
+                User: true  // This gets the parent/user info
+            }
         });
 
         if (!student) {
@@ -411,7 +427,7 @@ export default class DriverController {
 
         // thông báo HS đã lên xe
         const notificationController = new SocketNotificationController();
-        notificationController.sendNotification(studentId, {
+        notificationController.sendNotification(student.User.id, {
             type: 'StudentPickedUp',
             message: `${student.name} đã lên xe an toàn`,
         });
@@ -459,11 +475,18 @@ export default class DriverController {
         // Get all students waiting at this stop
 
         const student =  await prisma.student.findUnique({
-            where: { id: studentId }
+            where: { id: studentId },
+            include: {
+                User: true  // This gets the parent/user info
+            }
         });
+
+        if (!student) {
+            throw new NotFoundError("Student not found");
+        }
         
         // Send notification to each parent
-        notificationController.sendNotification(studentId, {
+        notificationController.sendNotification(student?.User.id, {
             type: 'StudentDroppedUp',
             message: `${student?.name} đã xuống xe an toàn`,
         });
