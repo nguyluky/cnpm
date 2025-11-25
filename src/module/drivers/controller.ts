@@ -113,7 +113,7 @@ export default class DriverController {
             startDate: schedule.startDate.toISOString(),
             daysOfWeek: schedule.daysOfWeek as number[],
             endDate: schedule.endDate ? schedule.endDate.toISOString() : undefined,
-            startTime: schedule.startTime.toISOString(),
+            startTime: schedule.startTime.toTimeString().slice(0, 5)
         }));
 
         return get_schedulesType.get_schedulesRes.parse({
