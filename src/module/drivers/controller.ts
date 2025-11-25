@@ -1,31 +1,29 @@
+import { NotFoundError } from "@lib/exception";
+import { Get, Post, Summary, useAuth } from "@lib/httpMethod";
+import { Validate } from "@lib/validate";
+import prisma from "@src/config/prisma.config";
+import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
+import { sendLiveLocationUpdate } from "@src/utils/socketio";
+import crypto from "crypto";
+import * as get_schedulesType from "./types/get_schedules.type";
+import * as get_tripType from "./types/get_trip.type";
+import * as getToDaySchedulesType from "./types/getToDaySchedules.type";
+import { BusInfo, RouteInfo } from "./types/shared.type";
 import * as trip_locationType from "./types/trip_location.type";
+import * as trip_startType from "./types/trip_start.type";
+import * as trip_stoppoint_arriveType from "./types/trip_stoppoint_arrive.type";
+import * as trip_stoppoint_departType from "./types/trip_stoppoint_depart.type";
+import * as trip_stoppoint_endType from "./types/trip_stoppoint_end.type";
 import * as trip_students_dropoffType from "./types/trip_students_dropoff.type";
 import * as trip_students_pickupType from "./types/trip_students_pickup.type";
-import * as trip_stoppoint_endType from "./types/trip_stoppoint_end.type";
-import * as trip_stoppoint_departType from "./types/trip_stoppoint_depart.type";
-import * as trip_stoppoint_arriveType from "./types/trip_stoppoint_arrive.type";
-import * as trip_startType from "./types/trip_start.type";
-import * as get_tripType from "./types/get_trip.type";
-import * as get_schedulesType from "./types/get_schedules.type";
-import * as getToDaySchedulesType from "./types/getToDaySchedules.type";
-import crypto from "crypto";
-import { Get, Post, Put, Delete, useAuth, Summary } from "@lib/httpMethod";
-import prisma from "@src/config/prisma.config";
-import { Validate } from "@lib/validate";
-import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
-import { BusData, GeoLocation, RouteData, StudentData } from "@src/types/share.type";
-import { StopPoints } from "../routes/types/create.type";
-import { NotFoundError } from "@lib/exception";
-import { BusInfo, RouteInfo } from "./types/shared.type";
-import { sendLiveLocationUpdate } from "@src/utils/socketio";
 
 export default class DriverController {
 
     @Summary("Get today's schedules")
     @Get("/schedules/today")
     @Validate(getToDaySchedulesType.schema)
-    @useAuth(JWT_AUTH)
     @usePremisstion(["read:driver_schedule"])
+    @useAuth(JWT_AUTH)
     async getToDaySchedules(req: getToDaySchedulesType.Req): Promise<getToDaySchedulesType.RerturnType> {
         const userId = req.user.id;
 
@@ -114,6 +112,8 @@ export default class DriverController {
             type: schedule.type as 'MORNING' | 'AFTERNOON',
             startDate: schedule.startDate.toISOString(),
             daysOfWeek: schedule.daysOfWeek as number[],
+            endDate: schedule.endDate ? schedule.endDate.toISOString() : undefined,
+            startTime: schedule.startTime.toISOString(),
         }));
 
         return get_schedulesType.get_schedulesRes.parse({

@@ -29,8 +29,14 @@ export class Scheduless extends ObjectType {
     @IsArray(Number)
     daysOfWeek: number[];
 
+    @IsString({description: "HH:mm format"})
+    startTime: string;
+
     @IsString({description: "ISO 8601 date string"})
     startDate: string;
+
+    @IsString({description: "ISO 8601 date string", optional: true})
+    endDate?: string;
 }
 
 export @ApiRequestStatus({
