@@ -35,7 +35,6 @@ export class Scheduless extends ObjectType {
     @IsString({description: "ISO 8601 date string"})
     startDate: string;
 
-
     @IsString({description: "ISO 8601 date string", optional: true})
     endDate?: string;
 }
