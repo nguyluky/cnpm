@@ -272,13 +272,14 @@ export default class DriverController {
             }
         }) : [];
 
-        if (!studentsAtStop) {
-            throw new NotFoundError("Student not found");
+        const uniqueParentIds = new Set<string>();
+        for (const student of studentsAtStop) {
+            uniqueParentIds.add(student.User.id);
         }
         
         // Send notification to each parent
-        for (const student of studentsAtStop) {
-            notificationController.sendNotification(student.User.id, {
+        for (const parentId of uniqueParentIds) {
+            notificationController.sendNotification(parentId, {
                 type: 'BusArriving',
                 message: 'Xe bus sẽ đến trong 5 phút',
             });
@@ -335,13 +336,15 @@ export default class DriverController {
                 User: true  // This gets the parent/user info
             }
         }) : [];
-        if (!studentsAtStop) {
-            throw new NotFoundError("Student not found");
+
+        const uniqueParentIds = new Set<string>();
+        for (const student of studentsAtStop) {
+            uniqueParentIds.add(student.User.id);
         }
         
         // Send notification to each parent
-        for (const student of studentsAtStop) {
-            notificationController.sendNotification(student.User.id, {
+        for (const parentId of uniqueParentIds) {
+            notificationController.sendNotification(parentId, {
                 type: 'BusDeparting',
                 message: 'Xe bus đã rời điểm đón con em',
             });
