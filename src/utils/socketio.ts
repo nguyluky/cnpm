@@ -1,5 +1,6 @@
 import { Namespace, Server, Socket } from 'socket.io';
 import { verifyAccessToken } from './jwt';
+import prisma from '@src/config/prisma.config';
 
 // c -> s
 interface SocketEvents {
@@ -11,9 +12,17 @@ interface SocketEvents {
     UpdateLocation: (location: { lat: number; lng: number }) => void;
 }
 
+
+interface NotificationType {
+    type: string;
+    message: string;
+    data?: string;
+    timestamp: Date;
+}
+
 // s -> c
 interface SocketEmits {
-    NewNotification: (notification: any) => void;
+    NewNotification: (notification: NotificationType) => void;
     LiveLocationUpdate: (location: { lat: number; lng: number }) => void;
     SystemAlert: (message: string) => void;
     UpdateLocation: (location: { lat: number; lng: number }) => void;
@@ -69,4 +78,102 @@ export function broadcastAlert(message: string) {
     if (!io) throw new Error('Socket.IO not initialized');
 
     io.emit('SystemAlert', message);
+}
+
+// send to users if bus is arriving at their station
+export async function notifyBusArrivalStation(spId: string, location: { lat: number; lng: number }) {
+    if (!io) throw new Error('Socket.IO not initialized');
+    // prisma.studentAssignment.
+    const userIds = await prisma.studentAssignment.findMany({
+        where: {
+            Student: {
+                StudentAssignment: {
+                    some: {
+                        stopId: spId
+                    }
+                }
+            }
+        },
+        select: {
+            id: true
+        }
+    })
+
+    io.to(userIds.map(a => `/notifications:${a.id}`)).emit('NewNotification', {
+        type: 'BusArrival',
+        message: `The bus is arriving at your station.`,
+        data: JSON.stringify(location),
+        timestamp: new Date(),
+    })
+}
+
+export async function notifyBusDepartureStation(spId: string, location: { lat: number; lng: number }) {
+    if (!io) throw new Error('Socket.IO not initialized');
+    // prisma.studentAssignment.
+    const userIds = await prisma.studentAssignment.findMany({
+        where: {
+            Student: {
+                StudentAssignment: {
+                    some: {
+                        stopId: spId
+                    }
+                }
+            }
+        },
+        select: {
+            id: true
+        }
+    })
+
+    io.to(userIds.map(a => `/notifications:${a.id}`)).emit('NewNotification', {
+        type: 'BusDeparture',
+        message: `The bus has departed from your station.`,
+        data: JSON.stringify(location),
+        timestamp: new Date(),
+    })
+}
+
+export async function notifyPickupStudent(stId: string) {
+    if (!io) throw new Error('Socket.IO not initialized');
+    // prisma.studentAssignment.
+    const userIds = await prisma.studentAssignment.findMany({
+        where: {
+            Student: {
+                id: stId
+            }
+        },
+        select: {
+            id: true
+        }
+    })
+
+    io.to(userIds.map(a => `/notifications:${a.id}`)).emit('NewNotification', {
+        type: 'StudentPickup',
+        message: `Your child is being picked up.`,
+        data: undefined,
+        timestamp: new Date(),
+    })
+}
+
+
+export async function notifyDropoffStudent(stId: string) {
+    if (!io) throw new Error('Socket.IO not initialized');
+    // prisma.studentAssignment.
+    const userIds = await prisma.studentAssignment.findMany({
+        where: {
+            Student: {
+                id: stId
+            }
+        },
+        select: {
+            id: true
+        }
+    })
+
+    io.to(userIds.map(a => `/notifications:${a.id}`)).emit('NewNotification', {
+        type: 'StudentDropoff',
+        message: `Your child has been dropped off.`,
+        data: undefined,
+        timestamp: new Date(),
+    })
 }

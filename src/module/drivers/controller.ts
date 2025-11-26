@@ -3,7 +3,7 @@ import { Get, Post, Summary, useAuth } from "@lib/httpMethod";
 import { Validate } from "@lib/validate";
 import prisma from "@src/config/prisma.config";
 import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
-import { sendLiveLocationUpdate } from "@src/utils/socketio";
+import { notifyBusArrivalStation, notifyDropoffStudent, notifyPickupStudent, sendLiveLocationUpdate } from "@src/utils/socketio";
 import crypto from "crypto";
 import * as get_schedulesType from "./types/get_schedules.type";
 import * as get_tripType from "./types/get_trip.type";
@@ -16,27 +16,7 @@ import * as trip_stoppoint_departType from "./types/trip_stoppoint_depart.type";
 import * as trip_stoppoint_endType from "./types/trip_stoppoint_end.type";
 import * as trip_students_dropoffType from "./types/trip_students_dropoff.type";
 import * as trip_students_pickupType from "./types/trip_students_pickup.type";
-// <<<<<<< HEAD
-// =======
-// import * as trip_stoppoint_endType from "./types/trip_stoppoint_end.type";
-// import * as trip_stoppoint_departType from "./types/trip_stoppoint_depart.type";
-// import * as trip_stoppoint_arriveType from "./types/trip_stoppoint_arrive.type";
-// import * as trip_startType from "./types/trip_start.type";
-// import * as get_tripType from "./types/get_trip.type";
-// import * as get_schedulesType from "./types/get_schedules.type";
-// import * as getToDaySchedulesType from "./types/getToDaySchedules.type";
-// import crypto from "crypto";
-// import { Get, Post, Put, Delete, useAuth, Summary } from "@lib/httpMethod";
-// import prisma from "@src/config/prisma.config";
-// import { Validate } from "@lib/validate";
-// import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
-// import { BusData, GeoLocation, RouteData, StudentData } from "@src/types/share.type";
-// import { StopPoints } from "../routes/types/create.type";
-// import { NotFoundError } from "@lib/exception";
-// import { BusInfo, RouteInfo } from "./types/shared.type";
-// import { sendLiveLocationUpdate } from "@src/utils/socketio";
-// import { SocketNotificationController } from "@src/socket/notifications/controller";
-// >>>>>>> origin/notification_parent
+import { GeoLocation } from "@src/types/share.type";
 
 export default class DriverController {
 
@@ -275,8 +255,19 @@ export default class DriverController {
             update: {
                 status: 'ARRIVED',
                 actualArrival: new Date(),
+            },
+            include: {
+                StopPoint: true
             }
         });
+
+        // send notification to parents that bus is arriving at their station
+        const location = tropStop.StopPoint.location as any as GeoLocation;
+        notifyBusArrivalStation(spId, {
+            lat: location.latitude,
+            lng: location.longitude
+        })
+
 
         return trip_stoppoint_arriveType.trip_stoppoint_arriveRes.parse({
             stopId: tropStop.stopId,
@@ -313,36 +304,18 @@ export default class DriverController {
             update: {
                 status: 'DONE',
                 actualDeparture: new Date(),
+            },
+            include: {
+                StopPoint: true
             }
         });
 
-  //       const notificationController = new SocketNotificationController();
-  // 
-  //       // Get all students waiting at this stop
-  //       const studentsAssignments = await prisma.studentAssignment.findMany({
-  //           where: { stopId: spId }
-  //       });
-  //       const studentIds = studentsAssignments.map(ob => ob.studentId);
-  //       const studentsAtStop = studentIds.length ? await prisma.student.findMany({
-  //           where: { id: { in: studentIds } },
-  //           include: {
-  //               User: true  // This gets the parent/user info
-  //           }
-  //       }) : [];
-  //
-  //       const uniqueParentIds = new Set<string>();
-  //       for (const student of studentsAtStop) {
-  //           uniqueParentIds.add(student.User.id);
-  //       }
-  //       
-  //       // Send notification to each parent
-  //       for (const parentId of uniqueParentIds) {
-  //           notificationController.sendNotification(parentId, {
-  //               type: 'BusDeparting',
-  //               message: 'Xe bus đã rời điểm đón con em',
-  //           });
-  //       }
-
+        // send notification to parents that bus is departing from their station
+        const location = tropStop.StopPoint.location as any as GeoLocation;
+        notifyBusArrivalStation(spId, {
+            lat: location.latitude,
+            lng: location.longitude
+        })
 
         return trip_stoppoint_departType.trip_stoppoint_departRes.parse({
             stopId: tropStop.stopId,
@@ -409,24 +382,7 @@ export default class DriverController {
             }
         });
 
-        // Tìm HS dựa trên mã HS
-        const student = await prisma.student.findUnique({
-            where: { id: studentId },
-            include: {
-                User: true  // This gets the parent/user info
-            }
-        });
-
-        if (!student) {
-            throw new NotFoundError("Student not found");
-        }
-
-        // thông báo HS đã lên xe
-        // const notificationController = new SocketNotificationController();
-        // notificationController.sendNotification(student.User.id, {
-        //     type: 'StudentPickedUp',
-        //     message: `${student.name} đã lên xe an toàn`,
-        // });
+        notifyPickupStudent(studentId);
 
         return trip_students_pickupType.trip_students_pickupRes.parse({
             studentId: studentAttendance.studentId,
@@ -466,27 +422,8 @@ export default class DriverController {
             }
         });
 
-  //               const notificationController = new SocketNotificationController();
-  // 
-  //       // Get all students waiting at this stop
-  //
-  //       const student =  await prisma.student.findUnique({
-  //           where: { id: studentId },
-  //           include: {
-  //               User: true  // This gets the parent/user info
-  //           }
-  //       });
-  //
-  //       if (!student) {
-  //           throw new NotFoundError("Student not found");
-  //       }
-  //       
-  //       // Send notification to each parent
-  //       notificationController.sendNotification(student?.User.id, {
-  //           type: 'StudentDroppedUp',
-  //           message: `${student?.name} đã xuống xe an toàn`,
-  //       });
-  //
+        notifyDropoffStudent(studentId);
+
         return trip_students_dropoffType.trip_students_dropoffRes.parse({
             studentId: studentAttendance.studentId,
             status: studentAttendance.status as 'PENDING' | 'PICKED_UP' | 'DROPPED_OFF',
