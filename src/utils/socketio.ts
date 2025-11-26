@@ -38,9 +38,14 @@ export function setSocketIO(socketIO: Server) {
     io.on('connection', (socket: Socket<SocketEvents, SocketEmits>) => {
         console.log(`New client connected: ${socket.id}`);
         socket.on('joinNotificationRoom', (accessToken: string) => {
-            const decoded = verifyAccessToken(accessToken);
-            const userId = decoded.user.id;
-            socket.join(`/notifications:${userId}`);
+            try {
+                const decoded = verifyAccessToken(accessToken);
+                const userId = decoded.user.id;
+                socket.join(`/notifications:${userId}`);
+            }
+            catch (err) {
+                console.log(`Invalid access token for socket ${socket.id}`);
+            }
         });
 
         socket.on('joinTripRoom', (tripId: string) => {
