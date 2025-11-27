@@ -6,7 +6,27 @@ import { StopPointsData } from "@src/types/share.type";
 import { IsArray, IsNumber } from "@lib/type_declaration";
 
 export class getAllReqBody {}
-export class getAllReqQuery {}
+export class getAllReqQuery {
+    @IsNumber({
+        optional: true
+    })
+    east?: number;
+
+    @IsNumber({
+        optional: true
+    })
+    north?: number;
+
+    @IsNumber({
+        optional: true
+    })
+    south?: number;
+
+    @IsNumber({
+        optional: true
+    })
+    west?: number;
+}
 export class getAllReqParams {}
 
 export @ApiRequestStatus({

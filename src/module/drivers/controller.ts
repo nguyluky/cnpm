@@ -3,7 +3,7 @@ import { Get, Post, Summary, useAuth } from "@lib/httpMethod";
 import { Validate } from "@lib/validate";
 import prisma from "@src/config/prisma.config";
 import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
-import { notifyBusArrivalStation, notifyDropoffStudent, notifyPickupStudent, sendLiveLocationUpdate } from "@src/utils/socketio";
+import { notifyBusArrivalStation, notifyBusDepartureStation, notifyDropoffStudent, notifyPickupStudent, sendLiveLocationUpdate } from "@src/utils/socketio";
 import crypto from "crypto";
 import * as get_schedulesType from "./types/get_schedules.type";
 import * as get_tripType from "./types/get_trip.type";
@@ -312,7 +312,7 @@ export default class DriverController {
 
         // send notification to parents that bus is departing from their station
         const location = tropStop.StopPoint.location as any as GeoLocation;
-        notifyBusArrivalStation(spId, {
+        notifyBusDepartureStation(spId, {
             lat: location.latitude,
             lng: location.longitude
         })

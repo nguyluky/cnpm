@@ -19,14 +19,39 @@ export default class StoppointsController {
     @useAuth(JWT_AUTH)
     @usePremisstion(["read:stoppoints"])
     async getAll(req: getAllType.Req): Promise<getAllType.RerturnType> {
-        const stoppoints = await prisma.stopPoint.findMany({})
 
-        const formattedStoppoints = stoppoints.map(stoppoint => StopPointsData.parse({
+        const { east, north, south, west } = req.query;
+
+        let stoppoints = await prisma.stopPoint.findMany({})
+
+
+        let formattedStoppoints = stoppoints.map(stoppoint => StopPointsData.parse({
             id: stoppoint.id,
             name: stoppoint.name,
             location: GeoLocation.parse(stoppoint.location),
             meta: stoppoint.meta as any
         }));
+
+
+        formattedStoppoints = formattedStoppoints.filter(stoppoint => {
+            const { location } = stoppoint;
+            const lng = location.longitude;
+            const lat = location.latitude;
+
+            if (east !== undefined && lng > east) {
+                return false;
+            }
+            if (west !== undefined && lng < west) {
+                return false;
+            }
+            if (north !== undefined && lat > north) {
+                return false;
+            }
+            if (south !== undefined && lat < south) {
+                return false;
+            }
+            return true;
+        });
         
         return getAllType.getAllRes.parse({
             data: formattedStoppoints,

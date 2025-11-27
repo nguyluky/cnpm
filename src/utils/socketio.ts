@@ -27,6 +27,7 @@ interface SocketEmits {
     SystemAlert: (message: string) => void;
     UpdateLocation: (location: { lat: number; lng: number }) => void;
     Success: () => void;
+    Error: (message: string) => void;
 }
 
 let io: Server<SocketEvents, SocketEmits>;
@@ -44,7 +45,7 @@ export function setSocketIO(socketIO: Server) {
                 socket.join(`/notifications:${userId}`);
             }
             catch (err) {
-                console.log(`Invalid access token for socket ${socket.id}`);
+                socket.emit('Error', 'Invalid access token');
             }
         });
 
@@ -89,7 +90,7 @@ export function broadcastAlert(message: string) {
 export async function notifyBusArrivalStation(spId: string, location: { lat: number; lng: number }) {
     if (!io) throw new Error('Socket.IO not initialized');
     // prisma.studentAssignment.
-    const userIds = await prisma.studentAssignment.findMany({
+    const userIds = await prisma.user.findMany({
         where: {
             Student: {
                 StudentAssignment: {
@@ -115,7 +116,7 @@ export async function notifyBusArrivalStation(spId: string, location: { lat: num
 export async function notifyBusDepartureStation(spId: string, location: { lat: number; lng: number }) {
     if (!io) throw new Error('Socket.IO not initialized');
     // prisma.studentAssignment.
-    const userIds = await prisma.studentAssignment.findMany({
+    const userIds = await prisma.user.findMany({
         where: {
             Student: {
                 StudentAssignment: {
@@ -140,17 +141,21 @@ export async function notifyBusDepartureStation(spId: string, location: { lat: n
 
 export async function notifyPickupStudent(stId: string) {
     if (!io) throw new Error('Socket.IO not initialized');
-    // prisma.studentAssignment.
-    const userIds = await prisma.studentAssignment.findMany({
+    const userIds = await prisma.user.findMany({
         where: {
             Student: {
-                id: stId
+                StudentAssignment: {
+                    some: {
+                        studentId: stId
+                    }
+                }
             }
         },
         select: {
             id: true
         }
-    })
+    });
+
 
     io.to(userIds.map(a => `/notifications:${a.id}`)).emit('NewNotification', {
         type: 'StudentPickup',
@@ -164,16 +169,20 @@ export async function notifyPickupStudent(stId: string) {
 export async function notifyDropoffStudent(stId: string) {
     if (!io) throw new Error('Socket.IO not initialized');
     // prisma.studentAssignment.
-    const userIds = await prisma.studentAssignment.findMany({
+    const userIds = await prisma.user.findMany({
         where: {
             Student: {
-                id: stId
+                StudentAssignment: {
+                    some: {
+                        studentId: stId
+                    }
+                }
             }
         },
         select: {
             id: true
         }
-    })
+    });
 
     io.to(userIds.map(a => `/notifications:${a.id}`)).emit('NewNotification', {
         type: 'StudentDropoff',
