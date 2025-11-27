@@ -3752,11 +3752,9 @@
                                 "type": "string"
                               },
                               "startDate": {
-                                "description": "ISO 8601 date string",
                                 "type": "string"
                               },
                               "endDate": {
-                                "description": "ISO 8601 date string",
                                 "type": "string"
                               }
                             },

@@ -32,10 +32,10 @@ export class Scheduless extends ObjectType {
     @IsString({description: "HH:mm format"})
     startTime: string;
 
-    @IsString({description: "ISO 8601 date string"})
+    @IsString()
     startDate: string;
 
-    @IsString({description: "ISO 8601 date string", optional: true})
+    @IsString({optional: true})
     endDate?: string;
 }
 
