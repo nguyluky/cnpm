@@ -1,7 +1,7 @@
 import { ApiRequestStatus } from "@lib/httpMethod";
 import { Formats, IsArray, IsObject, IsString } from "@lib/type_declaration";
 import { ObjectType } from "@lib/validate";
-import { AnyObject } from "@src/types/share.type";
+import { AnyObject, RouteMeta } from "@src/types/share.type";
 import { Request } from "express";
 import "reflect-metadata";
 
@@ -10,8 +10,8 @@ export class updateReqBody {
   @IsString()
   name: string;
 
-  @IsObject(AnyObject, { optional: true })
-  meta?: AnyObject;
+  @IsObject(RouteMeta, { optional: true })
+  meta?: RouteMeta;
 
   @IsArray(String, { minItems: 1, maxItems: 50 })
   stopPointIds: string[];
@@ -25,8 +25,7 @@ export class updateReqParams {
 }
 
 // { id, name, updatedAt }
-export
-@ApiRequestStatus({
+export @ApiRequestStatus({
   statusCode: 200,
   statusMess: "Success",
 })

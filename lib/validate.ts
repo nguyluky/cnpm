@@ -7,7 +7,13 @@ import { wa } from "./PropertyKey";
 
 export const SCHEMA_RES_KEY = "res_schema_key"
 
-export class ObjectType {
+
+export class AnyObject {
+    static parse<T extends AnyObject>(this: new () => T, data: T): any {}
+}
+
+export class ObjectType extends AnyObject {
+
     static parse<T extends ObjectType>(this: new () => T, data: T): T {
         const ins = new this();
         Object.assign(ins, data);
@@ -15,8 +21,18 @@ export class ObjectType {
     }
 }
 
+export class ArrayType<T> extends AnyObject {
+    items!: T[];
+
+    static parseItems<T>(data: Partial<ArrayType<T>>): T[] {
+        const ins = new this() as ArrayType<T>;
+        Object.assign(ins, data);
+        return ins.items;
+    }
+}
+
 // Generic kiểu cho "class constructor" kế thừa Class_
-export type ClassType_<T extends ObjectType = ObjectType> = new (...args: any[]) => T;
+export type ClassType_<T extends AnyObject = AnyObject> = new (...args: any[]) => T;
 
 // ApiSchemas nhận bất kỳ subclass nào của Class_
 export interface ApiSchemas<
