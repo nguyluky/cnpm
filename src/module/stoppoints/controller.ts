@@ -22,40 +22,16 @@ export default class StoppointsController {
 
         const { east, north, south, west, name } = req.query;
 
+        const conditions = [
+            name && { name: { contains: name } },
+            east && { location: { path: "$.longitude", lte: east } },
+            west && { location: { path: "$.longitude", gte: west } },
+            north && { location: { path: "$.latitude", lte: north } },
+            south && { location: { path: "$.latitude", gte: south } },
+        ].filter(Boolean);
+
         let stoppoints = await prisma.stopPoint.findMany({
-            where: {
-                AND: [
-                    name ? { name: { contains: name } } : {},
-
-                    east ? {
-                        location: {
-                            path: "$.longitude",
-                            lte: east,
-                        }
-                    } : {},
-
-                    west ? {
-                        location: {
-                            path: "$.longitude",
-                            gte: west,
-                        }
-                    } : {},
-
-                    north ? {
-                        location: {
-                            path: "$.latitude",
-                            lte: north,
-                        }
-                    } : {},
-
-                    south ? {
-                        location: {
-                            path: "$.latitude",
-                            gte: south
-                        }
-                    } : {}
-                ]
-            }
+            where: conditions.length > 0 ? { AND: conditions } : {}
         })
 
         let formattedStoppoints = stoppoints.map(stoppoint => StopPointsData.parse({
