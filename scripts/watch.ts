@@ -75,6 +75,7 @@ function createWatchAndRun() {
 
             try {
                 console.log('Running tsc-alias...');
+                await new Promise(resolve => setTimeout(resolve, 500)); // wait a bit for file system
                 await execAsync('npx tsc-alias');
                 await new Promise(resolve => setTimeout(resolve, 500)); // wait a bit for file system
                 console.log('tsc-alias completed.');

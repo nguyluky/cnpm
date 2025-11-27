@@ -20,10 +20,19 @@ export default class StoppointsController {
     @usePremisstion(["read:stoppoints"])
     async getAll(req: getAllType.Req): Promise<getAllType.RerturnType> {
 
-        const { east, north, south, west } = req.query;
+        const { east, north, south, west, name } = req.query;
 
-        let stoppoints = await prisma.stopPoint.findMany({})
+        const conditions = [
+            name && { name: { contains: name } },
+            east && { location: { path: "$.longitude", lte: east } },
+            west && { location: { path: "$.longitude", gte: west } },
+            north && { location: { path: "$.latitude", lte: north } },
+            south && { location: { path: "$.latitude", gte: south } },
+        ].filter(Boolean);
 
+        let stoppoints = await prisma.stopPoint.findMany({
+            where: conditions.length > 0 ? { AND: conditions } : {}
+        })
 
         let formattedStoppoints = stoppoints.map(stoppoint => StopPointsData.parse({
             id: stoppoint.id,
@@ -32,27 +41,6 @@ export default class StoppointsController {
             meta: stoppoint.meta as any
         }));
 
-
-        formattedStoppoints = formattedStoppoints.filter(stoppoint => {
-            const { location } = stoppoint;
-            const lng = location.longitude;
-            const lat = location.latitude;
-
-            if (east !== undefined && lng > east) {
-                return false;
-            }
-            if (west !== undefined && lng < west) {
-                return false;
-            }
-            if (north !== undefined && lat > north) {
-                return false;
-            }
-            if (south !== undefined && lat < south) {
-                return false;
-            }
-            return true;
-        });
-        
         return getAllType.getAllRes.parse({
             data: formattedStoppoints,
             total: formattedStoppoints.length,
@@ -69,7 +57,7 @@ export default class StoppointsController {
         const stoppoint = await prisma.stopPoint.findUnique({
             where: { id }
         })
-        
+
         if (!stoppoint) {
             throw new NotFoundError("Stoppoint not found");
         }
@@ -91,7 +79,7 @@ export default class StoppointsController {
     async createStoppoints(req: createStoppointsType.Req): Promise<createStoppointsType.RerturnType> {
         const { name, location, meta } = req.body;
         // Note: sequence is not stored in database, only used for validation
-        
+
         const stoppoint = await prisma.stopPoint.create({
             data: {
                 id: uuidv4(),
@@ -118,7 +106,7 @@ export default class StoppointsController {
         const { id } = req.params;
         const { name, location } = req.body;
         // Note: sequence is not stored in database, only used for validation
-        
+
         const data = {
             name,
             location: location as any

@@ -3,7 +3,7 @@ import { ApiRequestStatus } from "@lib/httpMethod";
 import { Request } from "express";
 import { ObjectType } from "@lib/validate";
 import { StopPointsData } from "@src/types/share.type";
-import { IsArray, IsNumber } from "@lib/type_declaration";
+import { IsArray, IsNumber, IsString } from "@lib/type_declaration";
 
 export class getAllReqBody {}
 export class getAllReqQuery {
@@ -26,6 +26,12 @@ export class getAllReqQuery {
         optional: true
     })
     west?: number;
+
+
+    @IsString({
+        optional: true
+    })
+    name?: string;
 }
 export class getAllReqParams {}
 

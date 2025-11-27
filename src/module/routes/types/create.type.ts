@@ -7,7 +7,7 @@ import {
   IsString,
 } from "@lib/type_declaration";
 import { ObjectType } from "@lib/validate";
-import { AnyObject, GeoLocation } from "@src/types/share.type";
+import { AnyObject, GeoLocation, RouteMeta } from "@src/types/share.type";
 import { Request } from "express";
 import "reflect-metadata";
 
@@ -22,8 +22,8 @@ export class createReqBody {
   @IsObject(GeoLocation)
   endLocation: GeoLocation;
 
-  @IsObject(AnyObject, { optional: true })
-  meta?: AnyObject;
+  @IsObject(RouteMeta)
+  meta: RouteMeta;
 
   @IsArray(String, { minItems: 1, maxItems: 50 })
   stopPointIds: string[];
