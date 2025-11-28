@@ -95,15 +95,6 @@ export default class StudentsController {
       throw new NotFoundError(`User not found with id: ${userId}`);
     }
 
-    // Check if student already exists for this user
-    const existingStudent = await prisma.student.findUnique({
-      where: { userId },
-    });
-
-    if (existingStudent) {
-      throw new ConflictError("Student already exists for this user");
-    }
-
     const student = await prisma.student.create({
       data: {
         id: uuidv4(),
