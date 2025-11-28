@@ -28,11 +28,11 @@ export default class StoppointsController {
             west && { location: { path: "$.longitude", gte: west } },
             north && { location: { path: "$.latitude", lte: north } },
             south && { location: { path: "$.latitude", gte: south } },
-        ].filter(Boolean);
+        ].filter(Boolean) as any[];
 
         let stoppoints = await prisma.stopPoint.findMany({
-            where: conditions.length > 0 ? { AND: conditions } : {}
-        })
+            where: conditions.length > 0 ? { AND: conditions } : undefined
+        });
 
         let formattedStoppoints = stoppoints.map(stoppoint => StopPointsData.parse({
             id: stoppoint.id,
