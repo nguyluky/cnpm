@@ -3,8 +3,8 @@ import { ObjectType } from "@lib/validate";
 import { BusData, RouteData } from "@src/types/share.type";
 
 export class TimeTable extends ObjectType {
-    @IsArray(String)
-    dayOfWeek: string[];
+    @IsArray(Number)
+    dayOfWeek: number[];
 
     @IsString({
         format: Formats["iso.time"]
@@ -12,6 +12,18 @@ export class TimeTable extends ObjectType {
     departureTime: string;
 }
 
+export class DriverData extends ObjectType {
+    @IsString({
+        format: Formats.uuid
+    })
+    id: string;
+
+    @IsString()
+    name: string;
+
+    @IsString()
+    email: string;
+}
 
 export class ScheduleInfo extends ObjectType {
     @IsString({
@@ -22,8 +34,11 @@ export class ScheduleInfo extends ObjectType {
     @IsObject(BusData)
     bus: BusData;
 
-    @IsArray(TimeTable)
-    times: TimeTable[];
+    @IsObject(DriverData)
+    driver: DriverData;
+
+    @IsObject(TimeTable)
+    times: TimeTable;
 
     @IsObject(RouteData)
     route: RouteData;
@@ -41,14 +56,9 @@ export class ScheduleInfo extends ObjectType {
     })
     endDate: string;
 
-    @IsString({
-        format: Formats["iso.time"]
-    })
-    startTime: string;
-
     @IsEnum({
-        value: ["MORNING", "AFTERNOON"],
+        value: ["DISPATCH", "RETURN"],
     })
-    type: "MORNING" | "AFTERNOON" = "MORNING";
+    type: "DISPATCH" | "RETURN";
 
 }

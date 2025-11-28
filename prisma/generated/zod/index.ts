@@ -142,10 +142,6 @@ export const RouteStopPoint_directionSchema = z.enum(['PICKUP','DROPOFF']);
 
 export type RouteStopPoint_directionType = `${z.infer<typeof RouteStopPoint_directionSchema>}`
 
-export const Schedule_typeSchema = z.enum(['MORNING','AFTERNOON']);
-
-export type Schedule_typeType = `${z.infer<typeof Schedule_typeSchema>}`
-
 export const StudentAssignment_directionSchema = z.enum(['PICKUP','DROPOFF']);
 
 export type StudentAssignment_directionType = `${z.infer<typeof StudentAssignment_directionSchema>}`
@@ -169,6 +165,10 @@ export type Schedule_statusType = `${z.infer<typeof Schedule_statusSchema>}`
 export const Trip_typeSchema = z.enum(['DISPATCH','RETURN']);
 
 export type Trip_typeType = `${z.infer<typeof Trip_typeSchema>}`
+
+export const Schedule_typeSchema = z.enum(['DISPATCH','RETURN']);
+
+export type Schedule_typeType = `${z.infer<typeof Schedule_typeSchema>}`
 
 /////////////////////////////////////////
 // MODELS
