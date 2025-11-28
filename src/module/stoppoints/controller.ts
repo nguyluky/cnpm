@@ -36,7 +36,7 @@ export default class StoppointsController {
         });
 =======
             where: {
-                AND: {...conditions as any}
+                AND: [...conditions as any]
             }
         })
 >>>>>>> 4ca29875c5afae8a96c726840e46b9438c894cfe

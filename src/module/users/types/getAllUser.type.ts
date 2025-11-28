@@ -1,5 +1,5 @@
 import { ApiRequestStatus } from "@lib/httpMethod";
-import { IsArray, IsObject } from "@lib/type_declaration";
+import { IsArray, IsObject, IsString } from "@lib/type_declaration";
 import { ObjectType } from "@lib/validate";
 import { PaginatedQuery, PaginationMetaData } from "@src/types/share.type";
 import { Request } from "express";
@@ -7,7 +7,12 @@ import "reflect-metadata";
 import { UserData } from "./share.type";
 
 export class getAllUserReqBody { }
-export class getAllUserReqQuery extends PaginatedQuery { }
+export class getAllUserReqQuery extends PaginatedQuery {
+    @IsString({
+        optional: true
+    })
+    role: string;
+}
 export class getAllUserReqParams { }
 
 

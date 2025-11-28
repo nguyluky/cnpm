@@ -253,11 +253,6 @@ enum RouteStopPoint_direction {
   DROPOFF
 }
 
-enum Schedule_type {
-  MORNING
-  AFTERNOON
-}
-
 enum StudentAssignment_direction {
   PICKUP
   DROPOFF
@@ -290,6 +285,11 @@ enum Schedule_status {
 }
 
 enum Trip_type {
+  DISPATCH
+  RETURN
+}
+
+enum Schedule_type {
   DISPATCH
   RETURN
 }

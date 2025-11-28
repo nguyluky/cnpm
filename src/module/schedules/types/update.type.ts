@@ -25,44 +25,36 @@ export class updateReqBody {
 
     @IsString({
         optional: true,
-        format: Formats["iso.time"]
-    })
-    startTime?: string;
-
-    @IsString({
-        optional: true,
-        format: Formats["iso.date"]
+        format: Formats["iso.datetime"]
     })
     startDate?: string;
 
     @IsString({
         optional: true,
-        format: Formats["iso.date"]
+        format: Formats["iso.datetime"]
     })
     endDate?: string;
 
     @IsEnum({
-        value: ["MORNING", "AFTERNOON"],
+        value: ["DISPATCH", "RETURN"],
         optional: true
     })
-    type?: "MORNING" | "AFTERNOON" = "MORNING";
+    type?: "DISPATCH" | "RETURN";
 
     @IsString({
         optional: true
     })
     routeId?: string;
 
-    @IsArray(TimeTable, {
+    @IsObject(TimeTable, {
         optional: true
     })
-    times?: TimeTable[];
+    times?: TimeTable;
 
 }
 export class updateReqQuery {}
 export class updateReqParams {
-    @IsString({
-        format: Formats.uuid
-    })
+    @IsString()
     id: string;
 }
 

@@ -1,3 +1,4 @@
+import * as getUserByIdType from "./types/getUserById.type";
 import { ConflictError, NotFoundError } from "@lib/exception";
 import { Get, Post, Summary } from "@lib/httpMethod";
 import { Validate } from "@lib/validate";
@@ -16,12 +17,32 @@ export default class UsersController {
     @Summary("Get All Users")
     @Validate(getAllUserType.schema)
     async getAllUser(req: getAllUserType.Req): Promise<getAllUserType.RerturnType> {
-        const { page, limit, search } = req.query;
-        const where = search
-            ? {
-                OR: [{ username: { contains: search } }],
-            }
-            : {};
+        const { page, limit, search, role } = req.query;
+        const where = {
+            AND: [
+                search
+                    ? {
+                        OR: [
+                            { username: { contains: search } },
+                            { email: { contains: search } },
+                        ],
+                    }
+                    : {},
+                role
+                    ? {
+                        UserRoles: {
+                            some: {
+                                Roles: {
+                                    name: {
+                                        equals: role
+                                    }
+                                },
+                            },
+                        },
+                    }
+                    : {},
+            ],
+        };
 
         const [total, users] = await Promise.all([
             prisma.user.count({ where }),
@@ -59,6 +80,38 @@ export default class UsersController {
             },
         });
     }
+
+    @Get("/:id")
+    @Summary("Get User by ID")
+    @Validate(getUserByIdType.schema)
+    async getUserById(req: getUserByIdType.Req): Promise<getUserByIdType.RerturnType> {
+        const { id } = req.params;
+
+        const user = await prisma.user.findUnique({
+            where: { id },
+            include: {
+                UserRoles: {
+                    include: {
+                        Roles: true
+                    },
+                }
+            },
+        });
+
+        if (!user) {
+            throw new NotFoundError("User not found");
+        }
+        
+        return getUserByIdType.getUserByIdRes.parse({   
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            createdAt: user.createdAt.toISOString(),
+            updatedAt: user.updatedAt.toISOString(),
+            roles: user.UserRoles.map(ur => ur.Roles.name),
+        });
+    }
+
 
     @Post("/")
     @Summary("Create New User")
@@ -215,4 +268,6 @@ export default class UsersController {
             permissions: updatedRole.RolePermissions.map(rp => rp.Permission.name),
         });
     }
+
+
 }
