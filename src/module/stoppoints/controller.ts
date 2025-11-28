@@ -31,7 +31,9 @@ export default class StoppointsController {
         ].filter(Boolean);
 
         let stoppoints = await prisma.stopPoint.findMany({
-            where: conditions.length > 0 ? { AND: conditions } : {}
+            where: {
+                AND: {...conditions as any}
+            }
         })
 
         let formattedStoppoints = stoppoints.map(stoppoint => StopPointsData.parse({
