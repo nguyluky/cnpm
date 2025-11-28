@@ -7,9 +7,7 @@ import "reflect-metadata";
 export class getByIdReqBody {}
 export class getByIdReqQuery {}
 export class getByIdReqParams {
-  @IsString({
-    format: Formats.uuid,
-  })
+  @IsString()
   id: string;
 }
 

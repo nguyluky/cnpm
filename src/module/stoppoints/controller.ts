@@ -32,7 +32,7 @@ export default class StoppointsController {
 
         let stoppoints = await prisma.stopPoint.findMany({
             where: {
-                AND: {...conditions as any}
+                AND: [...conditions as any]
             }
         })
 

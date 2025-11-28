@@ -8,10 +8,16 @@ import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
 import { AnyObject, BusData, GeoLocation, RouteData, RouteMeta, StopPointsMeta } from "@src/types/share.type";
 import { NotFoundError } from "@lib/exception";
-import { ScheduleInfo, TimeTable } from "./types/share.type";
+import { DriverData, ScheduleInfo, TimeTable } from "./types/share.type";
 import { v4 as uuid } from "uuid";
 import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
 import { sendNotification } from "@src/utils/socketio";
+
+function formatDateToHHMM(date: Date): string {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+}
 
 export default class SchedulesController {
 
@@ -35,7 +41,8 @@ export default class SchedulesController {
                 take: limit,
                 include: {
                     Bus: true,
-                    Route: true
+                    Route: true,
+                    User: true
                 }
             }),
             prisma.schedule.count({})
@@ -51,16 +58,21 @@ export default class SchedulesController {
         return getAllType.getAllRes.parse({
             data: data.map(item => ScheduleInfo.parse({
                 id: item.id,
+                driver: DriverData.parse({
+                    id: item.User?.id || "",
+                    name: item.User?.username || "",
+                    email: item.User?.email || "",
+                }),
                 bus: {
                     id: item.Bus.id,
                     licensePlate: item.Bus.licensePlate,
                     capacity: item.Bus.capacity,
                     metadata: AnyObject.parse(item.Bus.meta),
                 },
-                times: (item.daysOfWeek as any).map((t: any) => TimeTable.parse({
-                    dayOfWeek: t.dayOfWeek,
-                    departureTime: t.departureTime
-                })),
+                times: TimeTable.parse({
+                    dayOfWeek: item.daysOfWeek as number[],
+                    departureTime: formatDateToHHMM(item.startTime)
+                }),
                 route: RouteData.parse({
                     id: item.routeId,
                     name: item.Route?.name || "",
@@ -71,7 +83,6 @@ export default class SchedulesController {
                 meta: item.meta,
                 startDate: item.startDate.toISOString(),
                 endDate: item.endDate.toISOString(),
-                startTime: item.startTime.toISOString(),
                 type: item.type
             })),
             meta
@@ -84,12 +95,13 @@ export default class SchedulesController {
     @useAuth(JWT_AUTH)
     @usePremisstion(["read:schedule_detail"])
     async getById(req: getByIdType.Req): Promise<getByIdType.RerturnType> {
-        const {id} = req.params;
+        const { id } = req.params;
         const schedule = await prisma.schedule.findUnique({
             where: { id },
             include: {
                 Bus: true,
-                Route: true
+                Route: true,
+                User: true
             }
         });
 
@@ -99,16 +111,21 @@ export default class SchedulesController {
 
         return getByIdType.getByIdRes.parse({
             id: schedule.id,
+            driver: DriverData.parse({
+                id: schedule.User?.id || "",
+                name: schedule.User?.username || "",
+                email: schedule.User?.email || "",
+            }),
             bus: BusData.parse({
                 id: schedule.Bus.id,
                 licensePlate: schedule.Bus.licensePlate,
                 capacity: schedule.Bus.capacity,
                 metadata: AnyObject.parse(schedule.Bus.meta),
             }),
-            times: (schedule.daysOfWeek as any).map((t: any) => TimeTable.parse({
-                dayOfWeek: t.dayOfWeek,
-                departureTime: t.departureTime
-            })),
+            times: TimeTable.parse({
+                dayOfWeek: schedule.daysOfWeek as number[],
+                departureTime: formatDateToHHMM(schedule.startTime)
+            }),
             route: RouteData.parse({
                 id: schedule.Route.id,
                 name: schedule.Route.name,
@@ -119,7 +136,6 @@ export default class SchedulesController {
             meta: schedule.meta,
             startDate: schedule.startDate.toISOString(),
             endDate: schedule.endDate.toISOString(),
-            startTime: schedule.startTime.toISOString(),
             type: schedule.type
         });
     }
@@ -131,8 +147,14 @@ export default class SchedulesController {
     @useAuth(JWT_AUTH)
     @usePremisstion(["create:schedule"])
     async create(req: createType.Req): Promise<createType.RerturnType> {
-        const { busId, routeId, driverId, times, meta, type} = req.body;
+        const { busId, routeId, driverId, times, meta, type } = req.body;
         const new_id = uuid();
+
+        const formatStartDate = new Date();
+        const getHours = req.body.times.departureTime.split(':')[0];
+        const getMinutes = req.body.times.departureTime.split(':')[1];
+        formatStartDate.setHours(parseInt(getHours), parseInt(getMinutes), 0, 0);
+
 
         const newSchedule = await prisma.schedule.create({
             data: {
@@ -140,41 +162,47 @@ export default class SchedulesController {
                 busId,
                 routeId,
                 driverId,
-                daysOfWeek: times as any,
+                daysOfWeek: times.dayOfWeek as any,
                 meta,
                 startDate: req.body.startDate,
                 endDate: req.body.endDate,
-                startTime: req.body.startTime,
+                startTime: formatStartDate,
                 type: type
             },
             include: {
                 Bus: true,
-                Route: true
+                Route: true,
+                User: true
             }
         });
 
         // After update/delete
         // 1. Notify driver
         if (driverId) {
-          sendNotification(driverId, {
-            type: 'SCHEDULE_ADDED',
-            message: 'Your new schedule has been added',
-            data: { new_id }
-          });
+            sendNotification(driverId, {
+                type: 'SCHEDULE_ADDED',
+                message: 'Your new schedule has been added',
+                data: { new_id }
+            });
         }
 
         return createType.createRes.parse({
             id: newSchedule.id,
+            driver: DriverData.parse({
+                id: newSchedule.User?.id || "",
+                name: newSchedule.User?.username || "",
+                email: newSchedule.User?.email || "",
+            }),
             bus: BusData.parse({
                 id: newSchedule.Bus.id,
                 licensePlate: newSchedule.Bus.licensePlate,
                 capacity: newSchedule.Bus.capacity,
                 metadata: AnyObject.parse(newSchedule.Bus.meta),
             }),
-            times: (newSchedule.daysOfWeek as any).map((t: any) => TimeTable.parse({
-                dayOfWeek: t.dayOfWeek,
-                departureTime: t.departureTime
-            })),
+            times: TimeTable.parse({
+                dayOfWeek: newSchedule.daysOfWeek as number[],
+                departureTime: formatDateToHHMM(newSchedule.startTime)
+            }),
             route: RouteData.parse({
                 id: newSchedule.Route.id,
                 name: newSchedule.Route.name,
@@ -185,8 +213,7 @@ export default class SchedulesController {
             meta: newSchedule.meta,
             startDate: newSchedule.startDate.toISOString(),
             endDate: newSchedule.endDate.toISOString(),
-            startTime: newSchedule.startTime.toISOString(),
-            type: newSchedule.type
+            type: newSchedule.type,
         });
     }
 
@@ -197,7 +224,7 @@ export default class SchedulesController {
     @useAuth(JWT_AUTH)
     @usePremisstion(["update:schedule"])
     async update(req: updateType.Req): Promise<updateType.RerturnType> {
-        const { busId, routeId, driverId, times, meta, type} = req.body;
+        const { busId, routeId, driverId, times, meta, type } = req.body;
         const { id } = req.params;
 
         const existingSchedule = await prisma.schedule.findUnique({
@@ -208,17 +235,26 @@ export default class SchedulesController {
             throw new NotFoundError("");
         }
 
+        let formatStartDate: Date = existingSchedule.startTime;
+
+        if (req.body.times) {
+            formatStartDate = new Date();
+            const getHours = req.body.times.departureTime.split(':')[0];
+            const getMinutes = req.body.times.departureTime.split(':')[1];
+            formatStartDate.setHours(parseInt(getHours), parseInt(getMinutes), 0, 0);
+        }
+
         const updatedSchedule = await prisma.schedule.update({
             where: { id },
             data: {
                 busId,
                 routeId,
                 driverId,
-                daysOfWeek: times as any,
+                daysOfWeek: times?.dayOfWeek as any,
                 meta,
                 startDate: req.body.startDate,
                 endDate: req.body.endDate,
-                startTime: req.body.startTime,
+                startTime: formatStartDate,
                 type: type
             },
             include: {
@@ -229,35 +265,35 @@ export default class SchedulesController {
 
         // 1. Notify driver
         if (driverId) {
-          sendNotification(driverId, {
-            type: 'SCHEDULE_UPDATED',
-            message: 'Your schedule has been updated',
-            data: { id } // id: scheduleId
-          });
+            sendNotification(driverId, {
+                type: 'SCHEDULE_UPDATED',
+                message: 'Your schedule has been updated',
+                data: { id } // id: scheduleId
+            });
         }
-        
+
         // 2. Find all students on this schedule and notify their parents
         // because a route can only appear on 1 schedule only, so we will use route instead of scheduleId because of the database table design
         const studentsAssignments = await prisma.studentAssignment.findMany({
-          where: { routeId: routeId },
+            where: { routeId: routeId },
         });
 
         const studentIds = studentsAssignments.map(sa => sa.studentId).filter(Boolean);
 
         const students = studentIds.length
-          ? await prisma.student.findMany({
-              where: { id: { in: studentIds } }
+            ? await prisma.student.findMany({
+                where: { id: { in: studentIds } }
             })
-          : [];
+            : [];
 
         students.forEach(student => {
-          if (student?.id) {
-            sendNotification(student.id, {
-              type: 'SCHEDULE_UPDATED',
-              message: `Schedule for ${student.name} has been updated`,
-              data: { routeId, studentName: student.name }
-            });
-          }
+            if (student?.id) {
+                sendNotification(student.id, {
+                    type: 'SCHEDULE_UPDATED',
+                    message: `Schedule for ${student.name} has been updated`,
+                    data: { routeId, studentName: student.name }
+                });
+            }
         });
 
         return updateType.updateRes.parse({
@@ -268,10 +304,10 @@ export default class SchedulesController {
                 capacity: updatedSchedule.Bus.capacity,
                 metadata: AnyObject.parse(updatedSchedule.Bus.meta),
             }),
-            times: (updatedSchedule.daysOfWeek as any).map((t: any) => TimeTable.parse({
-                dayOfWeek: t.dayOfWeek,
-                departureTime: t.departureTime
-            })),
+            times: TimeTable.parse({
+                dayOfWeek: updatedSchedule.daysOfWeek as number[],
+                departureTime: formatDateToHHMM(updatedSchedule.startTime)
+            }),
             route: RouteData.parse({
                 id: updatedSchedule.Route.id,
                 name: updatedSchedule.Route.name,
@@ -294,7 +330,7 @@ export default class SchedulesController {
     @usePremisstion(["delete:schedule"])
     async delete(req: deleteType.Req): Promise<deleteType.RerturnType> {
         const { id } = req.params;
-        
+
         const existingSchedule = await prisma.schedule.findUnique({
             where: { id }
         });
@@ -309,35 +345,35 @@ export default class SchedulesController {
 
         // 1. Notify driver
         if (existingSchedule.driverId) {
-          sendNotification(existingSchedule.driverId, {
-            type: 'SCHEDULE_DELETED',
-            message: 'Your schedule has been deleted',
-            data: { id } // id: scheduleId
-          });
+            sendNotification(existingSchedule.driverId, {
+                type: 'SCHEDULE_DELETED',
+                message: 'Your schedule has been deleted',
+                data: { id } // id: scheduleId
+            });
         }
-        
+
         // 2. Find all students on this schedule and notify their parents
         // because a route can only appear on 1 schedule only, so we will use route instead of scheduleId because of the database table design
         const studentsAssignments = await prisma.studentAssignment.findMany({
-          where: { routeId: existingSchedule.routeId },
+            where: { routeId: existingSchedule.routeId },
         });
 
         const studentIds = studentsAssignments.map(sa => sa.studentId).filter(Boolean);
 
         const students = studentIds.length
-          ? await prisma.student.findMany({
-              where: { id: { in: studentIds } }
+            ? await prisma.student.findMany({
+                where: { id: { in: studentIds } }
             })
-          : [];
+            : [];
 
         students.forEach(student => {
-          if (student?.id) {
-            sendNotification(student.id, {
-              type: 'SCHEDULE_DELETED',
-              message: `Schedule for ${student.name} has been deleted`,
-              data: { routeId: existingSchedule.routeId, studentName: student.name }
-            });
-          }
+            if (student?.id) {
+                sendNotification(student.id, {
+                    type: 'SCHEDULE_DELETED',
+                    message: `Schedule for ${student.name} has been deleted`,
+                    data: { routeId: existingSchedule.routeId, studentName: student.name }
+                });
+            }
         });
 
 

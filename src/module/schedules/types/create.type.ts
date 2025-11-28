@@ -18,8 +18,8 @@ export class createReqBody {
     @IsString()
     driverId: string;
 
-    @IsArray(TimeTable)
-    times: string; // JSON string of array of { dayOfWeek: number; departureTime: string }
+    @IsObject(TimeTable)
+    times: TimeTable; // JSON string of array of { dayOfWeek: number; departureTime: string }
 
     @IsObject(Object, { optional: true })
     meta?: any;
@@ -35,15 +35,10 @@ export class createReqBody {
     })
     endDate: string;
 
-    @IsString({
-        format: Formats["iso.datetime"]
-    })
-    startTime: string;
-
     @IsEnum({
-        value: ["MORNING", "AFTERNOON"],
+        value: ["DISPATCH", "RETURN"],
     })
-    type: "MORNING" | "AFTERNOON" = "MORNING";
+    type: "DISPATCH" | "RETURN";
 }
 export class createReqQuery { }
 export class createReqParams { }
