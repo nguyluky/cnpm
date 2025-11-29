@@ -88,15 +88,6 @@ export default class StudentsController {
     async create(req: createType.Req): Promise<createType.RerturnType> {
         const { name, userId, metadata } = req.body;
 
-        // Check if user exists
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-        });
-
-        if (!user) {
-            throw new NotFoundError(`User not found with id: ${userId}`);
-        }
-
         const student = await prisma.student.create({
             data: {
                 id: uuidv4(),
