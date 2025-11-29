@@ -51,6 +51,7 @@ class BusSimulator:
                 print(f"Exception getting trip detail: {e}")
                 return None
     
+    # Events
     async def start_trip(self, trip_id: str) -> bool:
         """Bắt đầu trip"""
         async with aiohttp.ClientSession() as session:
@@ -181,6 +182,7 @@ class BusSimulator:
                 print(f"Exception ending trip: {e}")
                 return False
     
+    # realtime tracking information
     def calculate_distance(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
         """Tính khoảng cách giữa 2 điểm (km)"""
         R = 6371  # Bán kính Trái Đất (km)
@@ -202,7 +204,8 @@ class BusSimulator:
         distance = self.calculate_distance(current_pos[1], current_pos[0], stop_pos[1], stop_pos[0])
         return distance < threshold
     
-    async def simulate_student_actions(self, trip_id: str, trip_type: str):
+    # simulation 
+    async def simulate_student_actions(self, trip_id: str, trip_type: str): # should be deleted and use real student this time
         """Giả lập việc đón/trả học sinh"""
         # Giả lập có 2-5 học sinh mỗi chuyến
         student_count = random.randint(2, 5)
