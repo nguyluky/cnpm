@@ -31,15 +31,10 @@ export default class StoppointsController {
         ].filter(Boolean) as any[];
 
         let stoppoints = await prisma.stopPoint.findMany({
-<<<<<<< HEAD
-            where: conditions.length > 0 ? { AND: conditions } : undefined
-        });
-=======
             where: {
                 AND: [...conditions as any]
             }
         })
->>>>>>> 4ca29875c5afae8a96c726840e46b9438c894cfe
 
         let formattedStoppoints = stoppoints.map(stoppoint => StopPointsData.parse({
             id: stoppoint.id,
