@@ -1755,6 +1755,15 @@
               "minimum": 1,
               "maximum": 100
             }
+          },
+          {
+            "name": "stopId",
+            "in": "query",
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "description": "Filter by stop ID, split by comma for multiple IDs",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -6709,35 +6718,6 @@
                     "message": {
                       "type": "string",
                       "description": "Human-readable error message"
-                    }
-                  },
-                  "required": []
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "http://json-schema.org/draft-07/schema#",
-                  "title": "ApiErrorResponse",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer",
-                      "description": "HTTP status code of the error",
-                      "minimum": 400,
-                      "maximum": 599
-                    },
-                    "message": {
-                      "type": "string",
-                      "description": "Human-readable error message"
-                    },
-                    "name": {
-                      "type": "string",
-                      "description": "Error class name"
                     }
                   },
                   "required": []
