@@ -6,7 +6,13 @@ import { AnyObject, GeoLocation, PaginatedQuery, PaginationMetaData, RouteData }
 import { Formats, IsArray, IsObject, IsString, toSchema } from "@lib/type_declaration";
 
 export class getAllReqBody { }
-export class getAllReqQuery extends PaginatedQuery { }
+export class getAllReqQuery extends PaginatedQuery {
+    @IsString({ 
+        optional: true,
+        description: "Filter by stop ID, split by comma for multiple IDs"
+    })
+    stopId?: string;
+}
 export class getAllReqParams { }
 
 

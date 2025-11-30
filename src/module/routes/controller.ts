@@ -11,6 +11,7 @@ import * as deleteByIdType from "./types/deleteById.type";
 import * as getAllType from "./types/getAll.type";
 import * as getByIdType from "./types/getById.type";
 import * as updateType from "./types/update.type";
+import { Logger } from "@src/utils/logger";
 
 export default class routescontroller {
 
@@ -20,19 +21,46 @@ export default class routescontroller {
     @useAuth(JWT_AUTH)
     @usePremisstion(["read:route"])
     async getAll(req: getAllType.Req): Promise<getAllType.RerturnType> {
-        const { page, limit, search } = req.query;
+        const { page, limit, search, stopId } = req.query;
+
+
+        const stopIds = [];
+
+        // split stopId by comma
+        if (stopId) {
+            for (const id of stopId.split(",")) {
+                stopIds.push(id.trim());
+            }
+        }
         const where = search
             ? {
                 OR: [
-                    { name: { contains: search} },
-                    { id: { contains: search} },
+                    { name: { contains: search } },
+                    { id: { contains: search } },
                 ],
             }
             : {};
 
-        const total = await prisma.route.count({ where });
+        Logger.debug("Where clause for getAll routes: " + stopIds);
+        // get routes that have all stopIds in their
+        const whereWithStopPoints = stopIds.length > 0
+            ? {
+                ...where,
+                AND: stopIds.map((id) => ({
+                    RouteStopPoint: {
+                        some: {
+                            stopPointId: id,
+                        },
+                    },
+                })),
+            }
+            : where;
+
+
+
+        const total = await prisma.route.count({ where: whereWithStopPoints });
         const data = await prisma.route.findMany({
-            where,
+            where: whereWithStopPoints,
             skip: (page - 1) * limit,
             take: limit,
             orderBy: { createdAt: "desc" },
@@ -193,18 +221,18 @@ export default class routescontroller {
 
         // Find all drivers with schedules using this route
         const schedulesUsingRoute = await prisma.schedule.findMany({
-          where: { routeId: id },
-          select: { driverId: true }
+            where: { routeId: id },
+            select: { driverId: true }
         });
-        
+
         schedulesUsingRoute.forEach(schedule => {
-          if (schedule.driverId) {
-            sendNotification(schedule.driverId, {
-              type: 'ROUTE_UPDATED',
-              message: `Route "${name}" has been updated`,
-              data: { id, name }
-            });
-          }
+            if (schedule.driverId) {
+                sendNotification(schedule.driverId, {
+                    type: 'ROUTE_UPDATED',
+                    message: `Route "${name}" has been updated`,
+                    data: { id, name }
+                });
+            }
         });
 
         return updateType.updateRes.parse({

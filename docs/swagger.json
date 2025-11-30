@@ -1755,6 +1755,15 @@
               "minimum": 1,
               "maximum": 100
             }
+          },
+          {
+            "name": "stopId",
+            "in": "query",
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "description": "Filter by stop ID, split by comma for multiple IDs",
+              "type": "string"
+            }
           }
         ],
         "responses": {
