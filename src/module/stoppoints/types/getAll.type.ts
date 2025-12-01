@@ -8,22 +8,26 @@ import { IsArray, IsNumber, IsString } from "@lib/type_declaration";
 export class getAllReqBody {}
 export class getAllReqQuery {
     @IsNumber({
-        optional: true
+        optional: true,
+        coerce: true
     })
     east?: number;
 
     @IsNumber({
-        optional: true
+        optional: true,
+        coerce: true
     })
     north?: number;
 
     @IsNumber({
-        optional: true
+        optional: true,
+        coerce: true
     })
     south?: number;
 
     @IsNumber({
-        optional: true
+        optional: true,
+        coerce: true
     })
     west?: number;
 
