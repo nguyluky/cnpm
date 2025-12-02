@@ -81,47 +81,6 @@ export default class UsersController {
         });
     }
 
-    @Get("/:id")
-    @Summary("Get User by ID")
-    @Validate(getUserByIdType.schema)
-    async getUserById(req: getUserByIdType.Req): Promise<getUserByIdType.RerturnType> {
-        const { id } = req.params;
-
-        const user = await prisma.user.findUnique({
-            where: { id },
-            include: {
-                UserRoles: {
-                    include: {
-                        Roles: true
-                    },
-                }
-            },
-        });
-
-        if (!user) {
-            throw new NotFoundError("User not found");
-        }
-        
-        return getUserByIdType.getUserByIdRes.parse({   
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            createdAt: user.createdAt.toISOString(),
-            updatedAt: user.updatedAt.toISOString(),
-            roles: user.UserRoles.map(ur => ur.Roles.name),
-        });
-    }
-
-
-    @Post("/")
-    @Summary("Create New User")
-    @Validate(createNewUserType.schema)
-    async createNewUser(req: createNewUserType.Req): Promise<createNewUserType.RerturnType> {
-        const { username, email, password, roles } = req.body;
-        throw new Error();
-    }
-
-
     @Get("/roles")
     @Summary("Get All Roles")
     @Validate(getAllRolesType.schema)
@@ -147,6 +106,17 @@ export default class UsersController {
             total: roles.length,
         });
     }
+
+
+    @Post("/")
+    @Summary("Create New User")
+    @Validate(createNewUserType.schema)
+    async createNewUser(req: createNewUserType.Req): Promise<createNewUserType.RerturnType> {
+        const { username, email, password, roles } = req.body;
+        throw new Error();
+    }
+
+
 
     @Get("/permissions")
     @Summary("Get All Permissions")
@@ -266,6 +236,37 @@ export default class UsersController {
             id: updatedRole.id,
             name: updatedRole.name,
             permissions: updatedRole.RolePermissions.map(rp => rp.Permission.name),
+        });
+    }
+
+    @Get("/:id")
+    @Summary("Get User by ID")
+    @Validate(getUserByIdType.schema)
+    async getUserById(req: getUserByIdType.Req): Promise<getUserByIdType.RerturnType> {
+        const { id } = req.params;
+
+        const user = await prisma.user.findUnique({
+            where: { id },
+            include: {
+                UserRoles: {
+                    include: {
+                        Roles: true
+                    },
+                }
+            },
+        });
+
+        if (!user) {
+            throw new NotFoundError("User not found");
+        }
+
+        return getUserByIdType.getUserByIdRes.parse({
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            createdAt: user.createdAt.toISOString(),
+            updatedAt: user.updatedAt.toISOString(),
+            roles: user.UserRoles.map(ur => ur.Roles.name),
         });
     }
 

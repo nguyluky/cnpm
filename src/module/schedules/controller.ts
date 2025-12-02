@@ -27,7 +27,7 @@ export default class SchedulesController {
     @useAuth(JWT_AUTH)
     @usePremisstion(["read:schedule"])
     async getAll(req: getAllType.Req): Promise<getAllType.RerturnType> {
-        const { page, limit, search } = req.query;
+        const { page, limit, search, routeId, busId} = req.query;
         const where = search ? {
             OR: [
                 // TODO: add search fields
@@ -36,7 +36,11 @@ export default class SchedulesController {
 
         const [data, total] = await Promise.all([
             prisma.schedule.findMany({
-                where,
+                where: {
+                    ...where,
+                    routeId: routeId,
+                    busId: busId
+                },
                 skip: (page - 1) * limit,
                 take: limit,
                 include: {
@@ -45,7 +49,13 @@ export default class SchedulesController {
                     User: true
                 }
             }),
-            prisma.schedule.count({})
+            prisma.schedule.count({
+                where: {
+                    ...where,
+                    routeId: routeId,
+                    busId: busId
+                }
+            })
         ]);
 
         const meta = {
