@@ -16,7 +16,7 @@ interface SchemaData {
     className?: string;
 }
 
-export enum Formats{
+export enum Formats {
     /**
      * email format (see https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address)
      * example:
@@ -137,6 +137,7 @@ interface StringOptions {
 interface BooleanOptions {
     optional?: boolean;
     description?: string;
+    coerce?: boolean;
 }
 
 interface ArrayOptions {
@@ -219,7 +220,10 @@ export function IsString(options: StringOptions = {}) {
 // Decorator cho Boolean
 export function IsBoolean(options: BooleanOptions = {}) {
     return function (target: any, propertyKey: PropertyKey) {
-        let schema: any = z.boolean();
+        let schema: any;
+        if (options.coerce) schema = z.coerce.boolean();
+        else schema = z.boolean();
+
         if (options.optional) schema = schema.optional();
         if (options.description) schema = schema.meta({ description: options.description });
         Reflect.defineMetadata(SCHEMA_METADATA_KEY, schema, target, wa(propertyKey));

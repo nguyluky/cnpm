@@ -97,7 +97,7 @@ export const usePremisstion = (requiredPermissions: Premisstion[]) => {
 
     if (!hasPermission) {
       throw new ForbiddenError(
-        "You do not have permission to access this resource."
+        "You do not have permission(" + requiredPermissions.join(", ") + ") to access this resource."
       );
     }
   })();
