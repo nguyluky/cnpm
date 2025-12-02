@@ -20,7 +20,7 @@ export default class StoppointsController {
     @usePremisstion(["read:stoppoints"])
     async getAll(req: getAllType.Req): Promise<getAllType.RerturnType> {
 
-        const { east, north, south, west, name } = req.query;
+        const { east, north, south, west, name, isUse } = req.query;
 
         const conditions = [
             name && { name: { contains: name } },
@@ -32,7 +32,34 @@ export default class StoppointsController {
 
         let stoppoints = await prisma.stopPoint.findMany({
             where: {
-                AND: [...conditions as any]
+                AND: [...conditions as any],
+                ...(isUse !== undefined ? {
+                    RouteStopPoint: {
+                        some: {
+                            Route: {
+                                Schedule: {
+                                    some: {
+                                        startDate: {
+                                            lte: (() => {
+                                                const now = new Date();
+                                                now.setHours(0, 0, 0, 0);
+                                                return now;
+                                            })()
+                                        },
+                                        endDate: {
+                                            gte: (() => {
+                                                const now = new Date();
+                                                now.setHours(23, 59, 59, 999);
+                                                return now;
+                                            })()
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } : {})
             }
         })
 

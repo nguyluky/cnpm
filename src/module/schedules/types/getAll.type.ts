@@ -7,7 +7,19 @@ import { Formats, IsArray, IsObject, IsString, toSchema } from "@lib/type_declar
 import { ScheduleInfo } from "./share.type";
 
 export class getAllReqBody { }
-export class getAllReqQuery extends PaginatedQuery { }
+export class getAllReqQuery extends PaginatedQuery {
+    @IsString({
+        optional: true,
+        description: "Filter schedules by bus ID",
+    })
+    busId?: string;
+
+    @IsString({
+        optional: true,
+        description: "Filter schedules by route ID",
+    })
+    routeId?: string;
+}
 export class getAllReqParams { }
 
 export @ApiRequestStatus({
