@@ -23,7 +23,6 @@ export default class routescontroller {
     async getAll(req: getAllType.Req): Promise<getAllType.RerturnType> {
         const { page, limit, search, stopId } = req.query;
 
-
         const stopIds = [];
 
         // split stopId by comma
@@ -55,8 +54,6 @@ export default class routescontroller {
                 })),
             }
             : where;
-
-
 
         const total = await prisma.route.count({ where: whereWithStopPoints });
         const data = await prisma.route.findMany({

@@ -3,30 +3,40 @@ import { ApiRequestStatus } from "@lib/httpMethod";
 import { Request } from "express";
 import { ObjectType } from "@lib/validate";
 import { StopPointsData } from "@src/types/share.type";
-import { IsArray, IsNumber, IsString } from "@lib/type_declaration";
+import { IsArray, IsBoolean, IsNumber, IsString } from "@lib/type_declaration";
 
 export class getAllReqBody {}
 export class getAllReqQuery {
+
+    @IsBoolean({
+        optional: true,
+        coerce: true
+    })
+    isUse?: boolean;
+
     @IsNumber({
-        optional: true
+        optional: true,
+        coerce: true
     })
     east?: number;
 
     @IsNumber({
-        optional: true
+        optional: true,
+        coerce: true
     })
     north?: number;
 
     @IsNumber({
-        optional: true
+        optional: true,
+        coerce: true
     })
     south?: number;
 
     @IsNumber({
-        optional: true
+        optional: true,
+        coerce: true
     })
     west?: number;
-
 
     @IsString({
         optional: true
