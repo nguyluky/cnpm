@@ -3,7 +3,7 @@ import { Get, Post, Summary, useAuth } from "@lib/httpMethod";
 import { Validate } from "@lib/validate";
 import prisma from "@src/config/prisma.config";
 import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
-import { notifyBusArrivalStation, notifyBusDepartureStation, notifyDropoffStudent, notifyPickupStudent, sendLiveLocationUpdate } from "@src/utils/socketio";
+import { notifyTripStart, notifyBusArrivalStation, notifyBusDepartureStation, notifyDropoffStudent, notifyPickupStudent, sendLiveLocationUpdate } from "@src/utils/socketio";
 import crypto from "crypto";
 import * as get_schedulesType from "./types/get_schedules.type";
 import * as get_tripType from "./types/get_trip.type";
@@ -219,6 +219,16 @@ export default class DriverController {
                 actualStartTime: new Date(),
             }
         });
+
+        // notify parents that trip has started
+        // trip id => schedule id => route id => get all students on that route
+        const routeId = (await prisma.schedule.findUnique({
+            where: {
+                id: trip.scheduleId
+            }
+        }))?.routeId;
+
+        notifyTripStart(routeId || "");
 
         return trip_startType.trip_startRes.parse({
             tripId: trip.id,

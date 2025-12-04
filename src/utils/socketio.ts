@@ -86,6 +86,32 @@ export function broadcastAlert(message: string) {
     io.emit('SystemAlert', message);
 }
 
+// notify parents if the trip is start
+export async function notifyTripStart(routeId: string) {
+    if (!io) throw new Error('Socket.IO not initialized');
+    // prisma.studentAssignment.
+    const userIds = await prisma.user.findMany({
+        where: {
+            Student: {
+                StudentAssignment: {
+                    some: {
+                        routeId: routeId
+                    }
+                }
+            }
+        },
+        select: {
+            id: true
+        }
+    })
+    io.to(userIds.map(a => `/notifications:${a.id}`)).emit('NewNotification', {
+        type: 'TripStart',
+        message: `The bus trip has started.`,
+        data: undefined,
+        timestamp: new Date(),
+    })
+}
+
 // send to users if bus is arriving at their station
 export async function notifyBusArrivalStation(spId: string, location: { lat: number; lng: number }) {
     if (!io) throw new Error('Socket.IO not initialized');
