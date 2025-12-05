@@ -1,9 +1,11 @@
 import {
-  Formats,
-  IsBoolean,
-  IsNumber,
-  IsObject,
-  IsString,
+    Formats,
+    IsArray,
+    IsBoolean,
+    IsEnum,
+    IsNumber,
+    IsObject,
+    IsString,
 } from "@lib/type_declaration";
 import { ObjectType } from "@lib/validate";
 
@@ -247,3 +249,44 @@ export class StudentData extends ObjectType {
     return ins;
   }
 }
+
+
+export class RouteInfo extends ObjectType {
+    @IsString()
+    id: string;
+
+    @IsString()
+    name: string;
+}
+
+
+export class RouteInfoWithPath extends RouteInfo {
+
+    @IsArray(Object)
+    path: number[][];
+
+    @IsString()
+    startTime: string;
+
+}
+export class StopPointTrip extends ObjectType {
+
+    @IsString()
+    id: string;
+
+    @IsString()
+    name: string;
+
+    @IsArray(Number)
+    location: number[];
+
+    @IsNumber()
+    sequence: number;
+
+    @IsEnum({
+        value: ['PENDING', 'ARRIVED', 'DONE', 'SKIPPED'],
+    })
+    status: 'PENDING' | 'ARRIVED' | 'DONE' | 'SKIPPED';
+
+}
+

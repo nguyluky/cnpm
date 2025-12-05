@@ -1,9 +1,10 @@
-import "reflect-metadata";
 import { ApiRequestStatus } from "@lib/httpMethod";
-import { Request } from "express";
+import { IsArray, IsEnum, IsObject, IsString } from "@lib/type_declaration";
 import { ObjectType } from "@lib/validate";
-import { IsArray, IsEnum, IsNumber, IsObject, IsString } from "@lib/type_declaration";
-import { BusInfo, RouteInfo } from "./shared.type";
+import { RouteInfoWithPath, StopPointTrip } from "@src/types/share.type";
+import { Request } from "express";
+import "reflect-metadata";
+import { BusInfo } from "./shared.type";
 
 export class get_tripReqBody {}
 export class get_tripReqQuery {}
@@ -11,39 +12,6 @@ export class get_tripReqParams {
     @IsString()
     id: string;
 }
-
-export class RouteInfoWithPath extends RouteInfo {
-
-    @IsArray(Object)
-    path: number[][];
-
-    @IsString()
-    startTime: string;
-
-}
-
-
-export class StopPointTrip extends ObjectType {
-
-    @IsString()
-    id: string;
-
-    @IsString()
-    name: string;
-
-    @IsArray(Number)
-    location: number[];
-
-    @IsNumber()
-    sequence: number;
-
-    @IsEnum({
-    value: ['PENDING', 'ARRIVED', 'DONE', 'SKIPPED'],
-    })
-    status: 'PENDING' | 'ARRIVED' | 'DONE' | 'SKIPPED';
-    
-}
-
 
 export @ApiRequestStatus({
     statusCode: 200,
