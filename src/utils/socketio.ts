@@ -105,8 +105,8 @@ export async function notifyTripStart(routeId: string) {
         }
     })
     io.to(userIds.map(a => `/notifications:${a.id}`)).emit('NewNotification', {
-        type: 'TripStart',
-        message: `The bus trip has started.`,
+        type: 'Chuyến xe đã khởi hành',
+        message: `Chuyến xe của con bạn đã bắt đầu.`,
         data: undefined,
         timestamp: new Date(),
     })
@@ -132,8 +132,8 @@ export async function notifyBusArrivalStation(spId: string, location: { lat: num
     })
 
     io.to(userIds.map(a => `/notifications:${a.id}`)).emit('NewNotification', {
-        type: 'BusArrival',
-        message: `The bus is arriving at your station.`,
+        type: 'Xe bus sắp đến',
+        message: `Xe bus đang đến trạm dừng của bạn.`,
         data: JSON.stringify(location),
         timestamp: new Date(),
     })
@@ -158,8 +158,8 @@ export async function notifyBusDepartureStation(spId: string, location: { lat: n
     })
 
     io.to(userIds.map(a => `/notifications:${a.id}`)).emit('NewNotification', {
-        type: 'BusDeparture',
-        message: `The bus has departed from your station.`,
+        type: 'Xe bus đã rời trạm',
+        message: `Xe bus đã rời trạm dừng của bạn.`,
         data: JSON.stringify(location),
         timestamp: new Date(),
     })
@@ -184,8 +184,8 @@ export async function notifyPickupStudent(stId: string) {
 
 
     io.to(userIds.map(a => `/notifications:${a.id}`)).emit('NewNotification', {
-        type: 'StudentPickup',
-        message: `Your child is being picked up.`,
+        type: 'Con bạn đã được đón',
+        message: `Con bạn đã lên xe an toàn`,
         data: undefined,
         timestamp: new Date(),
     })
@@ -211,8 +211,8 @@ export async function notifyDropoffStudent(stId: string) {
     });
 
     io.to(userIds.map(a => `/notifications:${a.id}`)).emit('NewNotification', {
-        type: 'StudentDropoff',
-        message: `Your child has been dropped off.`,
+        type: 'Con bạn đã xuống xe',
+        message: `Con bạn đã xuống xe an toàn`,
         data: undefined,
         timestamp: new Date(),
     })

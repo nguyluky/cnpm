@@ -17,6 +17,7 @@ import * as trip_stoppoint_endType from "./types/trip_stoppoint_end.type";
 import * as trip_students_dropoffType from "./types/trip_students_dropoff.type";
 import * as trip_students_pickupType from "./types/trip_students_pickup.type";
 import { GeoLocation } from "@src/types/share.type";
+// import { sendNotification } from "@src/utils/socketio";
 
 export default class DriverController {
 
@@ -204,6 +205,7 @@ export default class DriverController {
         });
     }
 
+    // TODO
     @Post("/trip/:id/start")
     @Summary("Start trip")
     @useAuth(JWT_AUTH)
@@ -237,7 +239,7 @@ export default class DriverController {
         });
     }
 
-
+    // TODO
     @Post("/trip/:tripId/stoppoint/:spId/arrive") 
     @Summary("Mark stoppoint as arrived")
     @useAuth(JWT_AUTH)
@@ -286,7 +288,7 @@ export default class DriverController {
         });
     }
 
-
+    // TODO
     @Post("/trip/:tripId/stoppoint/:spId/depart")  
     @Summary("Mark stoppoint as departed")
     @useAuth(JWT_AUTH)
@@ -334,7 +336,7 @@ export default class DriverController {
         });
     }
 
-
+    // TODO
     @Get("/trip/:tripId/end")
     @Summary("End trip")
     @useAuth(JWT_AUTH)
@@ -361,7 +363,7 @@ export default class DriverController {
 
     }
 
-
+    // TODO
     @Post("/trip/:tripId/students/:studentId/pickup") 
     @Summary("Pickup student")
     @useAuth(JWT_AUTH)
@@ -401,7 +403,7 @@ export default class DriverController {
         });
     }
 
-
+    // TODO
     @Post("/trip/:tripId/students/:studentId/dropoff") 
     @Summary("Dropoff student")
     @useAuth(JWT_AUTH)
