@@ -2,13 +2,15 @@ import { NotFoundError } from "@lib/exception";
 import { Get, Post, Summary, useAuth } from "@lib/httpMethod";
 import { Validate } from "@lib/validate";
 import prisma from "@src/config/prisma.config";
+import * as shareType from "@src/types/share.type";
+import { GeoLocation, RouteInfo } from "@src/types/share.type";
 import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
-import { notifyTripStart, notifyBusArrivalStation, notifyBusDepartureStation, notifyDropoffStudent, notifyPickupStudent, sendLiveLocationUpdate } from "@src/utils/socketio";
+import { notifyBusArrivalStation, notifyBusDepartureStation, notifyDropoffStudent, notifyPickupStudent, notifyTripStart, sendLiveLocationUpdate } from "@src/utils/socketio";
 import crypto from "crypto";
 import * as get_schedulesType from "./types/get_schedules.type";
 import * as get_tripType from "./types/get_trip.type";
 import * as getToDaySchedulesType from "./types/getToDaySchedules.type";
-import { BusInfo, RouteInfo } from "./types/shared.type";
+import { BusInfo } from "./types/shared.type";
 import * as trip_locationType from "./types/trip_location.type";
 import * as trip_startType from "./types/trip_start.type";
 import * as trip_stoppoint_arriveType from "./types/trip_stoppoint_arrive.type";
@@ -16,8 +18,6 @@ import * as trip_stoppoint_departType from "./types/trip_stoppoint_depart.type";
 import * as trip_stoppoint_endType from "./types/trip_stoppoint_end.type";
 import * as trip_students_dropoffType from "./types/trip_students_dropoff.type";
 import * as trip_students_pickupType from "./types/trip_students_pickup.type";
-import { GeoLocation } from "@src/types/share.type";
-// import { sendNotification } from "@src/utils/socketio";
 
 export default class DriverController {
 
@@ -69,10 +69,10 @@ export default class DriverController {
         const scheduleData = schedules.flatMap(schedule =>
             schedule.Trip.map(trip => getToDaySchedulesType.ToDaySchedules.parse({
                 scheduleId: schedule.id,
-                type: schedule.type as 'DISPATH' | "RETURN",
+                type: schedule.type ,
                 tripId: trip.id,
                 date: trip.date.toISOString().split('T')[0],
-                static: trip.status as 'PLANNED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED',
+                static: trip.status || 'PLANNED',
                 startTime: schedule.startTime.toISOString(),
             }))
         );
@@ -111,7 +111,7 @@ export default class DriverController {
                 id: schedule.Bus.id,
                 licensePlate: schedule.Bus.licensePlate
             }),
-            type: schedule.type as 'MORNING' | 'AFTERNOON',
+            type: schedule.type,
             startDate: schedule.startDate.toISOString(),
             daysOfWeek: schedule.daysOfWeek as number[],
             endDate: schedule.endDate ? schedule.endDate.toISOString() : undefined,
@@ -166,7 +166,7 @@ export default class DriverController {
         const dispathPath = routePath ? routePath[0] || [] : [];
         const returnPath = routePath ? routePath[1] || routePath[0] || [] : [];
         // console.log("routePath", dispathPath, returnPath);
-        const routeInfo = get_tripType.RouteInfoWithPath.parse({
+        const routeInfo = shareType.RouteInfoWithPath.parse({
             id: trip.Schedule.Route.id,
             name: trip.Schedule.Route.name,
             path: trip.type == 'DISPATCH' ? dispathPath : returnPath,
@@ -182,7 +182,7 @@ export default class DriverController {
             const stopPoint = rsp.StopPoint;
             const tripStop = trip.TripStop.find(ts => ts.stopId === stopPoint.id);
 
-            return get_tripType.StopPointTrip.parse({
+            return shareType.StopPointTrip.parse({
                 id: stopPoint.id,
                 name: stopPoint.name,
                 location: [
@@ -194,11 +194,9 @@ export default class DriverController {
             });
         });
 
-
-
         return get_tripType.get_tripRes.parse({
             id: trip.id,
-            status: trip.status as 'PLANNED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED',
+            status: trip.status || 'PLANNED',
             rotute: routeInfo,
             bus: busInfo,
             stops,
@@ -283,7 +281,7 @@ export default class DriverController {
 
         return trip_stoppoint_arriveType.trip_stoppoint_arriveRes.parse({
             stopId: tropStop.stopId,
-            status: tropStop.status as 'PENDING' | 'ARRIVED' | 'DONE' | 'SKIPPED',
+            status: tropStop.status || "PENDING",
             arrivedAt: tropStop.actualArrival!.toISOString(),
         });
     }
@@ -331,7 +329,7 @@ export default class DriverController {
 
         return trip_stoppoint_departType.trip_stoppoint_departRes.parse({
             stopId: tropStop.stopId,
-            status: tropStop.status as 'PENDING' | 'ARRIVED' | 'DONE' | 'SKIPPED',
+            status: tropStop.status || "PENDING",
             departedAt: tropStop.actualDeparture!.toISOString(),
         });
     }
@@ -398,7 +396,7 @@ export default class DriverController {
 
         return trip_students_pickupType.trip_students_pickupRes.parse({
             studentId: studentAttendance.studentId,
-            status: studentAttendance.status as 'PENDING' | 'PICKED_UP' | 'DROPPED_OFF',
+            status: studentAttendance.status || "PENDING",
             pickedAt: studentAttendance.pickupTime!.toISOString(),
         });
     }
@@ -438,7 +436,7 @@ export default class DriverController {
 
         return trip_students_dropoffType.trip_students_dropoffRes.parse({
             studentId: studentAttendance.studentId,
-            status: studentAttendance.status as 'PENDING' | 'PICKED_UP' | 'DROPPED_OFF',
+            status: studentAttendance.status || "PENDING",
             droppedAt: studentAttendance.dropoffTime!.toISOString(),
         });
     }

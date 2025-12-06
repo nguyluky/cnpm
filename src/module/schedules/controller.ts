@@ -1,3 +1,4 @@
+import * as getAllTripToDayType from "./types/getAllTripToDay.type";
 import * as deleteType from "./types/delete.type";
 import * as updateType from "./types/update.type";
 import * as createType from "./types/create.type";
@@ -6,12 +7,13 @@ import * as getAllType from "./types/getAll.type";
 import { Get, Post, Put, Delete, useAuth, Summary } from "@lib/httpMethod";
 import prisma from "@src/config/prisma.config";
 import { Validate } from "@lib/validate";
-import { AnyObject, BusData, GeoLocation, RouteData, RouteMeta, StopPointsMeta } from "@src/types/share.type";
+import { AnyObject, BusData, GeoLocation, RouteData, RouteInfo, RouteInfoWithPath, RouteMeta, StopPointsMeta, StopPointTrip } from "@src/types/share.type";
 import { NotFoundError } from "@lib/exception";
 import { DriverData, ScheduleInfo, TimeTable } from "./types/share.type";
 import { v4 as uuid } from "uuid";
 import { JWT_AUTH, usePremisstion } from "@src/utils/jwt";
 import { sendNotification } from "@src/utils/socketio";
+import { BusInfo } from "../drivers/types/shared.type";
 
 function formatDateToHHMM(date: Date): string {
     const hours = date.getHours().toString().padStart(2, '0');
@@ -21,13 +23,97 @@ function formatDateToHHMM(date: Date): string {
 
 export default class SchedulesController {
 
+    @Get("/trip/today")
+    @Summary("Get all trips for today")
+    @Validate(getAllTripToDayType.schema)
+    async getAllTripToDay(req: getAllTripToDayType.Req): Promise<getAllTripToDayType.RerturnType> {
+        const now = new Date();
+        const startDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+        const endDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+        const trips = await prisma.trip.findMany({
+            where: {
+                date: {
+                    gte: startDay,
+                    lte: endDay
+                }
+            },
+            include: {
+                Schedule: {
+                    include: {
+                        Route: {
+                            include: {
+                                RouteStopPoint: {
+                                    orderBy: {
+                                        sequence: 'asc'
+                                    },
+                                    include: {
+                                        StopPoint: true
+                                    }
+                                }
+                            }
+                        },
+                        Bus: true,
+                        User: true
+
+                    }
+                },
+                TripStop: true
+            }
+        })
+
+        return getAllTripToDayType.getAllTripToDayRes.parse({
+            data: trips.map(trip => {
+
+                const stops = trip.Schedule.Route.RouteStopPoint.filter(e => (trip.type == "RETURN" && e.direction == "PICKUP") || (trip.type == "DISPATCH" && e.direction == "DROPOFF")).map(rsp => {
+                    const stopPoint = rsp.StopPoint;
+                    const tripStop = trip.TripStop.find(ts => ts.stopId === stopPoint.id);
+
+                    return StopPointTrip.parse({
+                        id: stopPoint.id,
+                        name: stopPoint.name,
+                        location: [
+                            (stopPoint.location as any).longitude,
+                            (stopPoint.location as any).latitude,
+                        ],
+                        sequence: rsp.sequence,
+                        status: tripStop ? (tripStop.status || 'PENDING') as 'PENDING' | 'ARRIVED' | 'DONE' | 'SKIPPED' : 'PENDING',
+                    });
+                });
+
+                const routeInfo = RouteInfo.parse({
+                    id: trip.Schedule.Route.id,
+                    name: trip.Schedule.Route.name,
+                });
+
+                return getAllTripToDayType.TripToDay.parse({
+                    scheduleId: trip.scheduleId,
+                    tripId: trip.id,
+                    sattus: trip.status as any,
+                    bus: BusInfo.parse({
+                        id: trip.Schedule.Bus.id,
+                        licensePlate: trip.Schedule.Bus.licensePlate,
+                    }),
+                    driver: DriverData.parse({
+                        id: trip.Schedule.User?.id || "",
+                        name: trip.Schedule.User?.username || "",
+                        email: trip.Schedule.User?.email || "",
+                    }),
+                    route: routeInfo,
+                    stops: stops,
+                });
+            }),
+            total: trips.length
+        });
+    }
+
     @Summary("Get all schedules")
     @Get("/")
     @Validate(getAllType.schema)
     @useAuth(JWT_AUTH)
     @usePremisstion(["read:schedule"])
     async getAll(req: getAllType.Req): Promise<getAllType.RerturnType> {
-        const { page, limit, search, routeId, busId} = req.query;
+        const { page, limit, search, routeId, busId } = req.query;
         const where = search ? {
             OR: [
                 // TODO: add search fields
@@ -389,4 +475,6 @@ export default class SchedulesController {
 
         return deleteType.deleteRes.parse({});
     }
+
+
 }

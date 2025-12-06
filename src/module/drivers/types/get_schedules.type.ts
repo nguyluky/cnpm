@@ -1,10 +1,11 @@
-import "reflect-metadata";
 import { ApiRequestStatus } from "@lib/httpMethod";
-import { Request } from "express";
-import { ObjectType } from "@lib/validate";
 import { IsArray, IsEnum, IsObject, IsString } from "@lib/type_declaration";
+import { ObjectType } from "@lib/validate";
+import { RouteInfo } from "@src/types/share.type";
 import { RequestWithUser } from "@src/utils/jwt";
-import { BusInfo, RouteInfo } from "./shared.type";
+import { Request } from "express";
+import "reflect-metadata";
+import { BusInfo } from "./shared.type";
 
 export class get_schedulesReqBody { }
 export class get_schedulesReqQuery { }
@@ -22,9 +23,9 @@ export class Scheduless extends ObjectType {
     bus: BusInfo;
 
     @IsEnum({
-        value: ['MORNING', 'AFTERNOON'],
+        value: ['DISPATCH', 'RETURN'],
     })
-    type: 'MORNING' | 'AFTERNOON';
+    type: 'DISPATCH' | 'RETURN';
 
     @IsArray(Number)
     daysOfWeek: number[];

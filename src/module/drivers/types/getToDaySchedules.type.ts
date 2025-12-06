@@ -27,9 +27,9 @@ export class ToDaySchedules extends ObjectType {
     static: 'PLANNED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
 
     @IsEnum({
-        value: ['DISPATH', "RETURN"],
+        value: ['DISPATCH', "RETURN"],
     })
-    type: 'DISPATH' | "RETURN";
+    type: 'DISPATCH' | "RETURN";
 
     @IsString()
     startTime: string;

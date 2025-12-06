@@ -23,7 +23,7 @@ interface NotificationType {
 // s -> c
 interface SocketEmits {
     NewNotification: (notification: NotificationType) => void;
-    LiveLocationUpdate: (location: { lat: number; lng: number }) => void;
+    LiveLocationUpdate: (location: { lat: number; lng: number }, tripId: string) => void;
     SystemAlert: (message: string) => void;
     UpdateLocation: (location: { lat: number; lng: number }) => void;
     Success: () => void;
@@ -77,7 +77,7 @@ export function sendLiveLocationUpdate(tripId: string, location: { lat: number; 
 
     io.to(`/trip:${tripId}`).emit('LiveLocationUpdate', {
         ...location,
-    });
+    }, tripId);
 }
 
 export function broadcastAlert(message: string) {
@@ -104,6 +104,7 @@ export async function notifyTripStart(routeId: string) {
             id: true
         }
     })
+    console.log('Notifying users of trip start:', userIds.map(a => a.id));
     io.to(userIds.map(a => `/notifications:${a.id}`)).emit('NewNotification', {
         type: 'Chuyến xe đã khởi hành',
         message: `Chuyến xe của con bạn đã bắt đầu.`,
