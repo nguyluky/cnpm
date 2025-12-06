@@ -30,10 +30,15 @@ export default class DriverController {
         const userId = req.user.id;
 
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        console.log("today before", today);
+        // today.setHours(0, 0, 0, 0);
+        // ex: today is 2025-12-06T03:44:43.010Z
+        // format to 2025-12-06T00:00:00.000Z
+        today.setUTCHours(0, 0, 0, 0);
+        console.log("today after", today);
 
         const end = new Date(today);
-        end.setHours(23, 59, 59, 999);
+        end.setUTCHours(23, 59, 59, 999);
 
         const dayOfWeek = today.getDay();
 
