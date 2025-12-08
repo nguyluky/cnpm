@@ -72,6 +72,9 @@ jobs:
           echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> .env
           echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
           echo "CLOUDFLARED_TOKEN=${{ secrets.CLOUDFLARED_TOKEN }}" >> .env
+          echo "WEB_PUSH_PRIVATE_KEY=${{ secrets.WEB_PUSH_PRIVATE_KEY }}" >> .env
+          echo "WEB_PUSH_PUBLIC_KEY=${{ secrets.WEB_PUSH_PUBLIC_KEY }}" >> .env
+          echo "WEB_PUSH_MAILTO=${{ secrets.WEB_PUSH_MAILTO }}" >> .env
           echo "--- .env file created ---"
 
       - name: Pull the new image
