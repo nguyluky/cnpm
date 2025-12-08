@@ -9,10 +9,13 @@ import { apiRouter, swaggerRouter } from "./module";
 // import { setupSocketServer } from "./socket";
 import { Logger } from "./utils/logger";
 import { setSocketIO } from "./utils/socketio";
+import { initializeWebPush } from "./utils/web-pull";
 
 const logger = new Logger("MAIN");
 const app = express();
 const httpServer = createServer(app);
+
+
 
 // ✅ Cấu hình CORS chính xác cho socket.io
 const io = new Server(httpServer, {
@@ -24,9 +27,9 @@ setSocketIO(io);
 
 // ✅ Cấu hình CORS chính xác cho Express API
 app.use(
-  cors({
-    origin: "*", // chỉ cho phép frontend này
-  })
+    cors({
+        origin: "*", // chỉ cho phép frontend này
+    })
 );
 
 app.use(express.json());
@@ -37,25 +40,33 @@ app.use("/docs", swaggerRouter);
 app.use(apiRouter);
 
 app.get("/health", (_, res) => {
-  res.status(200).json({
-    code: 200,
-    message: "OK",
-    name: "HealthCheck",
-  });
+    res.status(200).json({
+        code: 200,
+        message: "OK",
+        name: "HealthCheck",
+    });
 });
 
 app.use((req, res, _) => {
-  res.status(404).json({
-    code: 404,
-    message: `Not Found - ${req.originalUrl} - ${req.method}`,
-    name: "NotFoundError",
-  });
+    res.status(404).json({
+        code: 404,
+        message: `Not Found - ${req.originalUrl} - ${req.method}`,
+        name: "NotFoundError",
+    });
 });
 
 app.use(errorHandler);
 
+initializeWebPush().then(() => {
+    logger.info("Web Push initialized");
+}).catch(err => {
+    logger.error("Failed to initialize Web Push:", err);
+    // exit process if web push initialization fails
+    process.exit(1);
+});
+
 const port = env.PORT;
 
 httpServer.listen(port, () => {
-  logger.info(`Server running at http://localhost:${port}`);
+    logger.info(`Server running at http://localhost:${port}`);
 });

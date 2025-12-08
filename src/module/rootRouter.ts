@@ -8,6 +8,7 @@ import SchedulesController from "./schedules/controller";
 import StoppointsController from "./stoppoints/controller";
 import StudentsController from "./students/controller";
 import UsersController from "./users/controller";
+import NotificationsController from "./notify/controller";
 
 class RootRouter {
     @Use()
@@ -36,6 +37,9 @@ class RootRouter {
 
     @Use()
     users = UsersController;
+
+    @Use()
+    notifications = NotificationsController;
 
 }
 

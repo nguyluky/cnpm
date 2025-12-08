@@ -129,8 +129,6 @@ export default class DriverController {
     }
 
 
-
-
     @Get("/trip/:id")
     @Summary("Get trip by ID")
     @useAuth(JWT_AUTH)
@@ -282,7 +280,6 @@ export default class DriverController {
             lat: location.latitude,
             lng: location.longitude
         })
-
 
         return trip_stoppoint_arriveType.trip_stoppoint_arriveRes.parse({
             stopId: tropStop.stopId,

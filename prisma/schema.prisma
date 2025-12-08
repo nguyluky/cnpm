@@ -221,16 +221,17 @@ model TripStop {
 }
 
 model User {
-  id           String      @id
-  username     String      @unique
-  email        String      @unique
-  passwordHash String
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @default(now())
-  Report       Report[]
-  Schedule     Schedule[]
-  Student      Student?
-  UserRoles    UserRoles[]
+  id                 String               @id
+  username           String               @unique
+  email              String               @unique
+  passwordHash       String
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @default(now())
+  NotifySubscription NotifySubscription[]
+  Report             Report[]
+  Schedule           Schedule[]
+  Student            Student?
+  UserRoles          UserRoles[]
 }
 
 model UserRoles {
@@ -241,6 +242,15 @@ model UserRoles {
 
   @@id([userId, roleId])
   @@index([roleId], map: "UserRoles_roleId_fkey")
+}
+
+model NotifySubscription {
+  id           String @id
+  userId       String
+  subscription Json?
+  User         User   @relation(fields: [userId], references: [id], onDelete: Cascade, map: "NotifySubscription_ibfk_1")
+
+  @@index([userId], map: "userId")
 }
 
 enum Bus_status {

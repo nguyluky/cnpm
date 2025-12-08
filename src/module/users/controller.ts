@@ -1,6 +1,6 @@
 import * as getUserByIdType from "./types/getUserById.type";
 import { ConflictError, NotFoundError } from "@lib/exception";
-import { Get, Post, Summary } from "@lib/httpMethod";
+import { Get, Post, Summary, useAuth } from "@lib/httpMethod";
 import { Validate } from "@lib/validate";
 import prisma from "@src/config/prisma.config";
 import * as addPermissionType from "./types/addPermission.type";
@@ -10,8 +10,12 @@ import * as getAllPermissionType from "./types/getAllPermission.type";
 import * as getAllRolesType from "./types/getAllRoles.type";
 import * as getAllUserType from "./types/getAllUser.type";
 import * as shareType from "./types/share.type";
+import { JWT_AUTH } from "@src/utils/jwt";
+import crypto from "crypto";
+import { sendWebPushNotificationByUserId } from "@src/utils/web-pull";
 
 export default class UsersController {
+
 
     @Get("/")
     @Summary("Get All Users")
@@ -115,8 +119,6 @@ export default class UsersController {
         const { username, email, password, roles } = req.body;
         throw new Error();
     }
-
-
 
     @Get("/permissions")
     @Summary("Get All Permissions")
@@ -269,6 +271,10 @@ export default class UsersController {
             roles: user.UserRoles.map(ur => ur.Roles.name),
         });
     }
+
+
+
+
 
 
 }

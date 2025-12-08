@@ -43,6 +43,14 @@ class Env {
     CLOUDINARY_API_SECRET: string;
 
 
+    @IsString()
+    WEB_PUSH_PRIVATE_KEY: string;
+
+    @IsString()
+    WEB_PUSH_PUBLIC_KEY: string;
+
+    @IsString()
+    WEB_PUSH_MAILTO: string;
 }
 
 const EnvShema = toSchema(Env)!;
