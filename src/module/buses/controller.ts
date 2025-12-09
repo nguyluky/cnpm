@@ -22,9 +22,7 @@ export default class BusesController {
     const where = search
       ? {
           OR: [
-            { name: { contains: search, mode: "insensitive" } },
-            { model: { contains: search, mode: "insensitive" } },
-            { licensePlate: { contains: search, mode: "insensitive" } },
+            { licensePlate: { contains: search } },
           ],
         }
       : {};
